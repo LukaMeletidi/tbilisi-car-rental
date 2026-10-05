@@ -1,0 +1,15 @@
+{
+  "@@locale": "en",
+  "appTitle": "Tbilisi Car Rental",
+  "@appTitle": {
+    "description": "App name, shown in the browser tab and the app bar."
+  },
+  "placeholderMessage": "Project skeleton is running.",
+  "@placeholderMessage": {
+    "description": "Temporary text on the placeholder home page. Removed in Phase 1."
+  },
+  "languageLabel": "Language",
+  "@languageLabel": {
+    "description": "Label above the language switcher."
+  }
+}
