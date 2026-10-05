@@ -1,4 +1,4 @@
-package com.example.tbilisi_car_rental
+package com.greek.tbilisicarrental
 
 import io.flutter.embedding.android.FlutterActivity
 
