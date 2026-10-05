@@ -1,0 +1,433 @@
+# Tbilisi Car-Rental — Project Plan
+
+A portfolio project built with Claude Code under the developer's direction and approval.
+
+This file is the full plan with all decisions agreed so far. Short rules for daily work
+are in CLAUDE.md.
+
+## 0. How we work
+
+- Before any change, show a plan (and the full text of new or changed files) and wait
+  for approval. Nothing is decided until we agree on it together.
+- Work in small, reviewable steps. At the end of each step, summarize what changed and
+  wait for my approval before continuing.
+- Do not decide business rules on your own. If something is ambiguous, ask.
+- Do not add packages, features or Cloud Functions that are not in this plan without
+  asking.
+- Explain reasoning in plain language, including costs and downsides of each choice,
+  not only benefits.
+- Git: show `git status` and the list of files before every commit; ask before every
+  commit and every push; never use --force.
+
+## 1. Overview
+
+- A car rental app for a fictional Tbilisi company, serving mostly international
+  tourists.
+- This is a PORTFOLIO project. It will never be used by a real company.
+- No end-user authentication: the public catalog and booking form are open to anyone.
+- A single shared administrator account (not per-staff accounts) manages the fleet and
+  bookings. Multiple admins can be logged in simultaneously from different devices, with
+  real-time sync (Firestore listeners).
+- Backend: Firebase (Firestore, Authentication, Storage, Cloud Functions in the last
+  phase only).
+- Frontend: Flutter, one codebase. Platforms are described in Section 1.1.
+- There is ONE Firebase project (no dev/prod split). Firebase Emulator Suite is optional.
+- Demo data: a handful of hand-entered demo cars so the demo looks good. The public
+  catalog must show a friendly empty state ("No cars available yet") when there are no
+  cars.
+- The app will be published as a public demo. Whether that is a hosted web build
+  (Firebase Hosting), an APK, or both is decided in Phase 7.
+- Admin in the demo: same build, with an unlinked /admin route protected by rules. The
+  admin login route does not appear in public navigation. Admin screens will be shown to
+  recruiters via README screenshots/video later.
+- The public booking form shows a visible note: "This is a portfolio demo — no real
+  booking is made." Users must not be encouraged to enter real personal data.
+- Stack (same as my first app): Flutter, Riverpod (Notifier/AsyncNotifier), go_router.
+  Drift is NOT needed here because Firebase is the backend.
+
+### 1.1 Platforms
+
+- The public app is mobile-first. Android is the primary platform and the main test
+  platform (Android emulator, not Chrome).
+- Web is only for the admin panel on large screens and for hosting the public demo.
+- Admin screens are responsive (desktop and phone).
+- iOS config exists but cannot be built or tested on Windows.
+- Desktop folders (linux, macos, windows) were removed and are not used.
+- Step 0.8 and all later verification run on the Android emulator.
+
+### 1.2 Project facts
+
+- Firebase project ID: tbilisi-car-rental. Spark plan. Firestore (default) database,
+  created in production mode, region eur3. Google Analytics was enabled when the project
+  was created; no Analytics SDK is added yet.
+- Every firebase/flutterfire command must name tbilisi-car-rental explicitly. The older
+  projects on the same account are never touched.
+- App ID: com.greek.tbilisicarrental (Android applicationId and namespace, iOS bundle
+  ID; the iOS test target keeps the .RunnerTests suffix).
+- Dart package name: tbilisi_car_rental.
+- GitHub: https://github.com/LukaMeletidi/tbilisi-car-rental.git (private), branch main.
+
+## 2. Public (Customer-Facing) App
+
+### 2.1 Catalog
+
+List of active cars, each with photo(s) and:
+- Brand / model, year
+- Drivetrain: FWD / RWD / AWD
+- Transmission: automatic / manual
+- Fuel type: petrol / diesel / hybrid / electric
+- Seats: the exact number is stored per car
+- Engine size: optional; hidden for electric cars (no kW)
+- Price per day (USD)
+- Description in the current UI language
+
+A car's booked/available status is never shown to the public. Availability for the
+requested dates is resolved internally by staff after a request comes in.
+
+### 2.2 Filters
+
+- Seats: Any / 2 / 4 / 5 / 7+ ("7+" means 7 or more seats)
+- Fuel type: Any / Petrol / Diesel / Hybrid / Electric
+- Transmission: Any / Automatic / Manual
+
+### 2.3 Booking request form
+
+Triggered by a "Make a booking" button on a car. Fields:
+- Full name and surname (as in passport) — required
+- Phone number (international format) — required
+- Checkboxes next to phone: WhatsApp / Telegram (multi-select) — optional
+- Email — required
+- Pickup date & time — required
+- Dropoff date & time — required
+- Pickup location — required; dropdown: Tbilisi Airport / Kutaisi Airport / Batumi
+  Airport / Tbilisi Office / Other (free text, anywhere in Georgia)
+- Dropoff location — required; same dropdown, chosen independently
+- Extras (checkboxes, each with its own per-day price): Snow chains, Child seat,
+  Infant seat (under 1 year), Booster seat. Each extra can be selected at most once;
+  extra quantities go in the notes.
+- Special requests / notes — optional; free text, max 500 characters
+- Total price, calculated automatically (see Section 6)
+
+Rules:
+- Every date/time field shows a visible label: "Tbilisi time (GMT+4)".
+- Pickup must be in the future. Dropoff must be after pickup. There is no minimum lead
+  time and no maximum rental length.
+- "Other" location has the same price as the fixed locations; there is no delivery fee.
+
+### 2.4 Confirmation screen
+
+After submitting, the customer sees:
+- "Thank you for your trust — our representative will contact you shortly to confirm
+  the details."
+- Below it, a full summary: car, dates, pickup/dropoff locations, selected extras,
+  total price.
+
+### 2.5 About Us page
+
+Company information, contact details, working hours, address/map, social links. All of
+this comes from the `settings` collection (Section 5). Company info starts EMPTY, so
+this page needs a friendly empty state. The map is an external Google Maps link, not an
+embedded map.
+
+### 2.6 Localization
+
+- Public UI in three languages: Georgian (ka), Russian (ru), English (en), via
+  flutter_localizations + ARB files.
+- Admin panel UI is English only.
+- Do not conflate:
+  - Interface text (button labels, static strings, translated category names such as
+    transmission/fuel type) -> ARB files.
+  - Data-level content (a specific car's description) -> stored per car document as
+    { ka, ru, en }, authored by admin staff.
+- Every booking stores the customer's UI language (`language` field) so staff know
+  which language to respond in.
+- Starting language: the first SUPPORTED language (ka, ru or en) from the browser/device
+  language list; if none is supported, English. Examples: ['de','ru'] -> ru; nothing
+  supported -> en; empty list -> en; matching is case-insensitive.
+- The manual language choice is not remembered yet (shared_preferences comes later).
+- Language names are not in ARB files. Each is always shown in its own language:
+  English / ქართული / Русский.
+- The brand name "Tbilisi Car Rental" stays untranslated in all three languages.
+- Georgian font: NOT bundled initially. Add Noto Sans Georgian only if needed (see Open
+  reminders).
+
+## 3. Admin Panel (English only, protected)
+
+Admin on phones: the bookings list and status changes must work well. The calendar only
+needs horizontal scrolling, no special mobile design.
+
+### 3.1 Bookings list
+
+- Lists all documents in the `bookings` collection (Section 4).
+- Sort/filter by status and by pickup date.
+- Admin can edit ALL fields of a document (this covers changing booking details later).
+- Admin can change the status: new (displayed as a neutral "New" badge) / pending /
+  confirmed / cancelled.
+- Admin can also create a booking manually (e.g. a phone request) directly with status
+  `confirmed`. For such bookings, `createdBy` (free-text staff name) is filled in.
+- There is no "Convert to booking" copy operation: a customer request and a confirmed
+  booking are the same document at different stages.
+- The totalPrice sent by the public form is an ESTIMATE. The admin screen shows the
+  recomputed value next to the stored one.
+
+### 3.2 Fleet activity calendar
+
+- Grid: cars on one axis, dates on the other. Built by hand, no calendar package.
+- Shows ONLY `confirmed` bookings, so staff see which cars are free when.
+- Real-time updates across all logged-in devices.
+
+### 3.3 Fleet management
+
+- Add / edit / hide cars. "Remove" = `active: false` (soft delete), never hard delete.
+- Photo upload.
+- Description fields for ka/ru/en.
+- Fixed-category specs (transmission, fuel type, drivetrain) via dropdowns/selectors,
+  not free text. Seats is the exact number.
+- Price per day (USD), set individually per car.
+- Every field must have clear helper text or a placeholder example, because the person
+  filling it in is non-technical staff.
+
+### 3.4 Booking conflict warning
+
+When a booking is saved with status `confirmed` (directly, or when an existing booking
+is changed to `confirmed`, or when its car/dates change while confirmed), check for
+conflicts with other `confirmed` bookings on the same car (Section 7). If found, show a
+NON-blocking warning ("This car is already booked from X to Y. Continue anyway?"). The
+save is never silently blocked.
+
+### 3.5 Extras & Prices screen
+
+Separate admin screen where admin edits the global per-day prices of the four extras.
+
+### 3.6 Company Info screen
+
+Separate admin screen to fill in company info (name, phone, email, address, working
+hours, social links, map location). Starts empty.
+
+### 3.7 New booking email notifications
+
+LAST PHASE ONLY — see Section 12.
+
+## 4. Data Model (Firestore)
+
+High-level; final field names to be agreed in implementation.
+
+cars
+- brand, model, year
+- drivetrain, transmission, fuelType, seats (exact number), engineSize (optional)
+- pricePerDay (USD)
+- description: { ka, ru, en }
+- photos: array of URLs
+- active: bool (soft delete)
+
+bookings (ONE collection for customer requests and confirmed bookings)
+- customer: fullName, phone, whatsapp flag, telegram flag, email
+- carId
+- pickupDateTime, dropoffDateTime (stored in UTC)
+- pickupLocation, dropoffLocation
+- extras: list of selected extras
+- notes (<= 500 chars)
+- totalPrice: fixed number, NOT recomputed on display
+- language (ka/ru/en)
+- status: new | pending | confirmed | cancelled
+- createdAt
+- createdBy (only for admin-created bookings)
+- expireAt (set server-side in the last phase; absent until then)
+
+Statuses:
+- new: submitted by a customer, nobody has handled it yet.
+- pending: admin contacted the customer, order still in progress.
+- confirmed: a real booking. Only these appear on the calendar and count for conflicts.
+- cancelled: cancelled. No rejection reason field.
+
+There is no `contacted` status and no `completed` status.
+No full snapshot of car data is required; storing the final totalPrice is enough.
+
+settings
+- extras prices (global, per day)
+- pickup/dropoff location list
+- company info (name, phone, email, address, working hours, social links, map)
+
+## 5. Settings collection
+
+Public read, admin write. Company info starts empty; the public About Us page must
+handle that with an empty state.
+
+## 6. Pricing rules
+
+- Currency: USD everywhere. Price per day is set individually per car. Extras prices
+  are global (same for every car), per day.
+- Rental days = max(1, ceil((dropoff - pickup - 2 hours) / 24 hours)).
+  One day = 24 hours, with a 2-hour free grace period.
+- Total = days * (car price per day + sum of selected extras' per-day prices).
+- Test cases (pickup on the 10th at 18:00): return on the 15th at 20:00 -> 5 days;
+  15th at 20:01 -> 6 days; 16th at 20:01 -> 7 days.
+- Rental <= 7 days: show the calculated total.
+- Rental > 7 days: still show an estimated total, alongside a clearly visible note:
+  "For rentals longer than 7 days, the price is individual — our team will contact you
+  to confirm the final price."
+- Admin editing: the price field is auto-filled by the calculator and admin may
+  override it manually. If admin then changes dates, car or extras, the price is
+  recalculated and overwrites the manual value, with a short on-screen notice
+  explaining this.
+- Unit tests for the price calculation (including the cases above) are MANDATORY.
+
+## 7. Time rules
+
+- Store timestamps in UTC. ALL date/time pickers interpret and display time as
+  Asia/Tbilisi (GMT+4, no DST), regardless of the device time zone.
+- Implementation: a small fixed +4 hours helper in lib/core, no time zone package.
+- Every date/time field shows the label "Tbilisi time (GMT+4)".
+- Conflict check (warning only, never blocking, never silent): a booking conflicts with
+  an existing `confirmed` booking on the same car if
+  newPickup < existingDropoff + 5 hours AND newDropoff + 5 hours > existingPickup.
+  Example: a car returned at 10:00 can be picked up again from 15:00.
+- The 5-hour buffer is a single named constant in code.
+- `new`, `pending` and `cancelled` bookings do not block a car.
+- Unit tests for the overlap logic are MANDATORY.
+
+## 8. Security
+
+- Admin identity: Firebase Auth custom claim `admin: true`, checked in
+  Firestore/Storage rules. UI hiding alone is never protection.
+- The claim is set via a one-off Admin SDK script. Document it as an explicit setup
+  step, including how the ID token is refreshed after the claim is set.
+- cars: public read; writes admin only.
+- settings: public read; writes admin only.
+- bookings: public `create` only, with strict validation in rules: allowed field set
+  only, status == 'new', createdAt == request.time, notes <= 500 chars, string length
+  limits, `expireAt` NOT accepted from the client. No public get/list/update/delete.
+  Read/update/delete admin only.
+- `mail` collection (Trigger Email extension): clients must never read or write it.
+- Firebase App Check on the public booking form (reCAPTCHA on web; Android approach in
+  Open reminders).
+- The admin login route must not appear in public navigation.
+
+## 9. Analytics & Compliance
+
+- Firebase Analytics: track car views and filter usage.
+- Cookie/consent banner (web): Analytics is disabled until the user accepts; the choice
+  is stored on the device; the banner links to the Privacy Policy.
+- Privacy Policy page: what is collected, why, retention period 12 months.
+- Retention via Firestore TTL policy on the `expireAt` field (no custom cleanup job).
+
+## 10. Architecture (approved)
+
+- Folder structure: feature-first, with a small shared core.
+  lib/features/<feature>/{data,domain,presentation}; shared code in lib/core (shared
+  models in lib/core/models, router, theme, Tbilisi time helper, constants, shared
+  widgets); ARB files in lib/l10n.
+- Riverpod: manual Notifier/AsyncNotifier, no code generation. Models are hand-written
+  (fromMap/toMap), no freezed or json_serializable.
+- Firebase access: one thin repository per collection. Flow: UI -> provider ->
+  repository -> Firestore. Widgets and providers never import cloud_firestore.
+- Pricing, overlap and Tbilisi-time conversion are pure Dart with no Firebase or
+  Flutter imports, so they are unit-testable.
+- Config: no flavors. A single firebase_options.dart generated by flutterfire configure.
+- Imports use the full package:tbilisi_car_rental/... form.
+- Test strategy: unit tests for pricing, overlap and Tbilisi-time conversion, and for
+  any other new logic. No widget tests by default. Firestore rules tests on the
+  emulator are OPTIONAL and decided at the end.
+- Packages installed: firebase_core 4.15.0, flutter_riverpod 3.4.3, go_router 18.0.2,
+  flutter_localizations (Flutter SDK), intl 0.20.2.
+- Packages approved for later: url_launcher, shared_preferences, image_picker
+  (Phase 4). Other Firebase packages (for example cloud_firestore) are added in the
+  phase that first uses them, with approval.
+
+## 11. Phased delivery plan
+
+0. Setup: Firebase project, project skeleton, CLAUDE.md, localization scaffolding
+1. Public catalog (read-only) + filters + localization + empty states. Basic Firestore
+   rules start here (cars public read). Demo cars are entered by hand in the Firebase
+   console.
+2. Booking form + price calculation + confirmation screen + Firestore rules +
+   App Check. Extras prices and the location list are seeded by hand in the Firebase
+   console, because the admin screens for them come in Phase 6.
+3. Admin auth (custom claim script) + bookings list and editing
+4. Fleet management + photo upload
+5. Calendar + conflict warning
+6. Settings screens (Extras & Prices, Company Info) + About Us page
+7. Cloud Functions + compliance + polish (consent banner, Privacy Policy, TTL, email,
+   README with screenshots)
+
+## 12. Cloud Functions — LAST PHASE ONLY
+
+The app must be fully functional without the Blaze plan until the last phase. In the
+last phase:
+1. onCreate trigger on `bookings` -> writes to the `mail` collection (Trigger Email
+   extension, needs an SMTP provider such as a free-tier SendGrid account).
+2. The same (or a second) function sets `expireAt` = createdAt + 12 months.
+
+Before this phase starts, remind me about the Blaze plan requirement and to set a
+Google Cloud budget alert.
+
+Also: verify whether Cloud Storage for Firebase (photo upload, Phase 4) currently
+requires the Blaze plan for new projects, and tell me BEFORE Phase 4 what my options
+are.
+
+## 13. Design
+
+- The dominant color of the app is light purple, via a Material 3 theme in
+  lib/core/theme.
+- Exact shades (seed color, contrast, text readability) are decided with me in Phase 1.
+  Do not choose them yourself; propose 2-3 options then.
+
+## 14. Phase 0 status
+
+- 0.1 Git and cleanup — DONE. Repository initialised on main; desktop folders (linux,
+  macos, windows) removed; pushed to GitHub. Commits fdd84ee, 872939b.
+- App ID set to com.greek.tbilisicarrental — DONE. Commit 5feafb2.
+- 0.2 Firebase project — DONE (created by me in the console; see Section 1.2).
+- 0.3 Connect Flutter to Firebase — DONE. Commit c1e19ae.
+  - flutterfire configure registered web, Android and iOS apps and generated
+    lib/firebase_options.dart and android/app/google-services.json.
+  - No ios/Runner/GoogleService-Info.plist was written on Windows; re-run
+    flutterfire configure on a Mac if iOS is ever built.
+  - .firebaserc, the firestore section of firebase.json, firestore.rules (deny-all) and
+    firestore.indexes.json were written by hand. Nothing was deployed.
+- 0.4 Core dependencies — DONE. Commit f53e36d. The Android debug build passes.
+- 0.5 App skeleton — DONE. Commit 5a906fe. lib/main.dart (Firebase init,
+  ProviderScope, MaterialApp.router), lib/core/router/app_router.dart, and a temporary
+  placeholder home page that Phase 1 replaces.
+- 0.6 Localization scaffolding — DONE. Commit a08cf4a. l10n.yaml, three ARB files,
+  generated code committed in lib/l10n/generated, the starting-language rule with unit
+  tests, and a language switcher on the placeholder page.
+- 0.7 CLAUDE.md and docs/PLAN.md — this step.
+- 0.8 Verify on the Android emulator and commit — NOT DONE.
+
+Still to check: the Georgian and Russian placeholder sentences in the ARB files have
+not been reviewed by me yet.
+
+## 15. Open reminders
+
+- Before Phase 4: re-check live docs on whether Cloud Storage needs the Blaze plan; I
+  decide the option (Blaze early / no upload / build now, enable later).
+- Before Phase 7: switch to Blaze, set a Google Cloud budget alert; Cloud Functions use
+  Node 22 (Node 20 is being shut down).
+- firebase_core 4.15.0 still applies the Kotlin Gradle Plugin the old way (build
+  warning). Do not run flutter upgrade mid-project; check for a newer FlutterFire
+  release first.
+- Riverpod is 3.4.3: automatic retry of failing providers (consider turning it off for
+  Firestore streams), paused providers (relevant to real-time admin screens), no
+  separate AutoDispose classes, legacy providers moved. Confirm each against the
+  installed version when we first use it.
+- App Check: reCAPTCHA is the web mechanism; on Android use Play Integrity (a debug
+  provider for development). Propose the approach in Phase 2 and ask me before enabling.
+- Analytics consent: Section 9 describes a web consent banner; decide in Phase 7 how
+  consent works on Android (proposal: the same consent screen on all platforms, the
+  choice stored with shared_preferences, Analytics off until accepted).
+- Public demo: decide in Phase 7 whether it is a hosted web build, an APK, or both.
+- Web URLs keep the # for now; decide clean URLs and the Firebase Hosting rewrite rule
+  when we set up Hosting.
+- Georgian font: not bundled; renders fine on web so far. This was observed in Chrome
+  only; the Android emulator has not been checked yet. Re-check on the Android emulator
+  and in Phase 1 with more text.
+- Language choice is not remembered yet (shared_preferences comes later).
+- Rules tests on the emulator are optional, decided at the end. Java on PATH is needed
+  only if we use the Firebase Emulator.
+- Before making the repo public: review it for secrets (google-services.json and
+  firebase_options.dart are not secret and are allowed).
+- README is written in the last phase: screenshots, an honest "how I worked" paragraph
+  (architecture and business rules are my decisions; Claude Code writes the code under
+  my supervision; I review and approve every change), and a note that iOS could not be
+  tested on Windows.
