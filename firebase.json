@@ -1,0 +1,27 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "tbilisi-car-rental",
+          "appId": "1:717629199640:android:fde82c221d3ab8146dba6d",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "tbilisi-car-rental",
+          "configurations": {
+            "android": "1:717629199640:android:fde82c221d3ab8146dba6d",
+            "ios": "1:717629199640:ios:e711261170747e0c6dba6d",
+            "web": "1:717629199640:web:a5e9ab7d52a7a7306dba6d"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
+}

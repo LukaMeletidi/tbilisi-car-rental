@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "717629199640",
+    "project_id": "tbilisi-car-rental",
+    "storage_bucket": "tbilisi-car-rental.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:717629199640:android:fde82c221d3ab8146dba6d",
+        "android_client_info": {
+          "package_name": "com.greek.tbilisicarrental"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAkRY0QihbIRbEXe6dYA1s3LnXqDaA37Qo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
