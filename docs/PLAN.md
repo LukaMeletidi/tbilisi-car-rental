@@ -370,7 +370,7 @@ handle that with an empty state.
   any other new logic. No widget tests by default. Firestore rules tests on the
   emulator are OPTIONAL and decided at the end.
 - Packages installed: firebase_core 4.15.0, flutter_riverpod 3.4.3, go_router 18.0.2,
-  flutter_localizations (Flutter SDK), intl 0.20.2.
+  flutter_localizations (Flutter SDK), intl 0.20.2, cloud_firestore 6.10.0.
 - Package approved for Phase 1: cloud_firestore.
 - Packages approved for later: url_launcher, shared_preferences, image_picker
   (Phase 4). Other Firebase packages are added in the phase that first uses them, with
@@ -485,9 +485,9 @@ Phase 0 is complete.
 ## 16. Phase 1 status
 
 - 1.1 Docs: Phase 1 decisions recorded in this file — DONE.
-- 1.2 Car model and filter logic with unit tests (pure Dart) — not started.
-- 1.3 Firestore access: cloud_firestore, car repository, local firestore.rules — not
-  started.
+- 1.2 Car model and filter logic with unit tests (pure Dart) — DONE. Commit 4476931.
+- 1.3 Firestore access: cloud_firestore, car repository, local firestore.rules — DONE.
+  The rules are changed on disk only; they are not deployed yet.
 - 1.4 Rules deploy (one approved command) and demo cars entered by me — not started.
 - 1.5 Theme: preview screen, my choice, lib/core/theme — not started.
 - 1.6 Catalog screen: providers, card, loading/error/empty states, ARB strings;
