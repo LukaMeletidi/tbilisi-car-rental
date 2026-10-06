@@ -81,6 +81,20 @@ List of active cars, each with photo(s) and:
 - Price per day (USD)
 - Description in the current UI language
 
+Phase 1 decisions:
+- Each car is a large card: one photo, "Brand Model, year", spec chips, price, and 2-3
+  lines of description. A separate detail screen with all photos, the full description
+  and the "Make a booking" button comes in Phase 2.
+- Cars are sorted by price ascending, in the app.
+- Price: whole dollars are displayed, in the format "$45 / day" (translated). Decimals
+  are allowed in the model.
+- Engine size is shown as "1.8 L". It is shown for hybrid and hidden only for electric.
+- If the description is missing in the current language, show English; if that is
+  missing too, show nothing.
+- The catalog updates in real time (Firestore stream).
+- Wide screens: a simple multi-column grid of the same cards.
+- "No cars available yet" is shown only when there are no active cars at all.
+
 A car's booked/available status is never shown to the public. Availability for the
 requested dates is resolved internally by staff after a request comes in.
 
@@ -89,6 +103,14 @@ requested dates is resolved internally by staff after a request comes in.
 - Seats: Any / 2 / 4 / 5 / 7+ ("7+" means 7 or more seats)
 - Fuel type: Any / Petrol / Diesel / Hybrid / Electric
 - Transmission: Any / Automatic / Manual
+
+Phase 1 decisions:
+- Cars with 3 or 6 seats appear only under "Any".
+- A "Filters" button above the list opens a bottom sheet. The button shows the number
+  of active filters. The sheet has a Reset action.
+- When no car matches the filters: a separate text "No cars match your filters" with a
+  "Reset filters" button.
+- Filtering runs in the app on the already-loaded list of active cars.
 
 ### 2.3 Booking request form
 
@@ -148,6 +170,7 @@ embedded map.
 - Language names are not in ARB files. Each is always shown in its own language:
   English / ქართული / Русский.
 - The brand name "Tbilisi Car Rental" stays untranslated in all three languages.
+- The language switcher is a menu in the app bar.
 - Georgian font: NOT bundled initially. Add Noto Sans Georgian only if needed (see Open
   reminders).
 
@@ -212,13 +235,22 @@ LAST PHASE ONLY — see Section 12.
 
 High-level; final field names to be agreed in implementation.
 
-cars
-- brand, model, year
-- drivetrain, transmission, fuelType, seats (exact number), engineSize (optional)
-- pricePerDay (USD)
-- description: { ka, ru, en }
-- photos: array of URLs
-- active: bool (soft delete)
+cars (field names are final, agreed in Phase 1; document ID is auto-generated and not
+stored inside the document)
+- brand, model: string
+- year: number
+- drivetrain: string, one of "fwd" | "rwd" | "awd"
+- transmission: string, one of "automatic" | "manual"
+- fuelType: string, one of "petrol" | "diesel" | "hybrid" | "electric"
+- seats: number (exact number)
+- engineSize: number, in litres; optional (left out for electric cars)
+- pricePerDay: number (USD)
+- description: map { ka, ru, en } of strings
+- photos: array of strings (URLs)
+- active: boolean (soft delete)
+
+Until the Storage decision (before Phase 4), demo photos are image URLs of freely
+licensed photos, picked by me and stored in `photos`.
 
 bookings (ONE collection for customer requests and confirmed bookings)
 - customer: fullName, phone, whatsapp flag, telegram flag, email
@@ -292,7 +324,8 @@ handle that with an empty state.
   Firestore/Storage rules. UI hiding alone is never protection.
 - The claim is set via a one-off Admin SDK script. Document it as an explicit setup
   step, including how the ID token is refreshed after the claim is set.
-- cars: public read; writes admin only.
+- cars: public read of active cars only (active == true); writes admin only. Until
+  admin auth exists (Phase 3), nobody can write.
 - settings: public read; writes admin only.
 - bookings: public `create` only, with strict validation in rules: allowed field set
   only, status == 'new', createdAt == request.time, notes <= 500 chars, string length
@@ -319,6 +352,14 @@ handle that with an empty state.
   widgets); ARB files in lib/l10n.
 - Riverpod: manual Notifier/AsyncNotifier, no code generation. Models are hand-written
   (fromMap/toMap), no freezed or json_serializable.
+- Approved exception: the active cars stream uses a StreamProvider instead of a
+  Notifier.
+- Cars stream: automatic retry is turned off (error state with a "Try again" button),
+  the provider is auto-dispose, and paused providers keep the default behaviour.
+- The provider that creates a repository lives in the repository's data/ file, so no
+  presentation provider imports cloud_firestore.
+- A car document that cannot be parsed is skipped and logged, so one typo in the
+  console does not blank the whole catalog.
 - Firebase access: one thin repository per collection. Flow: UI -> provider ->
   repository -> Firestore. Widgets and providers never import cloud_firestore.
 - Pricing, overlap and Tbilisi-time conversion are pure Dart with no Firebase or
@@ -330,16 +371,18 @@ handle that with an empty state.
   emulator are OPTIONAL and decided at the end.
 - Packages installed: firebase_core 4.15.0, flutter_riverpod 3.4.3, go_router 18.0.2,
   flutter_localizations (Flutter SDK), intl 0.20.2.
+- Package approved for Phase 1: cloud_firestore.
 - Packages approved for later: url_launcher, shared_preferences, image_picker
-  (Phase 4). Other Firebase packages (for example cloud_firestore) are added in the
-  phase that first uses them, with approval.
+  (Phase 4). Other Firebase packages are added in the phase that first uses them, with
+  approval.
+- Not added for now: cached_network_image, flutter_launcher_icons.
 
 ## 11. Phased delivery plan
 
 0. Setup: Firebase project, project skeleton, CLAUDE.md, localization scaffolding
-1. Public catalog (read-only) + filters + localization + empty states. Basic Firestore
-   rules start here (cars public read). Demo cars are entered by hand in the Firebase
-   console.
+1. Public catalog (read-only) + filters + localization + empty states + light purple
+   theme + app name. Basic Firestore rules start here (public read of active cars).
+   Demo cars are entered by hand in the Firebase console.
 2. Booking form + price calculation + confirmation screen + Firestore rules +
    App Check. Extras prices and the location list are seeded by hand in the Firebase
    console, because the admin screens for them come in Phase 6.
@@ -348,7 +391,7 @@ handle that with an empty state.
 5. Calendar + conflict warning
 6. Settings screens (Extras & Prices, Company Info) + About Us page
 7. Cloud Functions + compliance + polish (consent banner, Privacy Policy, TTL, email,
-   README with screenshots)
+   README with screenshots, launcher icon)
 
 ## 12. Cloud Functions — LAST PHASE ONLY
 
@@ -371,6 +414,11 @@ are.
   lib/core/theme.
 - Exact shades (seed color, contrast, text readability) are decided with me in Phase 1.
   Do not choose them yourself; propose 2-3 options then.
+- Light theme only for now (no dark mode).
+- The theme is picked on the emulator from a temporary preview screen showing options
+  A, B and C side by side (step 1.5). The preview screen is deleted after the choice.
+- App name: "Tbilisi Car Rental" (Android label, iOS display name, web title).
+- Launcher icon: postponed to Phase 7.
 
 ## 14. Phase 0 status
 
@@ -392,11 +440,14 @@ are.
 - 0.6 Localization scaffolding — DONE. Commit a08cf4a. l10n.yaml, three ARB files,
   generated code committed in lib/l10n/generated, the starting-language rule with unit
   tests, and a language switcher on the placeholder page.
-- 0.7 CLAUDE.md and docs/PLAN.md — this step.
-- 0.8 Verify on the Android emulator and commit — NOT DONE.
+- 0.7 CLAUDE.md and docs/PLAN.md — DONE. Commit 91eb7b9.
+- 0.8 Verify on the Android emulator — DONE. I asked Claude Code to run the app on the
+  emulator; its flutter run debug connection did not attach from Claude Code's shell,
+  so I ran the app myself and checked it by hand: the app starts, Firebase initialises,
+  Georgian text renders correctly, the starting language is picked automatically from
+  the device language, and the language buttons switch the text.
 
-Still to check: the Georgian and Russian placeholder sentences in the ARB files have
-not been reviewed by me yet.
+Phase 0 is complete.
 
 ## 15. Open reminders
 
@@ -419,9 +470,8 @@ not been reviewed by me yet.
 - Public demo: decide in Phase 7 whether it is a hosted web build, an APK, or both.
 - Web URLs keep the # for now; decide clean URLs and the Firebase Hosting rewrite rule
   when we set up Hosting.
-- Georgian font: not bundled; renders fine on web so far. This was observed in Chrome
-  only; the Android emulator has not been checked yet. Re-check on the Android emulator
-  and in Phase 1 with more text.
+- Georgian font: not bundled; renders fine so far in Chrome and on the Android emulator
+  (short placeholder text only). Re-check in Phase 1 with more text.
 - Language choice is not remembered yet (shared_preferences comes later).
 - Rules tests on the emulator are optional, decided at the end. Java on PATH is needed
   only if we use the Firebase Emulator.
@@ -431,3 +481,17 @@ not been reviewed by me yet.
   (architecture and business rules are my decisions; Claude Code writes the code under
   my supervision; I review and approve every change), and a note that iOS could not be
   tested on Windows.
+
+## 16. Phase 1 status
+
+- 1.1 Docs: Phase 1 decisions recorded in this file — DONE.
+- 1.2 Car model and filter logic with unit tests (pure Dart) — not started.
+- 1.3 Firestore access: cloud_firestore, car repository, local firestore.rules — not
+  started.
+- 1.4 Rules deploy (one approved command) and demo cars entered by me — not started.
+- 1.5 Theme: preview screen, my choice, lib/core/theme — not started.
+- 1.6 Catalog screen: providers, card, loading/error/empty states, ARB strings;
+  placeholder page removed; language menu in the app bar — not started.
+- 1.7 Filters UI: button, bottom sheet, reset — not started.
+- 1.8 App name on Android, iOS and web — not started.
+- 1.9 Verify on the Android emulator — not started.
