@@ -61,7 +61,7 @@ class CatalogScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
                   // The button is stretched to the height of the search field.
                   child: IntrinsicHeight(
                     child: Row(
