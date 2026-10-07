@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:tbilisi_car_rental/core/widgets/app_bar_logo.dart';
 import 'package:tbilisi_car_rental/core/widgets/language_menu_button.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/car_filter_provider.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/car_search_provider.dart';
@@ -28,7 +29,8 @@ class CatalogScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.appTitle),
+        toolbarHeight: appBarLogoToolbarHeight,
+        title: const AppBarLogo(),
         actions: const [LanguageMenuButton()],
       ),
       body: SafeArea(

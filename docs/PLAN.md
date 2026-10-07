@@ -410,7 +410,8 @@ handle that with an empty state.
 5. Calendar + conflict warning
 6. Settings screens (Extras & Prices, Company Info) + About Us page
 7. Cloud Functions + compliance + polish (consent banner, Privacy Policy, TTL, email,
-   README with screenshots, launcher icon)
+   README with screenshots, launcher icon). The launcher icon is still open; it needs
+   the package flutter_launcher_icons, which needs the owner's permission then.
 
 ## 12. Cloud Functions — LAST PHASE ONLY
 
@@ -510,6 +511,8 @@ Phase 0 is complete.
   small app bar menu for the About Us and Privacy Policy pages (decide in Phase 6); the
   admin panel uses a responsive shell (a bottom navigation bar on phones, a side
   navigation rail on wide screens) with go_router's ShellRoute (decide in Phase 3).
+- App bar height and logo on other screens: when the car detail screen is built, decide
+  whether it reuses AppBarLogo next to the back arrow.
 
 ## 16. Phase 1 status
 
@@ -534,5 +537,8 @@ Phase 0 is complete.
   widget test.
 - 1.10 Catalog search: a search field next to the Filters button; search by brand and
   model, combined with the filters — DONE.
+- 1.11 Logo in the app bar: assets/images/app_bar_logo.png replaces the text title on
+  the catalog screen (logo height 48, toolbar height 64). The app name stays as the
+  screen-reader label and as the fallback text — DONE.
 
 Phase 1 is complete.
