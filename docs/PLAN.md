@@ -358,6 +358,9 @@ handle that with an empty state.
   the provider is auto-dispose, and paused providers keep the default behaviour.
 - The provider that creates a repository lives in the repository's data/ file, so no
   presentation provider imports cloud_firestore.
+- White areas are always built with AppCard or OnWhite (lib/core/widgets/app_card.dart).
+  They switch the text inside to dark; text on a white area without them would be white
+  on white.
 - A car document that cannot be parsed is skipped and logged, so one typo in the
   console does not blank the whole catalog.
 - Firebase access: one thin repository per collection. Flow: UI -> provider ->
@@ -380,8 +383,8 @@ handle that with an empty state.
 ## 11. Phased delivery plan
 
 0. Setup: Firebase project, project skeleton, CLAUDE.md, localization scaffolding
-1. Public catalog (read-only) + filters + localization + empty states + light purple
-   theme + app name. Basic Firestore rules start here (public read of active cars).
+1. Public catalog (read-only) + filters + localization + empty states + purple theme +
+   app name. Basic Firestore rules start here (public read of active cars).
    Demo cars are entered by hand in the Firebase console.
 2. Booking form + price calculation + confirmation screen + Firestore rules +
    App Check. Extras prices and the location list are seeded by hand in the Firebase
@@ -410,13 +413,18 @@ are.
 
 ## 13. Design
 
-- The dominant color of the app is light purple, via a Material 3 theme in
-  lib/core/theme.
-- Exact shades (seed color, contrast, text readability) are decided with me in Phase 1.
-  Do not choose them yourself; propose 2-3 options then.
-- Light theme only for now (no dark mode).
-- The theme is picked on the emulator from a temporary preview screen showing options
-  A, B and C side by side (step 1.5). The preview screen is deleted after the choice.
+- Purple (#673AB7) page background and app bar with white text; white cards, white text
+  fields and white filled buttons with purple text. Buttons inside white cards are purple
+  with white text. Theme in lib/core/theme; the purple is one named constant,
+  appBackgroundColor.
+- Text placed directly on the purple is white; text inside white cards is dark. No faint
+  or low-contrast text anywhere. The one exception: disabled controls keep the normal
+  faded Material look.
+- One fixed theme: no dark mode. Material calls the colour scheme "dark" only because
+  its text is light.
+- No gradient for now (flat colour only); it may be revisited in the polish phase.
+- I chose the colour on the emulator in step 1.5 from a temporary preview screen
+  (option F of options A to H). The preview screen has been deleted.
 - App name: "Tbilisi Car Rental" (Android label, iOS display name, web title).
 - Launcher icon: postponed to Phase 7.
 
@@ -488,8 +496,11 @@ Phase 0 is complete.
 - 1.2 Car model and filter logic with unit tests (pure Dart) — DONE. Commit 4476931.
 - 1.3 Firestore access: cloud_firestore, car repository, local firestore.rules — DONE.
   The rules are changed on disk only; they are not deployed yet.
-- 1.4 Rules deploy (one approved command) and demo cars entered by me — not started.
-- 1.5 Theme: preview screen, my choice, lib/core/theme — not started.
+- 1.4 Rules deploy (one approved command) and demo cars — DONE. The rules are live; an
+  anonymous read check confirmed that a query filtered on active == true succeeds and a
+  query without that filter is denied.
+- 1.5 Theme: purple page theme applied (background #673AB7, option F, chosen by me on
+  the emulator); temporary preview screen deleted — DONE.
 - 1.6 Catalog screen: providers, card, loading/error/empty states, ARB strings;
   placeholder page removed; language menu in the app bar — not started.
 - 1.7 Filters UI: button, bottom sheet, reset — not started.

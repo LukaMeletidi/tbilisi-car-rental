@@ -52,8 +52,10 @@ intl + flutter_localizations (ka, ru, en). No Drift.
 - Clients must never read or write the `mail` collection.
 
 ## Design
-- Dominant color: light purple, via a Material 3 theme in lib/core/theme. Exact shades are
-  decided with me in Phase 1; do not pick them yourself.
+- Purple (#673AB7) page background and app bar with white text; white cards, white text
+  fields and white filled buttons with purple text. Theme in lib/core/theme. White areas
+  must always be built with AppCard or OnWhite (lib/core/widgets/app_card.dart), otherwise
+  text is white on white. One fixed theme: no dark mode, no gradient for now.
 
 ## Commands
 - Run (Android emulator): `flutter run`
