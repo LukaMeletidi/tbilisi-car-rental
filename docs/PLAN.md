@@ -372,6 +372,9 @@ handle that with an empty state.
 - Test strategy: unit tests for pricing, overlap and Tbilisi-time conversion, and for
   any other new logic. No widget tests by default. Firestore rules tests on the
   emulator are OPTIONAL and decided at the end.
+- Approved exception to "no widget tests": catalog_screen_test.dart covers the catalog
+  states (loading, error with "Try again", empty, no match with "Reset filters"), with
+  the cars provider overridden (no Firebase).
 - Packages installed: firebase_core 4.15.0, flutter_riverpod 3.4.3, go_router 18.0.2,
   flutter_localizations (Flutter SDK), intl 0.20.2, cloud_firestore 6.10.0.
 - Package approved for Phase 1: cloud_firestore.
@@ -511,4 +514,10 @@ Phase 0 is complete.
 - 1.7 Filters UI: button, bottom sheet, reset — DONE.
 - 1.8 App name on Android, iOS and web — DONE. The launcher icon stays postponed to
   Phase 7.
-- 1.9 Verify on the Android emulator — not started.
+- 1.9 Verify on the Android emulator — DONE. After a fresh install I checked by hand:
+  the launcher label, the catalog sorted by price, the three languages, the filter
+  sheet, the no-match state, Reset, and that the filter survives a language change and
+  rotation. The error state cannot be triggered safely on a device; it is covered by a
+  widget test.
+
+Phase 1 is complete.
