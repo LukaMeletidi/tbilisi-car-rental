@@ -342,6 +342,17 @@ Implementation decisions (step 2.1):
 - `new`, `pending` and `cancelled` bookings do not block a car.
 - Unit tests for the overlap logic are MANDATORY.
 
+Implementation decisions (step 2.2):
+- The offset is one named constant: 4 hours, the same all year.
+- A Tbilisi date and time is its own small type (TbilisiDateTime: year, month, day,
+  hour, minute), not a DateTime, so it cannot be stored by mistake as if it were UTC.
+- Stored moments are converted for display with TbilisiDateTime.fromUtc; what the user
+  picks is converted for storing with toUtc.
+- The code never uses the device's time zone.
+- It works in whole minutes; seconds are dropped.
+- Invalid input is refused with an error: a date that is not UTC, or a date or time
+  that does not exist (for example 30 February).
+
 ## 8. Security
 
 - Admin identity: Firebase Auth custom claim `admin: true`, checked in
@@ -558,7 +569,7 @@ Phase 1 is complete.
 ## 17. Phase 2 status
 
 - 2.1 Price calculator and the list of extras (pure Dart, mandatory unit tests) — DONE.
-- 2.2 Tbilisi time helper (pure Dart, unit tests) — not started.
+- 2.2 Tbilisi time helper (pure Dart, unit tests) — DONE.
 - 2.3 Settings, read-only: extras prices and locations; rule "settings: public read";
   settings entered by me in the console — not started.
 - 2.4 Car detail screen with the "Make a booking" button — not started.
