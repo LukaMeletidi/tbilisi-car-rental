@@ -509,5 +509,6 @@ Phase 0 is complete.
 - 1.6 Catalog screen: providers, card, loading/error/empty states, ARB strings;
   placeholder page removed; language menu in the app bar — DONE.
 - 1.7 Filters UI: button, bottom sheet, reset — DONE.
-- 1.8 App name on Android, iOS and web — not started.
+- 1.8 App name on Android, iOS and web — DONE. The launcher icon stays postponed to
+  Phase 7.
 - 1.9 Verify on the Android emulator — not started.
