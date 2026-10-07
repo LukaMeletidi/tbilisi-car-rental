@@ -23,5 +23,8 @@
   "filterReset": "გასუფთავება",
   "resetFilters": "ფილტრების გასუფთავება",
   "catalogNoMatch": "ფილტრებს არცერთი ავტომობილი არ შეესაბამება",
-  "showCars": "ჩვენება ({count})"
+  "showCars": "ჩვენება ({count})",
+  "searchHint": "მარკა ან მოდელი",
+  "clearSearch": "ძიების გასუფთავება",
+  "catalogNoSearchMatch": "თქვენი ძიებით არაფერი მოიძებნა"
 }

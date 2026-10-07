@@ -93,4 +93,13 @@ class AppLocalizationsKa extends AppLocalizations {
   String showCars(int count) {
     return 'ჩვენება ($count)';
   }
+
+  @override
+  String get searchHint => 'მარკა ან მოდელი';
+
+  @override
+  String get clearSearch => 'ძიების გასუფთავება';
+
+  @override
+  String get catalogNoSearchMatch => 'თქვენი ძიებით არაფერი მოიძებნა';
 }

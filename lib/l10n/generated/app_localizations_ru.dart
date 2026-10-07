@@ -96,4 +96,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String showCars(int count) {
     return 'Показать ($count)';
   }
+
+  @override
+  String get searchHint => 'Марка или модель';
+
+  @override
+  String get clearSearch => 'Очистить поиск';
+
+  @override
+  String get catalogNoSearchMatch => 'По вашему запросу ничего не найдено';
 }

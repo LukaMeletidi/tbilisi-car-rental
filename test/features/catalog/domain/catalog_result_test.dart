@@ -6,13 +6,15 @@ import 'package:tbilisi_car_rental/features/catalog/domain/catalog_result.dart';
 
 Car car({
   required String id,
+  String brand = 'Brand',
+  String model = 'Model',
   double pricePerDay = 50,
   FuelType fuelType = FuelType.petrol,
 }) {
   return Car(
     id: id,
-    brand: 'Brand',
-    model: 'Model',
+    brand: brand,
+    model: model,
     year: 2020,
     drivetrain: Drivetrain.fwd,
     transmission: Transmission.automatic,
@@ -62,6 +64,48 @@ void main() {
       final result = buildCatalog([]);
       expect(result.cars, isEmpty);
       expect(result.totalActive, 0);
+    });
+
+    test('with a search query returns the matching cars, cheapest first', () {
+      final fleet = [
+        car(id: 'prius', brand: 'Toyota', model: 'Prius', pricePerDay: 45),
+        car(id: 'yaris', brand: 'Toyota', model: 'Yaris', pricePerDay: 30),
+        car(id: 'fit', brand: 'Honda', model: 'Fit', pricePerDay: 25),
+      ];
+      final result = buildCatalog(fleet, searchQuery: 'toyota');
+      expect(result.cars.map((car) => car.id), ['yaris', 'prius']);
+      expect(result.totalActive, 3);
+    });
+
+    test('the search and the filter must both match', () {
+      final fleet = [
+        car(id: 'prius', brand: 'Toyota', model: 'Prius'),
+        car(
+          id: 'hilux',
+          brand: 'Toyota',
+          model: 'Hilux',
+          fuelType: FuelType.diesel,
+        ),
+        car(id: 'octavia', brand: 'Skoda', fuelType: FuelType.diesel),
+      ];
+      final result = buildCatalog(
+        fleet,
+        filter: const CarFilter(fuelType: FuelType.diesel),
+        searchQuery: 'toyota',
+      );
+      expect(result.cars.map((car) => car.id), ['hilux']);
+      expect(result.totalActive, 3);
+    });
+
+    test('a search with no match keeps the count of all active cars', () {
+      final result = buildCatalog(cars, searchQuery: 'zzz');
+      expect(result.cars, isEmpty);
+      expect(result.totalActive, 3);
+    });
+
+    test('a blank search query returns every car', () {
+      final result = buildCatalog(cars, searchQuery: '   ');
+      expect(result.cars.map((car) => car.id), ['low', 'mid', 'high']);
     });
   });
 }

@@ -4,6 +4,7 @@ import 'package:tbilisi_car_rental/core/models/car.dart';
 import 'package:tbilisi_car_rental/features/catalog/data/car_repository.dart';
 import 'package:tbilisi_car_rental/features/catalog/domain/catalog_result.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/car_filter_provider.dart';
+import 'package:tbilisi_car_rental/features/catalog/presentation/car_search_provider.dart';
 
 /// Live list of active cars, as loaded from Firestore (not yet sorted or
 /// filtered). Auto-dispose: the Firestore listener closes when no screen
@@ -17,12 +18,15 @@ final activeCarsProvider = StreamProvider.autoDispose<List<Car>>(
 );
 
 /// What the catalog screen shows: the active cars that match the visitor's
-/// filter, cheapest first.
+/// filter and search text, cheapest first.
 final catalogCarsProvider = Provider.autoDispose<AsyncValue<CatalogResult>>((
   ref,
 ) {
   final filter = ref.watch(carFilterProvider);
+  final searchQuery = ref.watch(carSearchProvider);
   return ref
       .watch(activeCarsProvider)
-      .whenData((cars) => buildCatalog(cars, filter: filter));
+      .whenData(
+        (cars) => buildCatalog(cars, filter: filter, searchQuery: searchQuery),
+      );
 });

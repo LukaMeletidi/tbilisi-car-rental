@@ -23,5 +23,8 @@
   "filterReset": "Сбросить",
   "resetFilters": "Сбросить фильтры",
   "catalogNoMatch": "Нет автомобилей, подходящих под фильтры",
-  "showCars": "Показать ({count})"
+  "showCars": "Показать ({count})",
+  "searchHint": "Марка или модель",
+  "clearSearch": "Очистить поиск",
+  "catalogNoSearchMatch": "По вашему запросу ничего не найдено"
 }

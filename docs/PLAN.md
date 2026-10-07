@@ -112,6 +112,18 @@ Phase 1 decisions:
   "Reset filters" button.
 - Filtering runs in the app on the already-loaded list of active cars.
 
+Search (step 1.10):
+- A search field sits in the same row as the Filters button.
+- It searches the brand and the model: every word typed must be contained in
+  "brand model", ignoring letter case. An empty search shows all cars.
+- The input is not restricted. Georgian or Russian text simply finds nothing.
+- Search and filters combine (both must match). The "Filters (n)" counter does not
+  count the search.
+- It runs in the app on the loaded cars: no new Firestore query.
+- When nothing matches, the reset button clears both the search and the filters. If
+  only a search is active, the text is "No cars match your search" and the button is
+  "Clear search".
+
 ### 2.3 Booking request form
 
 Triggered by a "Make a booking" button on a car. Fields:
@@ -373,7 +385,8 @@ handle that with an empty state.
   any other new logic. No widget tests by default. Firestore rules tests on the
   emulator are OPTIONAL and decided at the end.
 - Approved exception to "no widget tests": catalog_screen_test.dart covers the catalog
-  states (loading, error with "Try again", empty, no match with "Reset filters"), with
+  states (loading, error with "Try again", empty, no match with "Reset filters") and
+  the search field (no match by search; Reset clears the search and the filters), with
   the cars provider overridden (no Firebase).
 - Packages installed: firebase_core 4.15.0, flutter_riverpod 3.4.3, go_router 18.0.2,
   flutter_localizations (Flutter SDK), intl 0.20.2, cloud_firestore 6.10.0.
@@ -519,5 +532,7 @@ Phase 0 is complete.
   sheet, the no-match state, Reset, and that the filter survives a language change and
   rotation. The error state cannot be triggered safely on a device; it is covered by a
   widget test.
+- 1.10 Catalog search: a search field next to the Filters button; search by brand and
+  model, combined with the filters — DONE.
 
 Phase 1 is complete.

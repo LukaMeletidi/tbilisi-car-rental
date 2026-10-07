@@ -243,6 +243,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show cars ({count})'**
   String showCars(int count);
+
+  /// Hint in the catalog search field.
+  ///
+  /// In en, this message translates to:
+  /// **'Brand or model'**
+  String get searchHint;
+
+  /// Tooltip of the x in the search field; also a button label.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get clearSearch;
+
+  /// No description provided for @catalogNoSearchMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No cars match your search'**
+  String get catalogNoSearchMatch;
 }
 
 class _AppLocalizationsDelegate

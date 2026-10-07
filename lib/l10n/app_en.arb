@@ -68,5 +68,14 @@
     "placeholders": {
       "count": { "type": "int" }
     }
-  }
+  },
+  "searchHint": "Brand or model",
+  "@searchHint": {
+    "description": "Hint in the catalog search field."
+  },
+  "clearSearch": "Clear search",
+  "@clearSearch": {
+    "description": "Tooltip of the x in the search field; also a button label."
+  },
+  "catalogNoSearchMatch": "No cars match your search"
 }

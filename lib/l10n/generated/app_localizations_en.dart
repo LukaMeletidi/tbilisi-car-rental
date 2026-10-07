@@ -93,4 +93,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String showCars(int count) {
     return 'Show cars ($count)';
   }
+
+  @override
+  String get searchHint => 'Brand or model';
+
+  @override
+  String get clearSearch => 'Clear search';
+
+  @override
+  String get catalogNoSearchMatch => 'No cars match your search';
 }
