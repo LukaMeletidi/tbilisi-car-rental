@@ -35,6 +35,13 @@ void main() {
     expect(ka.seatsCount(1), '1 $_georgianSeat');
     expect(ka.seatsCount(5), '5 $_georgianSeat');
   });
+
+  test('filter texts keep the number', () {
+    expect(en.filtersWithCount(2), 'Filters (2)');
+    expect(en.showCars(3), 'Show cars (3)');
+    expect(ru.filtersWithCount(2), 'Фильтры (2)');
+    expect(ru.showCars(0), 'Показать (0)');
+  });
 }
 
 const _georgianPrice45 = '\$45 / დღე';

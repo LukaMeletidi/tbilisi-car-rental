@@ -13,5 +13,15 @@
   "fuelPetrol": "ბენზინი",
   "fuelDiesel": "დიზელი",
   "fuelHybrid": "ჰიბრიდი",
-  "fuelElectric": "ელექტრო"
+  "fuelElectric": "ელექტრო",
+  "filters": "ფილტრები",
+  "filtersWithCount": "ფილტრები ({count})",
+  "filterSeats": "ადგილები",
+  "filterFuelType": "საწვავის ტიპი",
+  "filterTransmission": "გადაცემათა კოლოფი",
+  "filterAny": "ნებისმიერი",
+  "filterReset": "გასუფთავება",
+  "resetFilters": "ფილტრების გასუფთავება",
+  "catalogNoMatch": "ფილტრებს არცერთი ავტომობილი არ შეესაბამება",
+  "showCars": "ჩვენება ({count})"
 }

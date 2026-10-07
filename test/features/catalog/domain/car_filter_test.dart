@@ -222,4 +222,65 @@ void main() {
       expect(sortCarsByPrice([]), isEmpty);
     });
   });
+
+  group('CarFilter with... methods', () {
+    const full = CarFilter(
+      seats: SeatsFilter.five,
+      fuelType: FuelType.diesel,
+      transmission: Transmission.manual,
+    );
+
+    test('withSeats changes only the seats', () {
+      expect(
+        full.withSeats(SeatsFilter.two),
+        const CarFilter(
+          seats: SeatsFilter.two,
+          fuelType: FuelType.diesel,
+          transmission: Transmission.manual,
+        ),
+      );
+    });
+
+    test('withFuelType changes only the fuel type', () {
+      expect(
+        full.withFuelType(FuelType.electric),
+        const CarFilter(
+          seats: SeatsFilter.five,
+          fuelType: FuelType.electric,
+          transmission: Transmission.manual,
+        ),
+      );
+    });
+
+    test('withTransmission changes only the transmission', () {
+      expect(
+        full.withTransmission(Transmission.automatic),
+        const CarFilter(
+          seats: SeatsFilter.five,
+          fuelType: FuelType.diesel,
+          transmission: Transmission.automatic,
+        ),
+      );
+    });
+
+    test('fuel type and transmission can be set back to Any', () {
+      expect(
+        full.withFuelType(null),
+        const CarFilter(
+          seats: SeatsFilter.five,
+          transmission: Transmission.manual,
+        ),
+      );
+      expect(
+        full.withTransmission(null),
+        const CarFilter(seats: SeatsFilter.five, fuelType: FuelType.diesel),
+      );
+    });
+
+    test('the original filter is not changed', () {
+      full.withSeats(SeatsFilter.two).withFuelType(null);
+      expect(full.seats, SeatsFilter.five);
+      expect(full.fuelType, FuelType.diesel);
+    });
+  });
 }

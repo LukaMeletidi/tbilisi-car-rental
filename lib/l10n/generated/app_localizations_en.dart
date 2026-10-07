@@ -59,4 +59,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fuelElectric => 'Electric';
+
+  @override
+  String get filters => 'Filters';
+
+  @override
+  String filtersWithCount(int count) {
+    return 'Filters ($count)';
+  }
+
+  @override
+  String get filterSeats => 'Seats';
+
+  @override
+  String get filterFuelType => 'Fuel type';
+
+  @override
+  String get filterTransmission => 'Transmission';
+
+  @override
+  String get filterAny => 'Any';
+
+  @override
+  String get filterReset => 'Reset';
+
+  @override
+  String get resetFilters => 'Reset filters';
+
+  @override
+  String get catalogNoMatch => 'No cars match your filters';
+
+  @override
+  String showCars(int count) {
+    return 'Show cars ($count)';
+  }
 }

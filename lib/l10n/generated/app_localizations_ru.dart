@@ -62,4 +62,38 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get fuelElectric => 'Электро';
+
+  @override
+  String get filters => 'Фильтры';
+
+  @override
+  String filtersWithCount(int count) {
+    return 'Фильтры ($count)';
+  }
+
+  @override
+  String get filterSeats => 'Места';
+
+  @override
+  String get filterFuelType => 'Тип топлива';
+
+  @override
+  String get filterTransmission => 'Коробка передач';
+
+  @override
+  String get filterAny => 'Любой';
+
+  @override
+  String get filterReset => 'Сбросить';
+
+  @override
+  String get resetFilters => 'Сбросить фильтры';
+
+  @override
+  String get catalogNoMatch => 'Нет автомобилей, подходящих под фильтры';
+
+  @override
+  String showCars(int count) {
+    return 'Показать ($count)';
+  }
 }

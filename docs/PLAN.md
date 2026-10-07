@@ -489,6 +489,11 @@ Phase 0 is complete.
   (architecture and business rules are my decisions; Claude Code writes the code under
   my supervision; I review and approve every change), and a note that iOS could not be
   tested on Windows.
+- OPEN QUESTION, not a decision: Navigation between screens is not decided. Proposal to
+  decide later: the public app uses plain back navigation for the booking flow and a
+  small app bar menu for the About Us and Privacy Policy pages (decide in Phase 6); the
+  admin panel uses a responsive shell (a bottom navigation bar on phones, a side
+  navigation rail on wide screens) with go_router's ShellRoute (decide in Phase 3).
 
 ## 16. Phase 1 status
 
@@ -503,6 +508,6 @@ Phase 0 is complete.
   the emulator); temporary preview screen deleted — DONE.
 - 1.6 Catalog screen: providers, card, loading/error/empty states, ARB strings;
   placeholder page removed; language menu in the app bar — DONE.
-- 1.7 Filters UI: button, bottom sheet, reset — not started.
+- 1.7 Filters UI: button, bottom sheet, reset — DONE.
 - 1.8 App name on Android, iOS and web — not started.
 - 1.9 Verify on the Android emulator — not started.

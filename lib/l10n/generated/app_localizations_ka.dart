@@ -59,4 +59,38 @@ class AppLocalizationsKa extends AppLocalizations {
 
   @override
   String get fuelElectric => 'ელექტრო';
+
+  @override
+  String get filters => 'ფილტრები';
+
+  @override
+  String filtersWithCount(int count) {
+    return 'ფილტრები ($count)';
+  }
+
+  @override
+  String get filterSeats => 'ადგილები';
+
+  @override
+  String get filterFuelType => 'საწვავის ტიპი';
+
+  @override
+  String get filterTransmission => 'გადაცემათა კოლოფი';
+
+  @override
+  String get filterAny => 'ნებისმიერი';
+
+  @override
+  String get filterReset => 'გასუფთავება';
+
+  @override
+  String get resetFilters => 'ფილტრების გასუფთავება';
+
+  @override
+  String get catalogNoMatch => 'ფილტრებს არცერთი ავტომობილი არ შეესაბამება';
+
+  @override
+  String showCars(int count) {
+    return 'ჩვენება ($count)';
+  }
 }

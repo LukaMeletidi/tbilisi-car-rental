@@ -183,6 +183,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Electric'**
   String get fuelElectric;
+
+  /// Button above the list and title of the filter sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get filters;
+
+  /// Filters button when some filters are set.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters ({count})'**
+  String filtersWithCount(int count);
+
+  /// No description provided for @filterSeats.
+  ///
+  /// In en, this message translates to:
+  /// **'Seats'**
+  String get filterSeats;
+
+  /// No description provided for @filterFuelType.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel type'**
+  String get filterFuelType;
+
+  /// No description provided for @filterTransmission.
+  ///
+  /// In en, this message translates to:
+  /// **'Transmission'**
+  String get filterTransmission;
+
+  /// No description provided for @filterAny.
+  ///
+  /// In en, this message translates to:
+  /// **'Any'**
+  String get filterAny;
+
+  /// No description provided for @filterReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get filterReset;
+
+  /// No description provided for @resetFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset filters'**
+  String get resetFilters;
+
+  /// No description provided for @catalogNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No cars match your filters'**
+  String get catalogNoMatch;
+
+  /// Button that closes the filter sheet; count = matching cars.
+  ///
+  /// In en, this message translates to:
+  /// **'Show cars ({count})'**
+  String showCars(int count);
 }
 
 class _AppLocalizationsDelegate

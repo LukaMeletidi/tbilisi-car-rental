@@ -13,5 +13,15 @@
   "fuelPetrol": "Бензин",
   "fuelDiesel": "Дизель",
   "fuelHybrid": "Гибрид",
-  "fuelElectric": "Электро"
+  "fuelElectric": "Электро",
+  "filters": "Фильтры",
+  "filtersWithCount": "Фильтры ({count})",
+  "filterSeats": "Места",
+  "filterFuelType": "Тип топлива",
+  "filterTransmission": "Коробка передач",
+  "filterAny": "Любой",
+  "filterReset": "Сбросить",
+  "resetFilters": "Сбросить фильтры",
+  "catalogNoMatch": "Нет автомобилей, подходящих под фильтры",
+  "showCars": "Показать ({count})"
 }

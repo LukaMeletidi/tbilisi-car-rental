@@ -43,5 +43,30 @@
   "fuelPetrol": "Petrol",
   "fuelDiesel": "Diesel",
   "fuelHybrid": "Hybrid",
-  "fuelElectric": "Electric"
+  "fuelElectric": "Electric",
+  "filters": "Filters",
+  "@filters": {
+    "description": "Button above the list and title of the filter sheet."
+  },
+  "filtersWithCount": "Filters ({count})",
+  "@filtersWithCount": {
+    "description": "Filters button when some filters are set.",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "filterSeats": "Seats",
+  "filterFuelType": "Fuel type",
+  "filterTransmission": "Transmission",
+  "filterAny": "Any",
+  "filterReset": "Reset",
+  "resetFilters": "Reset filters",
+  "catalogNoMatch": "No cars match your filters",
+  "showCars": "Show cars ({count})",
+  "@showCars": {
+    "description": "Button that closes the filter sheet; count = matching cars.",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  }
 }
