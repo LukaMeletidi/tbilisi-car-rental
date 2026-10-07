@@ -106,17 +106,83 @@ abstract class AppLocalizations {
   /// **'Tbilisi Car Rental'**
   String get appTitle;
 
-  /// Temporary text on the placeholder home page. Removed in Phase 1.
-  ///
-  /// In en, this message translates to:
-  /// **'Project skeleton is running.'**
-  String get placeholderMessage;
-
-  /// Label above the language switcher.
+  /// Tooltip of the language menu in the app bar.
   ///
   /// In en, this message translates to:
   /// **'Language'**
   String get languageLabel;
+
+  /// Shown when there are no active cars at all.
+  ///
+  /// In en, this message translates to:
+  /// **'No cars available yet'**
+  String get catalogEmpty;
+
+  /// Shown when the list of cars cannot be loaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the cars. Please try again later.'**
+  String get catalogError;
+
+  /// Button under an error message.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get tryAgain;
+
+  /// Screen-reader text for the placeholder shown instead of a car photo.
+  ///
+  /// In en, this message translates to:
+  /// **'No photo'**
+  String get noPhoto;
+
+  /// Price per day in US dollars.
+  ///
+  /// In en, this message translates to:
+  /// **'\${price} / day'**
+  String pricePerDay(String price);
+
+  /// Number of seats in a car.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 seat} other{{count} seats}}'**
+  String seatsCount(int count);
+
+  /// No description provided for @transmissionAutomatic.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get transmissionAutomatic;
+
+  /// No description provided for @transmissionManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual'**
+  String get transmissionManual;
+
+  /// No description provided for @fuelPetrol.
+  ///
+  /// In en, this message translates to:
+  /// **'Petrol'**
+  String get fuelPetrol;
+
+  /// No description provided for @fuelDiesel.
+  ///
+  /// In en, this message translates to:
+  /// **'Diesel'**
+  String get fuelDiesel;
+
+  /// No description provided for @fuelHybrid.
+  ///
+  /// In en, this message translates to:
+  /// **'Hybrid'**
+  String get fuelHybrid;
+
+  /// No description provided for @fuelElectric.
+  ///
+  /// In en, this message translates to:
+  /// **'Electric'**
+  String get fuelElectric;
 }
 
 class _AppLocalizationsDelegate

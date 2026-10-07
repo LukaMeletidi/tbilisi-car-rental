@@ -1,6 +1,17 @@
 {
   "@@locale": "ru",
   "appTitle": "Tbilisi Car Rental",
-  "placeholderMessage": "Каркас проекта запущен.",
-  "languageLabel": "Язык"
+  "languageLabel": "Язык",
+  "catalogEmpty": "Пока нет доступных автомобилей",
+  "catalogError": "Не удалось загрузить автомобили. Повторите попытку позже.",
+  "tryAgain": "Повторить",
+  "noPhoto": "Нет фото",
+  "pricePerDay": "${price} / день",
+  "seatsCount": "{count, plural, one{{count} место} few{{count} места} many{{count} мест} other{{count} места}}",
+  "transmissionAutomatic": "Автомат",
+  "transmissionManual": "Механика",
+  "fuelPetrol": "Бензин",
+  "fuelDiesel": "Дизель",
+  "fuelHybrid": "Гибрид",
+  "fuelElectric": "Электро"
 }

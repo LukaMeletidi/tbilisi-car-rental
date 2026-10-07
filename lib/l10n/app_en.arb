@@ -4,12 +4,44 @@
   "@appTitle": {
     "description": "App name, shown in the browser tab and the app bar."
   },
-  "placeholderMessage": "Project skeleton is running.",
-  "@placeholderMessage": {
-    "description": "Temporary text on the placeholder home page. Removed in Phase 1."
-  },
   "languageLabel": "Language",
   "@languageLabel": {
-    "description": "Label above the language switcher."
-  }
+    "description": "Tooltip of the language menu in the app bar."
+  },
+  "catalogEmpty": "No cars available yet",
+  "@catalogEmpty": {
+    "description": "Shown when there are no active cars at all."
+  },
+  "catalogError": "Could not load the cars. Please try again later.",
+  "@catalogError": {
+    "description": "Shown when the list of cars cannot be loaded."
+  },
+  "tryAgain": "Try again",
+  "@tryAgain": {
+    "description": "Button under an error message."
+  },
+  "noPhoto": "No photo",
+  "@noPhoto": {
+    "description": "Screen-reader text for the placeholder shown instead of a car photo."
+  },
+  "pricePerDay": "${price} / day",
+  "@pricePerDay": {
+    "description": "Price per day in US dollars.",
+    "placeholders": {
+      "price": { "type": "String", "example": "45" }
+    }
+  },
+  "seatsCount": "{count, plural, =1{1 seat} other{{count} seats}}",
+  "@seatsCount": {
+    "description": "Number of seats in a car.",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "transmissionAutomatic": "Automatic",
+  "transmissionManual": "Manual",
+  "fuelPetrol": "Petrol",
+  "fuelDiesel": "Diesel",
+  "fuelHybrid": "Hybrid",
+  "fuelElectric": "Electric"
 }

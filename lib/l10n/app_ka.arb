@@ -1,6 +1,17 @@
 {
   "@@locale": "ka",
   "appTitle": "Tbilisi Car Rental",
-  "placeholderMessage": "პროექტის კარკასი მუშაობს.",
-  "languageLabel": "ენა"
+  "languageLabel": "ენა",
+  "catalogEmpty": "ავტომობილები ჯერ არ არის",
+  "catalogError": "ავტომობილების ჩატვირთვა ვერ მოხერხდა. სცადეთ მოგვიანებით.",
+  "tryAgain": "სცადეთ ხელახლა",
+  "noPhoto": "ფოტო არ არის",
+  "pricePerDay": "${price} / დღე",
+  "seatsCount": "{count, plural, other{{count} ადგილი}}",
+  "transmissionAutomatic": "ავტომატიკა",
+  "transmissionManual": "მექანიკა",
+  "fuelPetrol": "ბენზინი",
+  "fuelDiesel": "დიზელი",
+  "fuelHybrid": "ჰიბრიდი",
+  "fuelElectric": "ელექტრო"
 }

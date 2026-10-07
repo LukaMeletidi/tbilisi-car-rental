@@ -32,6 +32,7 @@ class AppCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return OnWhite(
       child: Card(
+        clipBehavior: Clip.antiAlias,
         child: Padding(padding: padding, child: child),
       ),
     );

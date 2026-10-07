@@ -12,8 +12,54 @@ class AppLocalizationsRu extends AppLocalizations {
   String get appTitle => 'Tbilisi Car Rental';
 
   @override
-  String get placeholderMessage => 'Каркас проекта запущен.';
+  String get languageLabel => 'Язык';
 
   @override
-  String get languageLabel => 'Язык';
+  String get catalogEmpty => 'Пока нет доступных автомобилей';
+
+  @override
+  String get catalogError =>
+      'Не удалось загрузить автомобили. Повторите попытку позже.';
+
+  @override
+  String get tryAgain => 'Повторить';
+
+  @override
+  String get noPhoto => 'Нет фото';
+
+  @override
+  String pricePerDay(String price) {
+    return '\$$price / день';
+  }
+
+  @override
+  String seatsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count места',
+      many: '$count мест',
+      few: '$count места',
+      one: '$count место',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get transmissionAutomatic => 'Автомат';
+
+  @override
+  String get transmissionManual => 'Механика';
+
+  @override
+  String get fuelPetrol => 'Бензин';
+
+  @override
+  String get fuelDiesel => 'Дизель';
+
+  @override
+  String get fuelHybrid => 'Гибрид';
+
+  @override
+  String get fuelElectric => 'Электро';
 }
