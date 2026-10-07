@@ -269,7 +269,8 @@ bookings (ONE collection for customer requests and confirmed bookings)
 - carId
 - pickupDateTime, dropoffDateTime (stored in UTC)
 - pickupLocation, dropoffLocation
-- extras: list of selected extras
+- extras: list of selected extras; stored names: snowChains, childSeat, infantSeat,
+  boosterSeat
 - notes (<= 500 chars)
 - totalPrice: fixed number, NOT recomputed on display
 - language (ka/ru/en)
@@ -315,6 +316,17 @@ handle that with an empty state.
   recalculated and overwrites the manual value, with a short on-screen notice
   explaining this.
 - Unit tests for the price calculation (including the cases above) are MANDATORY.
+
+Implementation decisions (step 2.1):
+- Rental days are computed in whole minutes; seconds are ignored.
+- The grace period (2 hours) and the limit for a normal price (7 days) are named
+  constants.
+- Exactly 7 days is a normal price. From 8 days the result is flagged as an individual
+  price; the total is still calculated as an estimate.
+- The total is calculated in whole cents, so 3 * 19.99 is exactly 59.97.
+- The calculator refuses invalid input with an error: dropoff not after pickup, a date
+  that is not UTC, a selected extra without a price, or a price that is negative or
+  not a number. A missing price is never counted as 0.
 
 ## 7. Time rules
 
@@ -542,3 +554,19 @@ Phase 0 is complete.
   screen-reader label and as the fallback text — DONE.
 
 Phase 1 is complete.
+
+## 17. Phase 2 status
+
+- 2.1 Price calculator and the list of extras (pure Dart, mandatory unit tests) — DONE.
+- 2.2 Tbilisi time helper (pure Dart, unit tests) — not started.
+- 2.3 Settings, read-only: extras prices and locations; rule "settings: public read";
+  settings entered by me in the console — not started.
+- 2.4 Car detail screen with the "Make a booking" button — not started.
+- 2.5 Booking model and form validation (pure Dart, unit tests) — not started.
+- 2.6 Firestore rules for bookings (public create only) and the create method in the
+  repository; deploy with my approval — not started.
+- 2.7 Booking form screen — not started.
+- 2.8 Confirmation screen — not started.
+- 2.9 App Check (approach proposed first, enabled only with my approval) — not
+  started.
+- 2.10 Verify Phase 2 on the Android emulator — not started.
