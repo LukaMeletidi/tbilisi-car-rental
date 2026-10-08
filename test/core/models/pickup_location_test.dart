@@ -101,6 +101,35 @@ void main() {
     expect(locations.map((l) => l.id), ['otherOffice', 'Other']);
   });
 
+  test('accepts ids of letters, digits, "_" and "-"', () {
+    final ids = ['a', 'tbilisiAirport', 'Office_2', 'batumi-port', 'a' * 64];
+    final locations = parsePickupLocations(
+      document([for (final id in ids) location(id)]),
+    );
+    expect(locations.map((l) => l.id), ids);
+  });
+
+  test('throws when an id has the wrong shape', () {
+    for (final id in [
+      'tbilisi airport',
+      ' tbilisiAirport',
+      'tbilisiAirport ',
+      '1airport',
+      '_airport',
+      '-airport',
+      'tbilisi.airport',
+      'tbilisi/airport',
+      'аэропорт',
+      'a' * 65,
+    ]) {
+      expect(
+        () => parsePickupLocations(document([location(id)])),
+        throwsFormatException,
+        reason: 'id "$id"',
+      );
+    }
+  });
+
   test('throws when a location has no English name', () {
     expect(
       () => parsePickupLocations(

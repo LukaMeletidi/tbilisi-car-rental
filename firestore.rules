@@ -17,6 +17,111 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ---- Booking limits. They must stay equal to the constants in
+    // lib/features/booking/domain/booking_limits.dart. A unit test compares
+    // them (test/rules/booking_rules_limits_test.dart).
+    function nameMinLength() { return 2; }
+    function nameMaxLength() { return 100; }
+    function emailMaxLength() { return 254; }
+    function otherLocationMaxLength() { return 200; }
+    function notesMaxLength() { return 500; }
+    function maxRentalDays() { return 365; }
+    function maxTotalPrice() { return 1000000; }
+
+    // A text of min..max characters with no space at either end.
+    function isTrimmedText(value, min, max) {
+      return value is string
+        && value.size() >= min
+        && value.size() <= max
+        && value.matches('^\\S([\\s\\S]*\\S)?$');
+    }
+
+    function isValidCustomer(c) {
+      return c is map
+        && c.keys().hasOnly(
+             ['fullName', 'phone', 'whatsapp', 'telegram', 'email'])
+        && c.keys().hasAll(
+             ['fullName', 'phone', 'whatsapp', 'telegram', 'email'])
+        && isTrimmedText(c.fullName, nameMinLength(), nameMaxLength())
+        // "+", a first digit 1-9, 8 to 15 digits in total
+        // (bookingPhoneMinDigits and bookingPhoneMaxDigits, each minus 1).
+        && c.phone is string
+        && c.phone.matches('^\\+[1-9][0-9]{7,14}$')
+        && c.whatsapp is bool
+        && c.telegram is bool
+        // No spaces, one "@", a domain with at least one dot.
+        && c.email is string
+        && c.email.size() <= emailMaxLength()
+        && c.email.matches('^[^@\\s]+@[^@\\s.]+(\\.[^@\\s.]+)+$');
+    }
+
+    // { id } for a fixed place, { id: 'other', text } for a free text.
+    // The rules cannot look an id up in settings/locations, so they only
+    // check its shape (the same pattern as locationIdPattern in
+    // lib/core/models/booking_location.dart).
+    function isValidLocation(l) {
+      return l is map
+        && l.keys().hasAll(['id'])
+        && l.id is string
+        && (l.id == 'other'
+             ? l.keys().hasOnly(['id', 'text'])
+               && l.keys().hasAll(['text'])
+               && isTrimmedText(l.text, 1, otherLocationMaxLength())
+             : l.keys().hasOnly(['id'])
+               && l.id.matches('^[A-Za-z][A-Za-z0-9_-]{0,63}$'));
+    }
+
+    // One document read per booking attempt. There is no separate exists():
+    // for a car that does not exist, get() gives no document, reading
+    // ".data" of it is an error, and an error refuses the request.
+    function isActiveCar(carId) {
+      return carId is string
+        && carId.matches('^[A-Za-z0-9_-]{1,128}$')
+        && get(/databases/$(database)/documents/cars/$(carId))
+             .data.active == true;
+    }
+
+    function isValidNewBooking(b) {
+      return b.keys().hasOnly([
+               'customer', 'carId', 'pickupDateTime', 'dropoffDateTime',
+               'pickupLocation', 'dropoffLocation', 'extras', 'notes',
+               'totalPrice', 'language', 'status', 'createdAt'])
+        && b.keys().hasAll([
+               'customer', 'carId', 'pickupDateTime', 'dropoffDateTime',
+               'pickupLocation', 'dropoffLocation', 'extras', 'notes',
+               'totalPrice', 'language', 'status', 'createdAt'])
+        && isValidCustomer(b.customer)
+        && isActiveCar(b.carId)
+        && b.pickupDateTime is timestamp
+        && b.dropoffDateTime is timestamp
+        && b.pickupDateTime > request.time
+        && b.dropoffDateTime > b.pickupDateTime
+        && b.dropoffDateTime
+             <= b.pickupDateTime + duration.value(maxRentalDays(), 'd')
+        && isValidLocation(b.pickupLocation)
+        && isValidLocation(b.dropoffLocation)
+        && b.extras is list
+        && b.extras.size() <= 4
+        && b.extras.hasOnly(
+             ['snowChains', 'childSeat', 'infantSeat', 'boosterSeat'])
+        && b.extras.toSet().size() == b.extras.size()
+        && b.notes is string
+        && b.notes.size() <= notesMaxLength()
+        && b.totalPrice is number
+        && b.totalPrice >= 0
+        && b.totalPrice <= maxTotalPrice()
+        && b.language in ['ka', 'ru', 'en']
+        && b.status == 'new'
+        && b.createdAt == request.time;
+    }
+
+    // Bookings: anyone may create a valid request. Nobody can read, change
+    // or delete one from an app. Admin access is added in Phase 3.
+    match /bookings/{bookingId} {
+      allow create: if isValidNewBooking(request.resource.data);
+      allow read, update, delete: if false;
+    }
+
     // Everything else is denied.
     match /{document=**} {
       allow read, write: if false;

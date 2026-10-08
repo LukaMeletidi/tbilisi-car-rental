@@ -21,8 +21,9 @@ class PickupLocation {
 
 /// Reads the document settings/locations. [data] is null when the document
 /// does not exist. Throws a [FormatException] when the list is missing or
-/// empty, or when a location has no ID, a repeated ID, the reserved ID
-/// "other", or no English name.
+/// empty, or when a location has no ID, an ID of the wrong shape (see
+/// [isValidLocationId]), a repeated ID, the reserved ID "other", or no
+/// English name.
 List<PickupLocation> parsePickupLocations(Map<String, dynamic>? data) {
   if (data == null) {
     throw const FormatException('settings/locations does not exist.');
@@ -48,6 +49,12 @@ List<PickupLocation> parsePickupLocations(Map<String, dynamic>? data) {
     if (id is! String || id.trim().isEmpty) {
       throw FormatException(
         'settings/locations: item $i has no "id" (a non-empty string).',
+      );
+    }
+    if (!isValidLocationId(id)) {
+      throw FormatException(
+        'settings/locations: the id "$id" must start with a letter and '
+        'contain only letters, digits, "_" or "-" (at most 64 characters).',
       );
     }
     if (id == otherLocationId) {

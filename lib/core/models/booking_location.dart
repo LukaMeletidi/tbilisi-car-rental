@@ -1,6 +1,14 @@
 /// The reserved id for a free-text place. No location in settings may use it.
 const otherLocationId = 'other';
 
+/// The shape of a location id: a letter first, then letters, digits, "_" or
+/// "-"; at most 64 characters. The Firestore rules for bookings use the same
+/// pattern; a test compares them.
+const locationIdPattern = r'^[A-Za-z][A-Za-z0-9_-]{0,63}$';
+
+/// Whether [id] has the shape of a location id (see [locationIdPattern]).
+bool isValidLocationId(String id) => RegExp(locationIdPattern).hasMatch(id);
+
 /// Where a car is picked up or dropped off: one of the fixed places from
 /// settings, or "other" with a free text (anywhere in Georgia).
 class BookingLocation {

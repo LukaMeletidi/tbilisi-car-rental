@@ -7,6 +7,8 @@ Full plan, business rules and open reminders: docs/PLAN.md (read it before any f
 - Portfolio only, never a real company. One Firebase project: tbilisi-car-rental.
 - NEVER touch the older projects. Every firebase/flutterfire command
   must name --project=tbilisi-car-rental explicitly.
+- Only exception: the Firebase emulator runs with --project demo-tbilisi-car-rental,
+  never against the real project.
 - Single currency USD. No payments. No end-user accounts. One shared admin account.
 
 ## Stack
