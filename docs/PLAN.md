@@ -715,7 +715,9 @@ Phase 1 is complete.
   create and the offline behaviour on the emulator: the booking document was correct,
   and an offline send fails with the "Could not send..." text in about 20 seconds and
   nothing is queued.
-- 2.8 Confirmation screen — not started.
+- 2.8 Confirmation screen: the thank-you screen with the summary of the sent request
+  — DONE. I checked the screen on the emulator after a real send, in English and
+  Georgian.
 - 2.9 App Check (approach proposed first, enabled only with my approval) — not
   started.
 - 2.10 Verify Phase 2 on the Android emulator — not started.
