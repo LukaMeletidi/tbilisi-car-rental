@@ -102,4 +102,28 @@ class AppLocalizationsKa extends AppLocalizations {
 
   @override
   String get catalogNoSearchMatch => 'თქვენი ძიებით არაფერი მოიძებნა';
+
+  @override
+  String get makeBooking => 'დაჯავშნა';
+
+  @override
+  String get bookingComingSoon => 'ონლაინ ჯავშანი მალე იქნება ხელმისაწვდომი';
+
+  @override
+  String get carNotAvailable => 'ეს ავტომობილი მიუწვდომელია';
+
+  @override
+  String get backToCars => 'ავტომობილების სიაში დაბრუნება';
+
+  @override
+  String get carError =>
+      'ავტომობილის ჩატვირთვა ვერ მოხერხდა. სცადეთ მოგვიანებით.';
+
+  @override
+  String get descriptionTitle => 'აღწერა';
+
+  @override
+  String photoPosition(int current, int total) {
+    return 'ფოტო $current / $total';
+  }
 }

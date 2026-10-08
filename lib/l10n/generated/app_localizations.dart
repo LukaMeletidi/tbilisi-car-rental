@@ -261,6 +261,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No cars match your search'**
   String get catalogNoSearchMatch;
+
+  /// No description provided for @makeBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Make a booking'**
+  String get makeBooking;
+
+  /// TEMPORARY, removed in step 2.7: under the disabled button.
+  ///
+  /// In en, this message translates to:
+  /// **'Online booking is coming soon'**
+  String get bookingComingSoon;
+
+  /// No description provided for @carNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This car is not available'**
+  String get carNotAvailable;
+
+  /// No description provided for @backToCars.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to the cars'**
+  String get backToCars;
+
+  /// No description provided for @carError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the car. Please try again later.'**
+  String get carError;
+
+  /// No description provided for @descriptionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get descriptionTitle;
+
+  /// Screen-reader text for the dots of the photo gallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo {current} of {total}'**
+  String photoPosition(int current, int total);
 }
 
 class _AppLocalizationsDelegate

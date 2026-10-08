@@ -17,6 +17,13 @@ final activeCarsProvider = StreamProvider.autoDispose<List<Car>>(
   retry: (retryCount, error) => null,
 );
 
+/// Live data of one car by its ID, for the detail screen. In the error state
+/// the error is a CarNotAvailableException when the car cannot be shown.
+final carProvider = StreamProvider.autoDispose.family<Car, String>(
+  (ref, carId) => ref.watch(carRepositoryProvider).watchCar(carId),
+  retry: (retryCount, error) => null,
+);
+
 /// What the catalog screen shows: the active cars that match the visitor's
 /// filter and search text, cheapest first.
 final catalogCarsProvider = Provider.autoDispose<AsyncValue<CatalogResult>>((

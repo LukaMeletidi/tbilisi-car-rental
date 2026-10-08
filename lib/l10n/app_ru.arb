@@ -26,5 +26,12 @@
   "showCars": "Показать ({count})",
   "searchHint": "Марка или модель",
   "clearSearch": "Очистить поиск",
-  "catalogNoSearchMatch": "По вашему запросу ничего не найдено"
+  "catalogNoSearchMatch": "По вашему запросу ничего не найдено",
+  "makeBooking": "Забронировать",
+  "bookingComingSoon": "Онлайн-бронирование скоро будет доступно",
+  "carNotAvailable": "Этот автомобиль недоступен",
+  "backToCars": "К списку автомобилей",
+  "carError": "Не удалось загрузить автомобиль. Повторите попытку позже.",
+  "descriptionTitle": "Описание",
+  "photoPosition": "Фото {current} из {total}"
 }

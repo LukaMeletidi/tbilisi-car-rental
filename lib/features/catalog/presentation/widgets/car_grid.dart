@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:tbilisi_car_rental/core/models/car.dart';
+import 'package:tbilisi_car_rental/core/router/app_router.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_layout.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/widgets/car_card.dart';
 
@@ -29,7 +31,11 @@ class CarGrid extends StatelessWidget {
                 constraints: const BoxConstraints(
                   maxWidth: catalogSingleColumnMaxWidth,
                 ),
-                child: CarCard(key: ValueKey(cars[index].id), car: cars[index]),
+                child: CarCard(
+                  key: ValueKey(cars[index].id),
+                  car: cars[index],
+                  onTap: () => context.go(AppRoutes.car(cars[index].id)),
+                ),
               ),
             ),
           );
@@ -47,7 +53,11 @@ class CarGrid extends StatelessWidget {
               for (final car in cars)
                 SizedBox(
                   width: cardWidth,
-                  child: CarCard(key: ValueKey(car.id), car: car),
+                  child: CarCard(
+                    key: ValueKey(car.id),
+                    car: car,
+                    onTap: () => context.go(AppRoutes.car(car.id)),
+                  ),
                 ),
             ],
           ),

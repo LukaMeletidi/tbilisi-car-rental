@@ -105,4 +105,28 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get catalogNoSearchMatch => 'По вашему запросу ничего не найдено';
+
+  @override
+  String get makeBooking => 'Забронировать';
+
+  @override
+  String get bookingComingSoon => 'Онлайн-бронирование скоро будет доступно';
+
+  @override
+  String get carNotAvailable => 'Этот автомобиль недоступен';
+
+  @override
+  String get backToCars => 'К списку автомобилей';
+
+  @override
+  String get carError =>
+      'Не удалось загрузить автомобиль. Повторите попытку позже.';
+
+  @override
+  String get descriptionTitle => 'Описание';
+
+  @override
+  String photoPosition(int current, int total) {
+    return 'Фото $current из $total';
+  }
 }

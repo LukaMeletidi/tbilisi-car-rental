@@ -23,17 +23,23 @@ class AppCard extends StatelessWidget {
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(16),
+    this.onTap,
   });
 
   final Widget child;
   final EdgeInsetsGeometry padding;
 
+  /// When set, the whole card can be tapped.
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
+    final content = Padding(padding: padding, child: child);
+
     return OnWhite(
       child: Card(
         clipBehavior: Clip.antiAlias,
-        child: Padding(padding: padding, child: child),
+        child: onTap == null ? content : InkWell(onTap: onTap, child: content),
       ),
     );
   }

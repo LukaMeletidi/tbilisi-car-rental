@@ -102,4 +102,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get catalogNoSearchMatch => 'No cars match your search';
+
+  @override
+  String get makeBooking => 'Make a booking';
+
+  @override
+  String get bookingComingSoon => 'Online booking is coming soon';
+
+  @override
+  String get carNotAvailable => 'This car is not available';
+
+  @override
+  String get backToCars => 'Back to the cars';
+
+  @override
+  String get carError => 'Could not load the car. Please try again later.';
+
+  @override
+  String get descriptionTitle => 'Description';
+
+  @override
+  String photoPosition(int current, int total) {
+    return 'Photo $current of $total';
+  }
 }

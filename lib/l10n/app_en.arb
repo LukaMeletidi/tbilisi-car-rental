@@ -77,5 +77,22 @@
   "@clearSearch": {
     "description": "Tooltip of the x in the search field; also a button label."
   },
-  "catalogNoSearchMatch": "No cars match your search"
+  "catalogNoSearchMatch": "No cars match your search",
+  "makeBooking": "Make a booking",
+  "bookingComingSoon": "Online booking is coming soon",
+  "@bookingComingSoon": {
+    "description": "TEMPORARY, removed in step 2.7: under the disabled button."
+  },
+  "carNotAvailable": "This car is not available",
+  "backToCars": "Back to the cars",
+  "carError": "Could not load the car. Please try again later.",
+  "descriptionTitle": "Description",
+  "photoPosition": "Photo {current} of {total}",
+  "@photoPosition": {
+    "description": "Screen-reader text for the dots of the photo gallery.",
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  }
 }

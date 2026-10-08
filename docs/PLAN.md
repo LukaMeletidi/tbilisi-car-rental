@@ -95,6 +95,18 @@ Phase 1 decisions:
 - Wide screens: a simple multi-column grid of the same cards.
 - "No cars available yet" is shown only when there are no active cars at all.
 
+Car detail screen (step 2.4):
+- Address: /cars/<id>, below the catalog. A catalog card opens it; going back returns
+  to the catalog with the search text and filters kept. A direct link works on web.
+- It shows all photos (swipe, with dots), the title, the price per day, the spec chips,
+  and the full description in the current language (English if missing; no section if
+  there is none).
+- A car that does not exist or is not active shows "This car is not available" with a
+  way back to the catalog, never a raw error.
+- One centred column, at most 720 px wide, on every screen size.
+- The "Make a booking" button is fixed at the bottom. Until the booking form exists
+  (step 2.7) it is disabled, with the line "Online booking is coming soon".
+
 A car's booked/available status is never shown to the public. Availability for the
 requested dates is resolved internally by staff after a request comes in.
 
@@ -418,7 +430,8 @@ Implementation decisions (step 2.2):
 - Approved exception to "no widget tests": catalog_screen_test.dart covers the catalog
   states (loading, error with "Try again", empty, no match with "Reset filters") and
   the search field (no match by search; Reset clears the search and the filters), with
-  the cars provider overridden (no Firebase).
+  the cars provider overridden (no Firebase). The car detail screen has the same kind
+  of tests (car_detail_screen_test.dart, catalog_navigation_test.dart).
 - Packages installed: firebase_core 4.15.0, flutter_riverpod 3.4.3, go_router 18.0.2,
   flutter_localizations (Flutter SDK), intl 0.20.2, cloud_firestore 6.10.0.
 - Package approved for Phase 1: cloud_firestore.
@@ -542,8 +555,9 @@ Phase 0 is complete.
   small app bar menu for the About Us and Privacy Policy pages (decide in Phase 6); the
   admin panel uses a responsive shell (a bottom navigation bar on phones, a side
   navigation rail on wide screens) with go_router's ShellRoute (decide in Phase 3).
-- App bar height and logo on other screens: when the car detail screen is built, decide
-  whether it reuses AppBarLogo next to the back arrow.
+- App bar on other screens: the car detail screen reuses AppBarLogo next to the back
+  arrow, with the same toolbar height (decided in step 2.4). Decide again for each new
+  screen.
 
 ## 16. Phase 1 status
 
@@ -580,7 +594,7 @@ Phase 1 is complete.
 - 2.2 Tbilisi time helper (pure Dart, unit tests) — DONE.
 - 2.3 Settings, read-only: extras prices and locations; rule "settings: public read";
   settings entered by me in the console — DONE.
-- 2.4 Car detail screen with the "Make a booking" button — not started.
+- 2.4 Car detail screen with the "Make a booking" button — DONE.
 - 2.5 Booking model and form validation (pure Dart, unit tests) — not started.
 - 2.6 Firestore rules for bookings (public create only) and the create method in the
   repository; deploy with my approval — not started.

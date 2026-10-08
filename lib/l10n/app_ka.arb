@@ -26,5 +26,12 @@
   "showCars": "ჩვენება ({count})",
   "searchHint": "მარკა ან მოდელი",
   "clearSearch": "ძიების გასუფთავება",
-  "catalogNoSearchMatch": "თქვენი ძიებით არაფერი მოიძებნა"
+  "catalogNoSearchMatch": "თქვენი ძიებით არაფერი მოიძებნა",
+  "makeBooking": "დაჯავშნა",
+  "bookingComingSoon": "ონლაინ ჯავშანი მალე იქნება ხელმისაწვდომი",
+  "carNotAvailable": "ეს ავტომობილი მიუწვდომელია",
+  "backToCars": "ავტომობილების სიაში დაბრუნება",
+  "carError": "ავტომობილის ჩატვირთვა ვერ მოხერხდა. სცადეთ მოგვიანებით.",
+  "descriptionTitle": "აღწერა",
+  "photoPosition": "ფოტო {current} / {total}"
 }

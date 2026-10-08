@@ -7,6 +7,9 @@ const catalogMaxColumns = 3;
 /// In the single-column layout a card is never wider than this.
 const catalogSingleColumnMaxWidth = 560.0;
 
+/// The car detail screen is never wider than this.
+const carDetailMaxWidth = 720.0;
+
 /// How many columns of cards fit into [availableWidth].
 int catalogColumnCount(double availableWidth) {
   final columns = (availableWidth / catalogMinCardWidth).floor();
