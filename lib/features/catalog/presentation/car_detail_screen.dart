@@ -64,7 +64,9 @@ class CarDetailScreen extends ConsumerWidget {
         ),
       ),
       // Only when the car is shown; not while loading or in an error state.
-      bottomNavigationBar: car is AsyncData<Car> ? const _BookingBar() : null,
+      bottomNavigationBar: car is AsyncData<Car>
+          ? _BookingBar(carId: carId)
+          : null,
     );
   }
 }
@@ -141,10 +143,11 @@ class _CarDetailBody extends ConsumerWidget {
 }
 
 /// The booking button, fixed at the bottom of the screen on the purple page.
-/// The booking form does not exist yet (step 2.7), so the button is disabled
-/// and a line below it says so.
+/// It opens the booking form of the car.
 class _BookingBar extends StatelessWidget {
-  const _BookingBar();
+  const _BookingBar({required this.carId});
+
+  final String carId;
 
   @override
   Widget build(BuildContext context) {
@@ -157,18 +160,12 @@ class _BookingBar extends StatelessWidget {
           heightFactor: 1,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: carDetailMaxWidth),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                FilledButton(onPressed: null, child: Text(l10n.makeBooking)),
-                const SizedBox(height: 4),
-                Text(
-                  l10n.bookingComingSoon,
-                  style: Theme.of(context).textTheme.bodySmall,
-                  textAlign: TextAlign.center,
-                ),
-              ],
+            child: SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () => context.go(AppRoutes.booking(carId)),
+                child: Text(l10n.makeBooking),
+              ),
             ),
           ),
         ),

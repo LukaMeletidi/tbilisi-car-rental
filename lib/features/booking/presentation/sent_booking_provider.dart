@@ -33,8 +33,11 @@ class SentBookingNotifier extends Notifier<SentBooking?> {
 
   void set(SentBooking sent) => state = sent;
 
-  /// Forgets the sent booking.
-  void clear() => state = null;
+  /// Forgets the sent booking. Does nothing when the app is already being
+  /// closed and this provider no longer exists.
+  void clear() {
+    if (ref.mounted) state = null;
+  }
 }
 
 final sentBookingProvider = NotifierProvider<SentBookingNotifier, SentBooking?>(

@@ -142,6 +142,12 @@ abstract class AppLocalizations {
   /// **'\${price} / day'**
   String pricePerDay(String price);
 
+  /// An amount in US dollars, such as a total.
+  ///
+  /// In en, this message translates to:
+  /// **'\${amount}'**
+  String priceAmount(String amount);
+
   /// Number of seats in a car.
   ///
   /// In en, this message translates to:
@@ -267,12 +273,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Make a booking'**
   String get makeBooking;
-
-  /// TEMPORARY, removed in step 2.7: under the disabled button.
-  ///
-  /// In en, this message translates to:
-  /// **'Online booking is coming soon'**
-  String get bookingComingSoon;
 
   /// No description provided for @carNotAvailable.
   ///

@@ -13,4 +13,15 @@ void main() {
       expect(AppRoutes.car('a/b'), '/cars/a%2Fb');
     });
   });
+
+  group('AppRoutes.booking', () {
+    test('is the address of the car followed by /book', () {
+      expect(AppRoutes.booking('abc123'), '/cars/abc123/book');
+      expect(AppRoutes.booking('a b'), '/cars/a%20b/book');
+    });
+  });
+
+  test('the thank-you screen is below the catalog', () {
+    expect(AppRoutes.bookingSent, '/booking-sent');
+  });
 }

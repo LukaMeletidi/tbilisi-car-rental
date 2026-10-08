@@ -91,7 +91,7 @@ void main() {
     expect(bookingButton(), findsNothing);
   });
 
-  testWidgets('shows the car and a disabled booking button', (tester) async {
+  testWidgets('shows the car and an enabled booking button', (tester) async {
     await pumpDetail(tester, () => Stream.value(car()));
 
     expect(find.text('Toyota Prius, 2019'), findsOneWidget);
@@ -105,8 +105,8 @@ void main() {
     expect(find.text(_descriptionText), findsOneWidget);
 
     expect(bookingButton(), findsOneWidget);
-    expect(tester.widget<FilledButton>(bookingButton()).onPressed, isNull);
-    expect(find.text('Online booking is coming soon'), findsOneWidget);
+    expect(tester.widget<FilledButton>(bookingButton()).onPressed, isNotNull);
+    expect(find.text('Online booking is coming soon'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 

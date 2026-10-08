@@ -31,6 +31,13 @@
       "price": { "type": "String", "example": "45" }
     }
   },
+  "priceAmount": "${amount}",
+  "@priceAmount": {
+    "description": "An amount in US dollars, such as a total.",
+    "placeholders": {
+      "amount": { "type": "String", "example": "272.50" }
+    }
+  },
   "seatsCount": "{count, plural, =1{1 seat} other{{count} seats}}",
   "@seatsCount": {
     "description": "Number of seats in a car.",
@@ -79,10 +86,6 @@
   },
   "catalogNoSearchMatch": "No cars match your search",
   "makeBooking": "Make a booking",
-  "bookingComingSoon": "Online booking is coming soon",
-  "@bookingComingSoon": {
-    "description": "TEMPORARY, removed in step 2.7: under the disabled button."
-  },
   "carNotAvailable": "This car is not available",
   "backToCars": "Back to the cars",
   "carError": "Could not load the car. Please try again later.",

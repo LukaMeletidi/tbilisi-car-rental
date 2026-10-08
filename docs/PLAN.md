@@ -104,8 +104,7 @@ Car detail screen (step 2.4):
 - A car that does not exist or is not active shows "This car is not available" with a
   way back to the catalog, never a raw error.
 - One centred column, at most 720 px wide, on every screen size.
-- The "Make a booking" button is fixed at the bottom. Until the booking form exists
-  (step 2.7) it is disabled, with the line "Online booking is coming soon".
+- The "Make a booking" button is fixed at the bottom and opens the booking form.
 
 A car's booked/available status is never shown to the public. Availability for the
 requested dates is resolved internally by staff after a request comes in.
@@ -184,7 +183,10 @@ screens and routes):
   2.8 that screen shows only the thank-you sentence and "Back to the cars".
 - App bar: the logo next to the back arrow, as on the car screen. The first card of
   the form shows the car (title and price per day, no photo).
-- Time picker: Flutter's own, any minute, 24-hour form in all three languages.
+- Time picker: Flutter's own, any minute, 24-hour form in all three languages. Both
+  pickers open as white dialogs with dark text.
+- A chosen date and time is shown in numbers, the same in every language:
+  "10.01.2026 18:00" (day.month.year hours:minutes).
 - Limits of the pickers only (not rules of the form): the pickup can be chosen up to
   2 years ahead; the dropoff up to 365 days after the pickup.
 - The pickers open on today and the next full hour (Tbilisi); the dropoff one day
@@ -200,6 +202,10 @@ screens and routes):
   sends nothing.
 - A failed sending shows a message above the button and keeps the draft; Send tries
   again (with a new document ID).
+- While a request is being sent, going back is blocked (at most 20 seconds): the back
+  arrow is disabled and the system back button does nothing. The browser's Back button
+  cannot be blocked; if the form is gone when the answer arrives, the app does not
+  open the thank-you screen and forgets the sent booking at once.
 - The sent booking is kept in memory only (it contains personal data) for the
   thank-you screen and is cleared when the user leaves that screen (step 2.8).
 - An extra with the price 0 shows "Free". The names and age ranges of the extras are
@@ -481,7 +487,9 @@ Implementation decisions (step 2.2):
   presentation provider imports cloud_firestore.
 - White areas are always built with AppCard or OnWhite (lib/core/widgets/app_card.dart).
   They switch the text inside to dark; text on a white area without them would be white
-  on white.
+  on white. A text field inside an AppCard gets a thin grey outline (purple when
+  focused, red on error), because a white field cannot be seen on a white card; a field
+  directly on the purple page (the search field) has no outline (step 2.7).
 - A car document that cannot be parsed is skipped and logged, so one typo in the
   console does not blank the whole catalog.
 - Firebase access: one thin repository per collection. Flow: UI -> provider ->
@@ -498,7 +506,9 @@ Implementation decisions (step 2.2):
   states (loading, error with "Try again", empty, no match with "Reset filters") and
   the search field (no match by search; Reset clears the search and the filters), with
   the cars provider overridden (no Firebase). The car detail screen has the same kind
-  of tests (car_detail_screen_test.dart, catalog_navigation_test.dart).
+  of tests (car_detail_screen_test.dart, catalog_navigation_test.dart). The booking
+  form has the same kind of tests (booking_form_screen_test.dart), with the car, the
+  settings, the booking repository and the clock overridden.
 - Packages installed: firebase_core 4.15.0, flutter_riverpod 3.4.3, go_router 18.0.2,
   flutter_localizations (Flutter SDK), intl 0.20.2, cloud_firestore 6.10.0.
 - Package approved for Phase 1: cloud_firestore.
@@ -631,8 +641,8 @@ Phase 0 is complete.
   admin panel uses a responsive shell (a bottom navigation bar on phones, a side
   navigation rail on wide screens) with go_router's ShellRoute (decide in Phase 3).
 - App bar on other screens: the car detail screen reuses AppBarLogo next to the back
-  arrow, with the same toolbar height (decided in step 2.4). Decide again for each new
-  screen.
+  arrow, with the same toolbar height (decided in step 2.4); the booking form and the
+  thank-you screen do the same (step 2.7). Decide again for each new screen.
 
 ## 16. Phase 1 status
 

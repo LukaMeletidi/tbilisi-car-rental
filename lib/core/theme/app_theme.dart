@@ -3,15 +3,26 @@ import 'package:flutter/material.dart';
 /// The purple of the page background and the app bar.
 const appBackgroundColor = Color(0xFF673AB7);
 
-/// The dark-on-white theme used inside white cards and text fields.
-/// It is stored in the page theme so that the OnWhite widget can find it.
-class PanelTheme extends ThemeExtension<PanelTheme> {
-  const PanelTheme(this.data);
+/// The outline of a text field inside a white card.
+const panelFieldOutlineColor = Color(0xFF8A8A8A);
 
+/// The dark-on-white themes used on white areas. They are stored in the page
+/// theme so that the OnWhite widget can find them.
+class PanelTheme extends ThemeExtension<PanelTheme> {
+  const PanelTheme(this.data, {required this.cardData});
+
+  /// For a white area directly on the purple page, such as the search field.
+  /// A text field has no outline; the purple around it is its edge.
   final ThemeData data;
 
+  /// For the inside of a white card. A text field there would be white on
+  /// white, so it gets a thin grey outline: purple when focused, red on
+  /// error.
+  final ThemeData cardData;
+
   @override
-  PanelTheme copyWith({ThemeData? data}) => PanelTheme(data ?? this.data);
+  PanelTheme copyWith({ThemeData? data, ThemeData? cardData}) =>
+      PanelTheme(data ?? this.data, cardData: cardData ?? this.cardData);
 
   @override
   PanelTheme lerp(PanelTheme? other, double t) => this;
@@ -54,28 +65,57 @@ ThemeData buildAppTheme() {
       foregroundColor: white,
       scrolledUnderElevation: 0,
     ),
-    extensions: [PanelTheme(_buildPanelTheme())],
+    extensions: [
+      PanelTheme(
+        _buildPanelTheme(outlinedFields: false),
+        cardData: _buildPanelTheme(outlinedFields: true),
+      ),
+    ],
   );
 }
 
 /// White surfaces with dark text; purple for accents such as a price.
-ThemeData _buildPanelTheme() {
+/// With [outlinedFields] a text field gets an outline (see [PanelTheme]).
+ThemeData _buildPanelTheme({required bool outlinedFields}) {
   const white = Colors.white;
   final scheme = ColorScheme.fromSeed(
     seedColor: appBackgroundColor,
   ).copyWith(surface: white, primary: appBackgroundColor, onPrimary: white);
 
+  OutlineInputBorder outline(Color color, {double width = 1}) {
+    return OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: color, width: width),
+    );
+  }
+
   return ThemeData(
     colorScheme: scheme,
     cardTheme: const CardThemeData(color: white),
-    inputDecorationTheme: InputDecorationThemeData(
-      filled: true,
-      fillColor: white,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
-      ),
-    ),
+    inputDecorationTheme: outlinedFields
+        ? InputDecorationThemeData(
+            filled: true,
+            fillColor: white,
+            // A long error text wraps instead of being cut off.
+            errorMaxLines: 3,
+            helperMaxLines: 2,
+            border: outline(panelFieldOutlineColor),
+            enabledBorder: outline(panelFieldOutlineColor),
+            disabledBorder: outline(
+              panelFieldOutlineColor.withValues(alpha: 0.4),
+            ),
+            focusedBorder: outline(appBackgroundColor, width: 2),
+            errorBorder: outline(scheme.error),
+            focusedErrorBorder: outline(scheme.error, width: 2),
+          )
+        : InputDecorationThemeData(
+            filled: true,
+            fillColor: white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+          ),
   );
 }
 

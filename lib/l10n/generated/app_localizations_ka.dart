@@ -33,6 +33,11 @@ class AppLocalizationsKa extends AppLocalizations {
   }
 
   @override
+  String priceAmount(String amount) {
+    return '\$$amount';
+  }
+
+  @override
   String seatsCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -105,9 +110,6 @@ class AppLocalizationsKa extends AppLocalizations {
 
   @override
   String get makeBooking => 'დაჯავშნა';
-
-  @override
-  String get bookingComingSoon => 'ონლაინ ჯავშანი მალე იქნება ხელმისაწვდომი';
 
   @override
   String get carNotAvailable => 'ეს ავტომობილი მიუწვდომელია';
