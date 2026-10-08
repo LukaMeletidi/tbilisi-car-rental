@@ -288,10 +288,16 @@ Statuses:
 There is no `contacted` status and no `completed` status.
 No full snapshot of car data is required; storing the final totalPrice is enough.
 
-settings
-- extras prices (global, per day)
-- pickup/dropoff location list
-- company info (name, phone, email, address, working hours, social links, map)
+settings (document and field names agreed in step 2.3)
+- settings/extras: pricesPerDay, a map with a number for each of snowChains, childSeat,
+  infantSeat, boosterSeat (USD per day).
+- settings/locations: items, an array of maps in dropdown order; each has id (stable
+  text stored in bookings) and name { ka, ru, en }. The English name is required.
+  "Other" is not stored; it is a fixed option of the form.
+- company info (name, phone, email, address, working hours, social links, map): its
+  own document, defined in Phase 6.
+- A missing or invalid settings document is an error. The app never uses default
+  prices or default locations.
 
 ## 5. Settings collection
 
@@ -362,6 +368,8 @@ Implementation decisions (step 2.2):
 - cars: public read of active cars only (active == true); writes admin only. Until
   admin auth exists (Phase 3), nobody can write.
 - settings: public read; writes admin only.
+- The settings collection is publicly readable. Never put anything private in it
+  (admin e-mails, keys, internal notes).
 - bookings: public `create` only, with strict validation in rules: allowed field set
   only, status == 'new', createdAt == request.time, notes <= 500 chars, string length
   limits, `expireAt` NOT accepted from the client. No public get/list/update/delete.
@@ -387,8 +395,8 @@ Implementation decisions (step 2.2):
   widgets); ARB files in lib/l10n.
 - Riverpod: manual Notifier/AsyncNotifier, no code generation. Models are hand-written
   (fromMap/toMap), no freezed or json_serializable.
-- Approved exception: the active cars stream uses a StreamProvider instead of a
-  Notifier.
+- Approved exception: read-only Firestore streams (the active cars, the extras prices,
+  the locations) use a StreamProvider instead of a Notifier.
 - Cars stream: automatic retry is turned off (error state with a "Try again" button),
   the provider is auto-dispose, and paused providers keep the default behaviour.
 - The provider that creates a repository lives in the repository's data/ file, so no
@@ -571,7 +579,8 @@ Phase 1 is complete.
 - 2.1 Price calculator and the list of extras (pure Dart, mandatory unit tests) — DONE.
 - 2.2 Tbilisi time helper (pure Dart, unit tests) — DONE.
 - 2.3 Settings, read-only: extras prices and locations; rule "settings: public read";
-  settings entered by me in the console — not started.
+  settings entered by me in the console — IN PROGRESS: code committed; rules deploy,
+  anonymous checks and console data entry still open.
 - 2.4 Car detail screen with the "Make a booking" button — not started.
 - 2.5 Booking model and form validation (pure Dart, unit tests) — not started.
 - 2.6 Firestore rules for bookings (public create only) and the create method in the

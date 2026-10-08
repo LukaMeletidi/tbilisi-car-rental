@@ -10,6 +10,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Settings (extras prices, locations, later company info): anyone can
+    // read; nobody can write from an app. Admin writes are added in Phase 3.
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // Everything else is denied.
     match /{document=**} {
       allow read, write: if false;
