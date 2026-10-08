@@ -579,8 +579,7 @@ Phase 1 is complete.
 - 2.1 Price calculator and the list of extras (pure Dart, mandatory unit tests) — DONE.
 - 2.2 Tbilisi time helper (pure Dart, unit tests) — DONE.
 - 2.3 Settings, read-only: extras prices and locations; rule "settings: public read";
-  settings entered by me in the console — IN PROGRESS: code committed; rules deploy,
-  anonymous checks and console data entry still open.
+  settings entered by me in the console — DONE.
 - 2.4 Car detail screen with the "Make a booking" button — not started.
 - 2.5 Booking model and form validation (pure Dart, unit tests) — not started.
 - 2.6 Firestore rules for bookings (public create only) and the create method in the
