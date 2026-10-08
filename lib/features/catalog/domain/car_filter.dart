@@ -42,26 +42,17 @@ class CarFilter {
       (transmission == null || car.transmission == transmission);
 
   /// A copy with a different seats choice; the other two are kept.
-  CarFilter withSeats(SeatsFilter seats) => CarFilter(
-    seats: seats,
-    fuelType: fuelType,
-    transmission: transmission,
-  );
+  CarFilter withSeats(SeatsFilter seats) =>
+      CarFilter(seats: seats, fuelType: fuelType, transmission: transmission);
 
   /// A copy with a different fuel type (null = Any); the other two are kept.
-  CarFilter withFuelType(FuelType? fuelType) => CarFilter(
-    seats: seats,
-    fuelType: fuelType,
-    transmission: transmission,
-  );
+  CarFilter withFuelType(FuelType? fuelType) =>
+      CarFilter(seats: seats, fuelType: fuelType, transmission: transmission);
 
   /// A copy with a different transmission (null = Any); the other two are
   /// kept.
-  CarFilter withTransmission(Transmission? transmission) => CarFilter(
-    seats: seats,
-    fuelType: fuelType,
-    transmission: transmission,
-  );
+  CarFilter withTransmission(Transmission? transmission) =>
+      CarFilter(seats: seats, fuelType: fuelType, transmission: transmission);
 
   @override
   bool operator ==(Object other) =>

@@ -36,28 +36,31 @@ void main() {
       expect(cars.map((car) => car.id), ['good-1', 'good-2']);
     });
 
-    test('reports each skipped document with its id, error and stack trace', () {
-      final errors = <String, Object>{};
-      final stackTraces = <String, StackTrace>{};
+    test(
+      'reports each skipped document with its id, error and stack trace',
+      () {
+        final errors = <String, Object>{};
+        final stackTraces = <String, StackTrace>{};
 
-      parseCars(
-        [
-          (id: 'good', data: carData()),
-          (id: 'no-seats', data: carData()..remove('seats')),
-          (id: 'bad-price', data: carData()..['pricePerDay'] = 0),
-        ],
-        onSkipped: (id, error, stackTrace) {
-          errors[id] = error;
-          stackTraces[id] = stackTrace;
-        },
-      );
+        parseCars(
+          [
+            (id: 'good', data: carData()),
+            (id: 'no-seats', data: carData()..remove('seats')),
+            (id: 'bad-price', data: carData()..['pricePerDay'] = 0),
+          ],
+          onSkipped: (id, error, stackTrace) {
+            errors[id] = error;
+            stackTraces[id] = stackTrace;
+          },
+        );
 
-      expect(errors.keys, ['no-seats', 'bad-price']);
-      expect(errors['no-seats'], isA<FormatException>());
-      expect(errors['bad-price'], isA<FormatException>());
-      expect(stackTraces.keys, ['no-seats', 'bad-price']);
-      expect(stackTraces['no-seats'].toString(), isNotEmpty);
-    });
+        expect(errors.keys, ['no-seats', 'bad-price']);
+        expect(errors['no-seats'], isA<FormatException>());
+        expect(errors['bad-price'], isA<FormatException>());
+        expect(stackTraces.keys, ['no-seats', 'bad-price']);
+        expect(stackTraces['no-seats'].toString(), isNotEmpty);
+      },
+    );
 
     test('does not report anything when every document is valid', () {
       var skippedCount = 0;
@@ -84,13 +87,10 @@ void main() {
     test('returns an empty list when every document is bad', () {
       final skippedIds = <String>[];
 
-      final cars = parseCars(
-        [
-          (id: 'empty', data: <String, dynamic>{}),
-          (id: 'blank-brand', data: carData()..['brand'] = '   '),
-        ],
-        onSkipped: (id, error, stackTrace) => skippedIds.add(id),
-      );
+      final cars = parseCars([
+        (id: 'empty', data: <String, dynamic>{}),
+        (id: 'blank-brand', data: carData()..['brand'] = '   '),
+      ], onSkipped: (id, error, stackTrace) => skippedIds.add(id));
 
       expect(cars, isEmpty);
       expect(skippedIds, ['empty', 'blank-brand']);

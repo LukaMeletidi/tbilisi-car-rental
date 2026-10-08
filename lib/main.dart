@@ -11,9 +11,7 @@ import 'package:tbilisi_car_rental/l10n/generated/app_localizations.dart';
 Future<void> main() async {
   // Needed because we call Firebase before runApp().
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const ProviderScope(child: TbilisiCarRentalApp()));
 }
 

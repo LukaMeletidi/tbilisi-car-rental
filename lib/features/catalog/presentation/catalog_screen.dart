@@ -92,9 +92,7 @@ class CatalogScreen extends ConsumerWidget {
                               ref.read(carSearchProvider.notifier).clear();
                             },
                             child: Text(
-                              searchOnly
-                                  ? l10n.clearSearch
-                                  : l10n.resetFilters,
+                              searchOnly ? l10n.clearSearch : l10n.resetFilters,
                             ),
                           ),
                         )

@@ -10,8 +10,7 @@ class CatalogSearchField extends ConsumerStatefulWidget {
   const CatalogSearchField({super.key});
 
   @override
-  ConsumerState<CatalogSearchField> createState() =>
-      _CatalogSearchFieldState();
+  ConsumerState<CatalogSearchField> createState() => _CatalogSearchFieldState();
 }
 
 class _CatalogSearchFieldState extends ConsumerState<CatalogSearchField> {

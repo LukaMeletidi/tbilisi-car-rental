@@ -47,9 +47,7 @@ void main() {
   test('throws when the price of any extra is missing', () {
     for (final extra in Extra.values) {
       expect(
-        () => ExtrasPrices.fromMap(
-          document(validPrices()..remove(extra.name)),
-        ),
+        () => ExtrasPrices.fromMap(document(validPrices()..remove(extra.name))),
         throwsFormatException,
         reason: 'missing ${extra.name}',
       );
@@ -58,27 +56,21 @@ void main() {
 
   test('throws when a price is not a number', () {
     expect(
-      () => ExtrasPrices.fromMap(
-        document(validPrices()..['childSeat'] = '4'),
-      ),
+      () => ExtrasPrices.fromMap(document(validPrices()..['childSeat'] = '4')),
       throwsFormatException,
     );
   });
 
   test('throws when a price is negative', () {
     expect(
-      () => ExtrasPrices.fromMap(
-        document(validPrices()..['childSeat'] = -1),
-      ),
+      () => ExtrasPrices.fromMap(document(validPrices()..['childSeat'] = -1)),
       throwsFormatException,
     );
   });
 
   test('throws for an unknown extra name', () {
     expect(
-      () => ExtrasPrices.fromMap(
-        document(validPrices()..['snowchains'] = 5),
-      ),
+      () => ExtrasPrices.fromMap(document(validPrices()..['snowchains'] = 5)),
       throwsFormatException,
     );
   });
@@ -94,9 +86,7 @@ void main() {
   test('values with the same prices are equal', () {
     final a = ExtrasPrices.fromMap(document(validPrices()));
     final b = ExtrasPrices.fromMap(document(validPrices()));
-    final c = ExtrasPrices.fromMap(
-      document(validPrices()..['childSeat'] = 9),
-    );
+    final c = ExtrasPrices.fromMap(document(validPrices()..['childSeat'] = 9));
     expect(a, b);
     expect(a.hashCode, b.hashCode);
     expect(a == c, false);

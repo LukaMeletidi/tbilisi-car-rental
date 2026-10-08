@@ -63,9 +63,7 @@ List<PickupLocation> parsePickupLocations(Map<String, dynamic>? data) {
       for (final entry in rawName.entries) '${entry.key}': entry.value,
     });
     if (name.en.trim().isEmpty) {
-      throw FormatException(
-        'settings/locations: "$id" has no English name.',
-      );
+      throw FormatException('settings/locations: "$id" has no English name.');
     }
     locations.add(PickupLocation(id: id, name: name));
   }

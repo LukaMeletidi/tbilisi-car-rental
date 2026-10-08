@@ -15,8 +15,7 @@ class CarFilterNotifier extends Notifier<CarFilter> {
   void setSeats(SeatsFilter seats) => state = state.withSeats(seats);
 
   /// null = Any.
-  void setFuelType(FuelType? fuelType) =>
-      state = state.withFuelType(fuelType);
+  void setFuelType(FuelType? fuelType) => state = state.withFuelType(fuelType);
 
   /// null = Any.
   void setTransmission(Transmission? transmission) =>

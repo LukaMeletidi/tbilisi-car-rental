@@ -28,10 +28,7 @@ void main() {
     final locations = parsePickupLocations(
       document([location('tbilisiOffice', en: 'Tbilisi Office')]),
     );
-    expect(
-      locations.single.name.forLanguage(AppLanguage.ka),
-      'Tbilisi Office',
-    );
+    expect(locations.single.name.forLanguage(AppLanguage.ka), 'Tbilisi Office');
   });
 
   test('throws when the document does not exist', () {
@@ -40,10 +37,7 @@ void main() {
 
   test('throws when items is missing, not a list, or empty', () {
     expect(() => parsePickupLocations({}), throwsFormatException);
-    expect(
-      () => parsePickupLocations({'items': 'x'}),
-      throwsFormatException,
-    );
+    expect(() => parsePickupLocations({'items': 'x'}), throwsFormatException);
     expect(() => parsePickupLocations(document([])), throwsFormatException);
   });
 
