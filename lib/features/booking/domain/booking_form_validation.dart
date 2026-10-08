@@ -38,6 +38,36 @@ class BookingFormInput {
 
   final Set<Extra> extras;
   final String notes;
+
+  /// A copy with the given values changed. A value that is left out stays
+  /// as it is; a date or a location cannot be set back to "not chosen".
+  BookingFormInput copyWith({
+    String? fullName,
+    String? phone,
+    bool? whatsapp,
+    bool? telegram,
+    String? email,
+    TbilisiDateTime? pickup,
+    TbilisiDateTime? dropoff,
+    BookingLocation? pickupLocation,
+    BookingLocation? dropoffLocation,
+    Set<Extra>? extras,
+    String? notes,
+  }) {
+    return BookingFormInput(
+      fullName: fullName ?? this.fullName,
+      phone: phone ?? this.phone,
+      whatsapp: whatsapp ?? this.whatsapp,
+      telegram: telegram ?? this.telegram,
+      email: email ?? this.email,
+      pickup: pickup ?? this.pickup,
+      dropoff: dropoff ?? this.dropoff,
+      pickupLocation: pickupLocation ?? this.pickupLocation,
+      dropoffLocation: dropoffLocation ?? this.dropoffLocation,
+      extras: extras ?? this.extras,
+      notes: notes ?? this.notes,
+    );
+  }
 }
 
 /// What can be wrong with a booking form. The texts shown to the user come

@@ -177,6 +177,43 @@ step 2.6:
 - The car must be active.
 - The checks do not prove that a phone number or an email address exists.
 
+Form decisions (step 2.7; built in two parts: 2.7a logic, state and texts, 2.7b
+screens and routes):
+- Address: /cars/<id>/book, below the car screen; Back returns to the car. After
+  sending: /booking-sent, below the catalog, so Back leads to the catalog. Until step
+  2.8 that screen shows only the thank-you sentence and "Back to the cars".
+- App bar: the logo next to the back arrow, as on the car screen. The first card of
+  the form shows the car (title and price per day, no photo).
+- Time picker: Flutter's own, any minute, 24-hour form in all three languages.
+- Limits of the pickers only (not rules of the form): the pickup can be chosen up to
+  2 years ahead; the dropoff up to 365 days after the pickup.
+- The pickers open on today and the next full hour (Tbilisi); the dropoff one day
+  after the pickup. No field is pre-filled.
+- "Today" and "now" come from the UTC moment plus 4 hours, never from the time zone of
+  the device. The code reads the moment from one clock provider.
+- Errors: a field shows its error after the user has left or changed it; after the
+  first press of Send every field does; from then on they update live. A failed Send
+  scrolls to the first field with an error.
+- The Send button is at the end of the form, not fixed at the bottom.
+- The draft is kept in memory per car until it is sent or the app is closed, so Back
+  does not lose it. While a request is being sent the form is locked; a second press
+  sends nothing.
+- A failed sending shows a message above the button and keeps the draft; Send tries
+  again (with a new document ID).
+- The sent booking is kept in memory only (it contains personal data) for the
+  thank-you screen and is cleared when the user leaves that screen (step 2.8).
+- An extra with the price 0 shows "Free". The names and age ranges of the extras are
+  in the ARB files only. The age ranges are final (infant seat 0-12 months, child seat
+  1-4 years, booster seat 3-16 years; the overlap 3-4 years is accepted), and the
+  extras prices in settings are final too.
+- Notes: the counter ("430 / 500") appears from 400 characters; typing is not cut off.
+  The other text fields have no counter.
+- Every number in a text (length limits, 365 days, 7 days) comes from the constants in
+  the code, never typed into a translation.
+- No consent line in the form for now (see Open reminders).
+- The booking feature may import from the catalog feature (the car provider, the
+  price and title helpers, the message widget), never the other way round.
+
 ### 2.4 Confirmation screen
 
 After submitting, the customer sees:
@@ -566,6 +603,9 @@ Phase 0 is complete.
 - Analytics consent: Section 9 describes a web consent banner; decide in Phase 7 how
   consent works on Android (proposal: the same consent screen on all platforms, the
   choice stored with shared_preferences, Analytics off until accepted).
+- Privacy Policy and the booking form: the form has no consent line yet (decided in
+  step 2.7). When the Privacy Policy page exists, link it from the booking form, next
+  to the Send button, and decide then whether a consent line is needed.
 - Public demo: decide in Phase 7 whether it is a hosted web build, an APK, or both.
 - Web URLs keep the # for now; decide clean URLs and the Firebase Hosting rewrite rule
   when we set up Hosting.
@@ -634,7 +674,8 @@ Phase 1 is complete.
 - 2.6 Firestore rules for bookings (public create only) and the create method in the
   repository; deploy with my approval — DONE. The rules were deployed on 2026-10-08;
   the first valid create is tested from the real app in step 2.7.
-- 2.7 Booking form screen — not started.
+- 2.7 Booking form screen, in two parts: 2.7a the logic, the state and the texts;
+  2.7b the screens and the routes — not started.
 - 2.8 Confirmation screen — not started.
 - 2.9 App Check (approach proposed first, enabled only with my approval) — not
   started.

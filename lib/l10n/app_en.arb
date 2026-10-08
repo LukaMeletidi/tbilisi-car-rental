@@ -94,5 +94,101 @@
       "current": { "type": "int" },
       "total": { "type": "int" }
     }
-  }
+  },
+  "bookingTitle": "Booking request",
+  "bookingSectionContact": "Your details",
+  "bookingFullName": "Full name and surname",
+  "bookingFullNameHelper": "As in your passport",
+  "bookingPhone": "Phone number",
+  "bookingWhatsapp": "I use WhatsApp on this number",
+  "bookingTelegram": "I use Telegram on this number",
+  "bookingEmail": "E-mail",
+  "bookingSectionDates": "Dates",
+  "bookingPickupDateTime": "Pickup date and time",
+  "bookingDropoffDateTime": "Dropoff date and time",
+  "tbilisiTimeLabel": "Tbilisi time (GMT+4)",
+  "@tbilisiTimeLabel": {
+    "description": "Shown with every date and time field."
+  },
+  "bookingSectionLocations": "Places",
+  "bookingPickupLocation": "Pickup place",
+  "bookingDropoffLocation": "Dropoff place",
+  "bookingLocationOther": "Other place",
+  "bookingLocationOtherText": "Address or place in Georgia",
+  "bookingSectionExtras": "Extras",
+  "extraSnowChains": "Snow chains",
+  "extraChildSeat": "Child seat",
+  "extraChildSeatAge": "1–4 years",
+  "@extraChildSeatAge": {
+    "description": "Age range the seat is meant for."
+  },
+  "extraInfantSeat": "Infant seat",
+  "extraInfantSeatAge": "0–12 months",
+  "@extraInfantSeatAge": {
+    "description": "Age range the seat is meant for."
+  },
+  "extraBoosterSeat": "Booster seat",
+  "extraBoosterSeatAge": "3–16 years",
+  "@extraBoosterSeatAge": {
+    "description": "Age range the seat is meant for."
+  },
+  "extraFree": "Free",
+  "@extraFree": {
+    "description": "Shown instead of a price for an extra that costs 0."
+  },
+  "bookingSectionNotes": "Special requests",
+  "bookingNotesHint": "Optional. For example: two child seats",
+  "bookingSectionPrice": "Price",
+  "bookingChooseDates": "Choose the dates to see the price",
+  "bookingRentalDays": "Rental days",
+  "bookingTotal": "Total",
+  "bookingEstimatedTotal": "Estimated total",
+  "bookingIndividualPriceNote": "For rentals longer than {days} days, the price is individual — our team will contact you to confirm the final price.",
+  "@bookingIndividualPriceNote": {
+    "description": "days = the longest rental with a normal price (7).",
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "bookingSubmit": "Send request",
+  "bookingSending": "Sending…",
+  "bookingCheckFields": "Please check the marked fields",
+  "bookingFormLoadError": "Could not load the booking form. Please try again later.",
+  "bookingErrorNameRequired": "Enter your full name",
+  "bookingErrorNameTooShort": "The name is too short",
+  "bookingErrorTooLong": "At most {max} characters",
+  "@bookingErrorTooLong": {
+    "description": "max = the limit of the field.",
+    "placeholders": {
+      "max": { "type": "int" }
+    }
+  },
+  "bookingErrorPhoneRequired": "Enter your phone number",
+  "bookingErrorPhoneInvalid": "Use the international format, for example {example}",
+  "@bookingErrorPhoneInvalid": {
+    "description": "example = a phone number such as +995 555 12 34 56.",
+    "placeholders": {
+      "example": { "type": "String" }
+    }
+  },
+  "bookingErrorEmailRequired": "Enter your e-mail",
+  "bookingErrorEmailInvalid": "Enter a valid e-mail address",
+  "bookingErrorPickupRequired": "Choose the pickup date and time",
+  "bookingErrorPickupNotInFuture": "The pickup time must be in the future",
+  "bookingErrorDropoffRequired": "Choose the dropoff date and time",
+  "bookingErrorDropoffNotAfterPickup": "The dropoff must be later than the pickup",
+  "bookingErrorRentalTooLong": "A rental can be at most {days} days",
+  "@bookingErrorRentalTooLong": {
+    "description": "days = the longest rental the form accepts (365).",
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "bookingErrorLocationRequired": "Choose a place",
+  "bookingErrorLocationUnknown": "This place is no longer available. Choose another one.",
+  "bookingErrorLocationTextRequired": "Enter the address or place",
+  "bookingFailedRejected": "The request was not accepted. Check your details and the dates, or choose another car.",
+  "bookingFailedNoConnection": "Could not send the request. Check your internet connection and try again.",
+  "bookingFailedUnknown": "Something went wrong. Please try again.",
+  "bookingSentThanks": "Thank you for your trust — our representative will contact you shortly to confirm the details."
 }

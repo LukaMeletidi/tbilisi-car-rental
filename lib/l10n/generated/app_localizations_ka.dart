@@ -126,4 +126,190 @@ class AppLocalizationsKa extends AppLocalizations {
   String photoPosition(int current, int total) {
     return 'ფოტო $current / $total';
   }
+
+  @override
+  String get bookingTitle => 'ჯავშნის მოთხოვნა';
+
+  @override
+  String get bookingSectionContact => 'თქვენი მონაცემები';
+
+  @override
+  String get bookingFullName => 'სახელი და გვარი';
+
+  @override
+  String get bookingFullNameHelper => 'როგორც პასპორტშია';
+
+  @override
+  String get bookingPhone => 'ტელეფონის ნომერი';
+
+  @override
+  String get bookingWhatsapp => 'ამ ნომერზე ვიყენებ WhatsApp-ს';
+
+  @override
+  String get bookingTelegram => 'ამ ნომერზე ვიყენებ Telegram-ს';
+
+  @override
+  String get bookingEmail => 'ელ. ფოსტა';
+
+  @override
+  String get bookingSectionDates => 'თარიღები';
+
+  @override
+  String get bookingPickupDateTime => 'აყვანის თარიღი და დრო';
+
+  @override
+  String get bookingDropoffDateTime => 'დაბრუნების თარიღი და დრო';
+
+  @override
+  String get tbilisiTimeLabel => 'თბილისის დრო (GMT+4)';
+
+  @override
+  String get bookingSectionLocations => 'ადგილები';
+
+  @override
+  String get bookingPickupLocation => 'აყვანის ადგილი';
+
+  @override
+  String get bookingDropoffLocation => 'დაბრუნების ადგილი';
+
+  @override
+  String get bookingLocationOther => 'სხვა ადგილი';
+
+  @override
+  String get bookingLocationOtherText => 'მისამართი ან ადგილი საქართველოში';
+
+  @override
+  String get bookingSectionExtras => 'დამატებითი მომსახურება';
+
+  @override
+  String get extraSnowChains => 'თოვლის ჯაჭვები';
+
+  @override
+  String get extraChildSeat => 'ბავშვის სავარძელი';
+
+  @override
+  String get extraChildSeatAge => '1–4 წელი';
+
+  @override
+  String get extraInfantSeat => 'ჩვილის სავარძელი';
+
+  @override
+  String get extraInfantSeatAge => '0–12 თვე';
+
+  @override
+  String get extraBoosterSeat => 'ბუსტერი';
+
+  @override
+  String get extraBoosterSeatAge => '3–16 წელი';
+
+  @override
+  String get extraFree => 'უფასო';
+
+  @override
+  String get bookingSectionNotes => 'განსაკუთრებული სურვილები';
+
+  @override
+  String get bookingNotesHint =>
+      'არასავალდებულო. მაგალითად: ორი საბავშვო სავარძელი';
+
+  @override
+  String get bookingSectionPrice => 'ფასი';
+
+  @override
+  String get bookingChooseDates => 'ფასის სანახავად აირჩიეთ თარიღები';
+
+  @override
+  String get bookingRentalDays => 'ქირაობის დღეები';
+
+  @override
+  String get bookingTotal => 'სულ';
+
+  @override
+  String get bookingEstimatedTotal => 'სავარაუდო ფასი';
+
+  @override
+  String bookingIndividualPriceNote(int days) {
+    return '$days დღეზე მეტი ხნით ქირაობისას ფასი ინდივიდუალურია — ჩვენი გუნდი დაგიკავშირდებათ საბოლოო ფასის დასადასტურებლად.';
+  }
+
+  @override
+  String get bookingSubmit => 'მოთხოვნის გაგზავნა';
+
+  @override
+  String get bookingSending => 'იგზავნება…';
+
+  @override
+  String get bookingCheckFields => 'გთხოვთ, შეამოწმოთ მონიშნული ველები';
+
+  @override
+  String get bookingFormLoadError =>
+      'ჯავშნის ფორმის ჩატვირთვა ვერ მოხერხდა. სცადეთ მოგვიანებით.';
+
+  @override
+  String get bookingErrorNameRequired => 'შეიყვანეთ სახელი და გვარი';
+
+  @override
+  String get bookingErrorNameTooShort => 'სახელი ძალიან მოკლეა';
+
+  @override
+  String bookingErrorTooLong(int max) {
+    return 'არაუმეტეს $max სიმბოლო';
+  }
+
+  @override
+  String get bookingErrorPhoneRequired => 'შეიყვანეთ ტელეფონის ნომერი';
+
+  @override
+  String bookingErrorPhoneInvalid(String example) {
+    return 'მიუთითეთ ნომერი საერთაშორისო ფორმატში, მაგალითად $example';
+  }
+
+  @override
+  String get bookingErrorEmailRequired => 'შეიყვანეთ ელ. ფოსტა';
+
+  @override
+  String get bookingErrorEmailInvalid => 'შეიყვანეთ სწორი ელ. ფოსტის მისამართი';
+
+  @override
+  String get bookingErrorPickupRequired => 'აირჩიეთ აყვანის თარიღი და დრო';
+
+  @override
+  String get bookingErrorPickupNotInFuture => 'აყვანის დრო მომავალში უნდა იყოს';
+
+  @override
+  String get bookingErrorDropoffRequired => 'აირჩიეთ დაბრუნების თარიღი და დრო';
+
+  @override
+  String get bookingErrorDropoffNotAfterPickup =>
+      'დაბრუნება აყვანაზე გვიან უნდა იყოს';
+
+  @override
+  String bookingErrorRentalTooLong(int days) {
+    return 'ქირაობა შესაძლებელია არაუმეტეს $days დღით';
+  }
+
+  @override
+  String get bookingErrorLocationRequired => 'აირჩიეთ ადგილი';
+
+  @override
+  String get bookingErrorLocationUnknown =>
+      'ეს ადგილი აღარ არის ხელმისაწვდომი. აირჩიეთ სხვა.';
+
+  @override
+  String get bookingErrorLocationTextRequired => 'მიუთითეთ მისამართი ან ადგილი';
+
+  @override
+  String get bookingFailedRejected =>
+      'მოთხოვნა არ იქნა მიღებული. შეამოწმეთ თქვენი მონაცემები და თარიღები, ან აირჩიეთ სხვა ავტომობილი.';
+
+  @override
+  String get bookingFailedNoConnection =>
+      'მოთხოვნის გაგზავნა ვერ მოხერხდა. შეამოწმეთ ინტერნეტკავშირი და სცადეთ ხელახლა.';
+
+  @override
+  String get bookingFailedUnknown => 'დაფიქსირდა შეცდომა. სცადეთ ხელახლა.';
+
+  @override
+  String get bookingSentThanks =>
+      'გმადლობთ ნდობისთვის — ჩვენი წარმომადგენელი მალე დაგიკავშირდებათ დეტალების დასაზუსტებლად.';
 }

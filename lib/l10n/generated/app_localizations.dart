@@ -303,6 +303,348 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Photo {current} of {total}'**
   String photoPosition(int current, int total);
+
+  /// No description provided for @bookingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking request'**
+  String get bookingTitle;
+
+  /// No description provided for @bookingSectionContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Your details'**
+  String get bookingSectionContact;
+
+  /// No description provided for @bookingFullName.
+  ///
+  /// In en, this message translates to:
+  /// **'Full name and surname'**
+  String get bookingFullName;
+
+  /// No description provided for @bookingFullNameHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'As in your passport'**
+  String get bookingFullNameHelper;
+
+  /// No description provided for @bookingPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number'**
+  String get bookingPhone;
+
+  /// No description provided for @bookingWhatsapp.
+  ///
+  /// In en, this message translates to:
+  /// **'I use WhatsApp on this number'**
+  String get bookingWhatsapp;
+
+  /// No description provided for @bookingTelegram.
+  ///
+  /// In en, this message translates to:
+  /// **'I use Telegram on this number'**
+  String get bookingTelegram;
+
+  /// No description provided for @bookingEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'E-mail'**
+  String get bookingEmail;
+
+  /// No description provided for @bookingSectionDates.
+  ///
+  /// In en, this message translates to:
+  /// **'Dates'**
+  String get bookingSectionDates;
+
+  /// No description provided for @bookingPickupDateTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Pickup date and time'**
+  String get bookingPickupDateTime;
+
+  /// No description provided for @bookingDropoffDateTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropoff date and time'**
+  String get bookingDropoffDateTime;
+
+  /// Shown with every date and time field.
+  ///
+  /// In en, this message translates to:
+  /// **'Tbilisi time (GMT+4)'**
+  String get tbilisiTimeLabel;
+
+  /// No description provided for @bookingSectionLocations.
+  ///
+  /// In en, this message translates to:
+  /// **'Places'**
+  String get bookingSectionLocations;
+
+  /// No description provided for @bookingPickupLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Pickup place'**
+  String get bookingPickupLocation;
+
+  /// No description provided for @bookingDropoffLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropoff place'**
+  String get bookingDropoffLocation;
+
+  /// No description provided for @bookingLocationOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other place'**
+  String get bookingLocationOther;
+
+  /// No description provided for @bookingLocationOtherText.
+  ///
+  /// In en, this message translates to:
+  /// **'Address or place in Georgia'**
+  String get bookingLocationOtherText;
+
+  /// No description provided for @bookingSectionExtras.
+  ///
+  /// In en, this message translates to:
+  /// **'Extras'**
+  String get bookingSectionExtras;
+
+  /// No description provided for @extraSnowChains.
+  ///
+  /// In en, this message translates to:
+  /// **'Snow chains'**
+  String get extraSnowChains;
+
+  /// No description provided for @extraChildSeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Child seat'**
+  String get extraChildSeat;
+
+  /// Age range the seat is meant for.
+  ///
+  /// In en, this message translates to:
+  /// **'1–4 years'**
+  String get extraChildSeatAge;
+
+  /// No description provided for @extraInfantSeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Infant seat'**
+  String get extraInfantSeat;
+
+  /// Age range the seat is meant for.
+  ///
+  /// In en, this message translates to:
+  /// **'0–12 months'**
+  String get extraInfantSeatAge;
+
+  /// No description provided for @extraBoosterSeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Booster seat'**
+  String get extraBoosterSeat;
+
+  /// Age range the seat is meant for.
+  ///
+  /// In en, this message translates to:
+  /// **'3–16 years'**
+  String get extraBoosterSeatAge;
+
+  /// Shown instead of a price for an extra that costs 0.
+  ///
+  /// In en, this message translates to:
+  /// **'Free'**
+  String get extraFree;
+
+  /// No description provided for @bookingSectionNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Special requests'**
+  String get bookingSectionNotes;
+
+  /// No description provided for @bookingNotesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional. For example: two child seats'**
+  String get bookingNotesHint;
+
+  /// No description provided for @bookingSectionPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get bookingSectionPrice;
+
+  /// No description provided for @bookingChooseDates.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the dates to see the price'**
+  String get bookingChooseDates;
+
+  /// No description provided for @bookingRentalDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Rental days'**
+  String get bookingRentalDays;
+
+  /// No description provided for @bookingTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get bookingTotal;
+
+  /// No description provided for @bookingEstimatedTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated total'**
+  String get bookingEstimatedTotal;
+
+  /// days = the longest rental with a normal price (7).
+  ///
+  /// In en, this message translates to:
+  /// **'For rentals longer than {days} days, the price is individual — our team will contact you to confirm the final price.'**
+  String bookingIndividualPriceNote(int days);
+
+  /// No description provided for @bookingSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Send request'**
+  String get bookingSubmit;
+
+  /// No description provided for @bookingSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending…'**
+  String get bookingSending;
+
+  /// No description provided for @bookingCheckFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Please check the marked fields'**
+  String get bookingCheckFields;
+
+  /// No description provided for @bookingFormLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the booking form. Please try again later.'**
+  String get bookingFormLoadError;
+
+  /// No description provided for @bookingErrorNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your full name'**
+  String get bookingErrorNameRequired;
+
+  /// No description provided for @bookingErrorNameTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'The name is too short'**
+  String get bookingErrorNameTooShort;
+
+  /// max = the limit of the field.
+  ///
+  /// In en, this message translates to:
+  /// **'At most {max} characters'**
+  String bookingErrorTooLong(int max);
+
+  /// No description provided for @bookingErrorPhoneRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your phone number'**
+  String get bookingErrorPhoneRequired;
+
+  /// example = a phone number such as +995 555 12 34 56.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the international format, for example {example}'**
+  String bookingErrorPhoneInvalid(String example);
+
+  /// No description provided for @bookingErrorEmailRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your e-mail'**
+  String get bookingErrorEmailRequired;
+
+  /// No description provided for @bookingErrorEmailInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid e-mail address'**
+  String get bookingErrorEmailInvalid;
+
+  /// No description provided for @bookingErrorPickupRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the pickup date and time'**
+  String get bookingErrorPickupRequired;
+
+  /// No description provided for @bookingErrorPickupNotInFuture.
+  ///
+  /// In en, this message translates to:
+  /// **'The pickup time must be in the future'**
+  String get bookingErrorPickupNotInFuture;
+
+  /// No description provided for @bookingErrorDropoffRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the dropoff date and time'**
+  String get bookingErrorDropoffRequired;
+
+  /// No description provided for @bookingErrorDropoffNotAfterPickup.
+  ///
+  /// In en, this message translates to:
+  /// **'The dropoff must be later than the pickup'**
+  String get bookingErrorDropoffNotAfterPickup;
+
+  /// days = the longest rental the form accepts (365).
+  ///
+  /// In en, this message translates to:
+  /// **'A rental can be at most {days} days'**
+  String bookingErrorRentalTooLong(int days);
+
+  /// No description provided for @bookingErrorLocationRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a place'**
+  String get bookingErrorLocationRequired;
+
+  /// No description provided for @bookingErrorLocationUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'This place is no longer available. Choose another one.'**
+  String get bookingErrorLocationUnknown;
+
+  /// No description provided for @bookingErrorLocationTextRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the address or place'**
+  String get bookingErrorLocationTextRequired;
+
+  /// No description provided for @bookingFailedRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'The request was not accepted. Check your details and the dates, or choose another car.'**
+  String get bookingFailedRejected;
+
+  /// No description provided for @bookingFailedNoConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send the request. Check your internet connection and try again.'**
+  String get bookingFailedNoConnection;
+
+  /// No description provided for @bookingFailedUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again.'**
+  String get bookingFailedUnknown;
+
+  /// No description provided for @bookingSentThanks.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you for your trust — our representative will contact you shortly to confirm the details.'**
+  String get bookingSentThanks;
 }
 
 class _AppLocalizationsDelegate

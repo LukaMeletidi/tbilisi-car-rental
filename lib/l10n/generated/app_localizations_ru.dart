@@ -129,4 +129,190 @@ class AppLocalizationsRu extends AppLocalizations {
   String photoPosition(int current, int total) {
     return 'Фото $current из $total';
   }
+
+  @override
+  String get bookingTitle => 'Заявка на бронирование';
+
+  @override
+  String get bookingSectionContact => 'Ваши данные';
+
+  @override
+  String get bookingFullName => 'Имя и фамилия';
+
+  @override
+  String get bookingFullNameHelper => 'Как в паспорте';
+
+  @override
+  String get bookingPhone => 'Номер телефона';
+
+  @override
+  String get bookingWhatsapp => 'Я пользуюсь WhatsApp на этом номере';
+
+  @override
+  String get bookingTelegram => 'Я пользуюсь Telegram на этом номере';
+
+  @override
+  String get bookingEmail => 'Эл. почта';
+
+  @override
+  String get bookingSectionDates => 'Даты';
+
+  @override
+  String get bookingPickupDateTime => 'Дата и время получения';
+
+  @override
+  String get bookingDropoffDateTime => 'Дата и время возврата';
+
+  @override
+  String get tbilisiTimeLabel => 'Время Тбилиси (GMT+4)';
+
+  @override
+  String get bookingSectionLocations => 'Места';
+
+  @override
+  String get bookingPickupLocation => 'Место получения';
+
+  @override
+  String get bookingDropoffLocation => 'Место возврата';
+
+  @override
+  String get bookingLocationOther => 'Другое место';
+
+  @override
+  String get bookingLocationOtherText => 'Адрес или место в Грузии';
+
+  @override
+  String get bookingSectionExtras => 'Дополнительно';
+
+  @override
+  String get extraSnowChains => 'Цепи противоскольжения';
+
+  @override
+  String get extraChildSeat => 'Детское кресло';
+
+  @override
+  String get extraChildSeatAge => '1–4 года';
+
+  @override
+  String get extraInfantSeat => 'Автолюлька';
+
+  @override
+  String get extraInfantSeatAge => '0–12 месяцев';
+
+  @override
+  String get extraBoosterSeat => 'Бустер';
+
+  @override
+  String get extraBoosterSeatAge => '3–16 лет';
+
+  @override
+  String get extraFree => 'Бесплатно';
+
+  @override
+  String get bookingSectionNotes => 'Особые пожелания';
+
+  @override
+  String get bookingNotesHint => 'Необязательно. Например: два детских кресла';
+
+  @override
+  String get bookingSectionPrice => 'Стоимость';
+
+  @override
+  String get bookingChooseDates => 'Выберите даты, чтобы увидеть стоимость';
+
+  @override
+  String get bookingRentalDays => 'Дней аренды';
+
+  @override
+  String get bookingTotal => 'Итого';
+
+  @override
+  String get bookingEstimatedTotal => 'Примерная стоимость';
+
+  @override
+  String bookingIndividualPriceNote(int days) {
+    return 'Для аренды дольше $days дней цена индивидуальная — наша команда свяжется с вами, чтобы подтвердить окончательную цену.';
+  }
+
+  @override
+  String get bookingSubmit => 'Отправить заявку';
+
+  @override
+  String get bookingSending => 'Отправка…';
+
+  @override
+  String get bookingCheckFields => 'Проверьте отмеченные поля';
+
+  @override
+  String get bookingFormLoadError =>
+      'Не удалось загрузить форму бронирования. Попробуйте позже.';
+
+  @override
+  String get bookingErrorNameRequired => 'Введите имя и фамилию';
+
+  @override
+  String get bookingErrorNameTooShort => 'Имя слишком короткое';
+
+  @override
+  String bookingErrorTooLong(int max) {
+    return 'Не более $max символов';
+  }
+
+  @override
+  String get bookingErrorPhoneRequired => 'Введите номер телефона';
+
+  @override
+  String bookingErrorPhoneInvalid(String example) {
+    return 'Укажите номер в международном формате, например $example';
+  }
+
+  @override
+  String get bookingErrorEmailRequired => 'Введите эл. почту';
+
+  @override
+  String get bookingErrorEmailInvalid => 'Введите правильный адрес эл. почты';
+
+  @override
+  String get bookingErrorPickupRequired => 'Выберите дату и время получения';
+
+  @override
+  String get bookingErrorPickupNotInFuture =>
+      'Время получения должно быть в будущем';
+
+  @override
+  String get bookingErrorDropoffRequired => 'Выберите дату и время возврата';
+
+  @override
+  String get bookingErrorDropoffNotAfterPickup =>
+      'Возврат должен быть позже получения';
+
+  @override
+  String bookingErrorRentalTooLong(int days) {
+    return 'Аренда может длиться не более $days дней';
+  }
+
+  @override
+  String get bookingErrorLocationRequired => 'Выберите место';
+
+  @override
+  String get bookingErrorLocationUnknown =>
+      'Это место больше недоступно. Выберите другое.';
+
+  @override
+  String get bookingErrorLocationTextRequired => 'Укажите адрес или место';
+
+  @override
+  String get bookingFailedRejected =>
+      'Заявка не принята. Проверьте свои данные и даты или выберите другой автомобиль.';
+
+  @override
+  String get bookingFailedNoConnection =>
+      'Не удалось отправить заявку. Проверьте подключение к интернету и попробуйте ещё раз.';
+
+  @override
+  String get bookingFailedUnknown => 'Что-то пошло не так. Попробуйте ещё раз.';
+
+  @override
+  String get bookingSentThanks =>
+      'Спасибо за доверие — наш представитель скоро свяжется с вами, чтобы уточнить детали.';
 }

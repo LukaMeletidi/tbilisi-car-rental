@@ -19,6 +19,12 @@ const bookingOtherLocationMaxLength = 200;
 
 const bookingNotesMaxLength = 500;
 
+/// From this many characters the notes field shows its counter
+/// ("430 / 500").
+///
+/// Only used by the app; it is NOT mirrored in the rules.
+const bookingNotesCounterFrom = 400;
+
 /// How long before pickup a booking must be made. Zero means any future
 /// moment is accepted (there is no minimum lead time).
 ///
