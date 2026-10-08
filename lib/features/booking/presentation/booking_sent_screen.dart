@@ -8,16 +8,17 @@ import 'package:tbilisi_car_rental/core/router/app_router.dart';
 import 'package:tbilisi_car_rental/core/widgets/app_bar_logo.dart';
 import 'package:tbilisi_car_rental/core/widgets/language_menu_button.dart';
 import 'package:tbilisi_car_rental/features/booking/presentation/sent_booking_provider.dart';
-import 'package:tbilisi_car_rental/features/catalog/presentation/widgets/catalog_message.dart';
+import 'package:tbilisi_car_rental/features/booking/presentation/widgets/sent_booking_summary.dart';
+import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_layout.dart';
 import 'package:tbilisi_car_rental/l10n/generated/app_localizations.dart';
 
-/// Shown after a booking request was sent: the thank-you sentence and the
-/// way back to the cars. Step 2.8 adds the summary of the request.
+/// Shown after a booking request was sent: the thank-you sentence, the
+/// summary of the request, and the way back to the cars.
 ///
-/// The sent booking is kept in memory only. It is forgotten when the user
-/// leaves this screen, because it contains personal data. Opened without a
-/// sent booking (a page reload or a direct link), the screen goes to the
-/// catalog.
+/// The sent booking is kept in memory only. This screen takes its own copy
+/// when it opens and forgets the shared one when the user leaves, because it
+/// contains personal data. Opened without a sent booking (a page reload or a
+/// direct link), the screen goes to the catalog.
 class BookingSentScreen extends ConsumerStatefulWidget {
   const BookingSentScreen({super.key});
 
@@ -27,14 +28,16 @@ class BookingSentScreen extends ConsumerStatefulWidget {
 
 class _BookingSentScreenState extends ConsumerState<BookingSentScreen> {
   late final SentBookingNotifier _sentBooking;
-  late final bool _hasBooking;
+
+  /// The copy this screen shows; it stays while the screen closes.
+  late final SentBooking? _sent;
 
   @override
   void initState() {
     super.initState();
     _sentBooking = ref.read(sentBookingProvider.notifier);
-    _hasBooking = ref.read(sentBookingProvider) != null;
-    if (!_hasBooking) {
+    _sent = ref.read(sentBookingProvider);
+    if (_sent == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) context.go(AppRoutes.home);
       });
@@ -50,7 +53,7 @@ class _BookingSentScreenState extends ConsumerState<BookingSentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final sent = _sent;
 
     return Scaffold(
       appBar: AppBar(
@@ -59,16 +62,54 @@ class _BookingSentScreenState extends ConsumerState<BookingSentScreen> {
         actions: const [LanguageMenuButton()],
       ),
       body: SafeArea(
-        child: _hasBooking
-            ? CatalogMessage(
-                icon: Icons.check_circle_outline,
-                text: l10n.bookingSentThanks,
-                action: FilledButton(
-                  onPressed: () => context.go(AppRoutes.home),
-                  child: Text(l10n.backToCars),
+        child: sent == null
+            ? const SizedBox.shrink()
+            : _SentBookingBody(sent: sent),
+      ),
+    );
+  }
+}
+
+class _SentBookingBody extends StatelessWidget {
+  const _SentBookingBody({required this.sent});
+
+  final SentBooking sent;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(12),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: carDetailMaxWidth),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 12),
+              const Icon(Icons.check_circle_outline, size: 64),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Text(
+                  l10n.bookingSentThanks,
+                  style: Theme.of(context).textTheme.titleMedium,
+                  textAlign: TextAlign.center,
                 ),
-              )
-            : const SizedBox.shrink(),
+              ),
+              const SizedBox(height: 20),
+              SentBookingSummary(sent: sent),
+              const SizedBox(height: 12),
+              FilledButton(
+                onPressed: () => context.go(AppRoutes.home),
+                child: Text(l10n.backToCars),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        ),
       ),
     );
   }

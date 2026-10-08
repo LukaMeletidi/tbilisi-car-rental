@@ -193,5 +193,22 @@
   "bookingFailedRejected": "The request was not accepted. Check your details and the dates, or choose another car.",
   "bookingFailedNoConnection": "Could not send the request. Check your internet connection and try again.",
   "bookingFailedUnknown": "Something went wrong. Please try again.",
-  "bookingSentThanks": "Thank you for your trust — our representative will contact you shortly to confirm the details."
+  "bookingSentThanks": "Thank you for your trust — our representative will contact you shortly to confirm the details.",
+  "bookingSentSummaryTitle": "Your request",
+  "@bookingSentSummaryTitle": {
+    "description": "Title of the summary on the thank-you screen."
+  },
+  "bookingSentCar": "Car",
+  "bookingSentPickup": "Pickup",
+  "bookingSentDropoff": "Dropoff",
+  "bookingSentNoExtras": "None",
+  "@bookingSentNoExtras": {
+    "description": "Shown in the summary when no extra was chosen."
+  },
+  "bookingSentUnknownPlace": "A place from our list",
+  "@bookingSentUnknownPlace": {
+    "description": "Shown instead of a place name that cannot be looked up."
+  },
+  "bookingSentWhatsapp": "WhatsApp",
+  "bookingSentTelegram": "Telegram"
 }

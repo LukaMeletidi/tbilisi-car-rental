@@ -314,4 +314,28 @@ class AppLocalizationsKa extends AppLocalizations {
   @override
   String get bookingSentThanks =>
       'გმადლობთ ნდობისთვის — ჩვენი წარმომადგენელი მალე დაგიკავშირდებათ დეტალების დასაზუსტებლად.';
+
+  @override
+  String get bookingSentSummaryTitle => 'თქვენი მოთხოვნა';
+
+  @override
+  String get bookingSentCar => 'ავტომობილი';
+
+  @override
+  String get bookingSentPickup => 'აყვანა';
+
+  @override
+  String get bookingSentDropoff => 'დაბრუნება';
+
+  @override
+  String get bookingSentNoExtras => 'არ არის';
+
+  @override
+  String get bookingSentUnknownPlace => 'ადგილი ჩვენი სიიდან';
+
+  @override
+  String get bookingSentWhatsapp => 'WhatsApp';
+
+  @override
+  String get bookingSentTelegram => 'Telegram';
 }

@@ -90,5 +90,13 @@
   "bookingFailedRejected": "მოთხოვნა არ იქნა მიღებული. შეამოწმეთ თქვენი მონაცემები და თარიღები, ან აირჩიეთ სხვა ავტომობილი.",
   "bookingFailedNoConnection": "მოთხოვნის გაგზავნა ვერ მოხერხდა. შეამოწმეთ ინტერნეტკავშირი და სცადეთ ხელახლა.",
   "bookingFailedUnknown": "დაფიქსირდა შეცდომა. სცადეთ ხელახლა.",
-  "bookingSentThanks": "გმადლობთ ნდობისთვის — ჩვენი წარმომადგენელი მალე დაგიკავშირდებათ დეტალების დასაზუსტებლად."
+  "bookingSentThanks": "გმადლობთ ნდობისთვის — ჩვენი წარმომადგენელი მალე დაგიკავშირდებათ დეტალების დასაზუსტებლად.",
+  "bookingSentSummaryTitle": "თქვენი მოთხოვნა",
+  "bookingSentCar": "ავტომობილი",
+  "bookingSentPickup": "აყვანა",
+  "bookingSentDropoff": "დაბრუნება",
+  "bookingSentNoExtras": "არ არის",
+  "bookingSentUnknownPlace": "ადგილი ჩვენი სიიდან",
+  "bookingSentWhatsapp": "WhatsApp",
+  "bookingSentTelegram": "Telegram"
 }

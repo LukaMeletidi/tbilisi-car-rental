@@ -703,8 +703,10 @@ void main() {
       expect(find.byType(BookingSentScreen), findsOneWidget);
       expect(find.byType(BookingFormScreen), findsNothing);
       expect(find.text(thanksText), findsOneWidget);
-      // Nothing personal is shown in this step.
-      expect(find.text('Nino Beridze'), findsNothing);
+      // The summary of what was sent (step 2.8).
+      expect(find.text('Nino Beridze'), findsOneWidget);
+      expect(find.text('10.01.2026 18:00'), findsOneWidget);
+      expect(find.text('\$225'), findsOneWidget);
 
       final sent = containerOf(tester).read(sentBookingProvider)!;
       expect(sent.id, 'document-1');

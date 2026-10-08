@@ -645,6 +645,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Thank you for your trust — our representative will contact you shortly to confirm the details.'**
   String get bookingSentThanks;
+
+  /// Title of the summary on the thank-you screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Your request'**
+  String get bookingSentSummaryTitle;
+
+  /// No description provided for @bookingSentCar.
+  ///
+  /// In en, this message translates to:
+  /// **'Car'**
+  String get bookingSentCar;
+
+  /// No description provided for @bookingSentPickup.
+  ///
+  /// In en, this message translates to:
+  /// **'Pickup'**
+  String get bookingSentPickup;
+
+  /// No description provided for @bookingSentDropoff.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropoff'**
+  String get bookingSentDropoff;
+
+  /// Shown in the summary when no extra was chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get bookingSentNoExtras;
+
+  /// Shown instead of a place name that cannot be looked up.
+  ///
+  /// In en, this message translates to:
+  /// **'A place from our list'**
+  String get bookingSentUnknownPlace;
+
+  /// No description provided for @bookingSentWhatsapp.
+  ///
+  /// In en, this message translates to:
+  /// **'WhatsApp'**
+  String get bookingSentWhatsapp;
+
+  /// No description provided for @bookingSentTelegram.
+  ///
+  /// In en, this message translates to:
+  /// **'Telegram'**
+  String get bookingSentTelegram;
 }
 
 class _AppLocalizationsDelegate

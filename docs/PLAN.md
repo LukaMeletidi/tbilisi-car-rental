@@ -180,7 +180,8 @@ Form decisions (step 2.7; built in two parts: 2.7a logic, state and texts, 2.7b
 screens and routes):
 - Address: /cars/<id>/book, below the car screen; Back returns to the car. After
   sending: /booking-sent, below the catalog, so Back leads to the catalog. Until step
-  2.8 that screen shows only the thank-you sentence and "Back to the cars".
+  2.8 that screen showed only the thank-you sentence and "Back to the cars"; since
+  step 2.8 it also shows the summary (Section 2.4).
 - App bar: the logo next to the back arrow, as on the car screen. The first card of
   the form shows the car (title and price per day, no photo).
 - Time picker: Flutter's own, any minute, 24-hour form in all three languages. Both
@@ -227,6 +228,29 @@ After submitting, the customer sees:
   the details."
 - Below it, a full summary: car, dates, pickup/dropoff locations, selected extras,
   total price.
+
+Decisions (step 2.8):
+- Two white cards under the thank-you sentence. "Your request": the car, pickup and
+  dropoff (date and time, the line "Tbilisi time (GMT+4)", the place), the extras
+  ("None" when there are none), the notes (only when not empty), the rental days and
+  the total. "Your details": name, phone (in its stored form), WhatsApp and Telegram
+  when ticked, and e-mail.
+- The summary shows what was sent: the days come from the two stored dates and the
+  total is the stored one. Nothing is calculated again from the current prices. More
+  than 7 days shows "Estimated total" and the individual-price note, as in the form.
+- Not shown: the document ID (no use to the customer), and the prices per day of the
+  car and the extras.
+- Dates are the stored UTC moments shown as Tbilisi time, in numbers
+  ("10.01.2026 18:00").
+- The name of a fixed place is looked up in settings when the screen is shown, in the
+  current language. If the settings are not loaded or the place is no longer there,
+  the line says "A place from our list"; the stored id is never shown and the screen
+  never waits for the settings or shows an error for them.
+- A language switch changes the labels, the extras and the place names, never the
+  stored booking.
+- Unchanged from step 2.7: the screen keeps its own copy, the shared sent booking is
+  cleared when the user leaves, and without a sent booking the screen goes to the
+  catalog.
 
 ### 2.5 About Us page
 
@@ -508,7 +532,9 @@ Implementation decisions (step 2.2):
   the cars provider overridden (no Firebase). The car detail screen has the same kind
   of tests (car_detail_screen_test.dart, catalog_navigation_test.dart). The booking
   form has the same kind of tests (booking_form_screen_test.dart), with the car, the
-  settings, the booking repository and the clock overridden.
+  settings, the booking repository and the clock overridden. The thank-you screen has
+  them too (booking_sent_screen_test.dart), with the sent booking put into its provider
+  and the places overridden.
 - Packages installed: firebase_core 4.15.0, flutter_riverpod 3.4.3, go_router 18.0.2,
   flutter_localizations (Flutter SDK), intl 0.20.2, cloud_firestore 6.10.0.
 - Package approved for Phase 1: cloud_firestore.

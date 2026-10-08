@@ -317,4 +317,28 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get bookingSentThanks =>
       'Спасибо за доверие — наш представитель скоро свяжется с вами, чтобы уточнить детали.';
+
+  @override
+  String get bookingSentSummaryTitle => 'Ваша заявка';
+
+  @override
+  String get bookingSentCar => 'Автомобиль';
+
+  @override
+  String get bookingSentPickup => 'Получение';
+
+  @override
+  String get bookingSentDropoff => 'Возврат';
+
+  @override
+  String get bookingSentNoExtras => 'Нет';
+
+  @override
+  String get bookingSentUnknownPlace => 'Место из нашего списка';
+
+  @override
+  String get bookingSentWhatsapp => 'WhatsApp';
+
+  @override
+  String get bookingSentTelegram => 'Telegram';
 }

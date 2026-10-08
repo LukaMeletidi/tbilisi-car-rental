@@ -313,4 +313,28 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bookingSentThanks =>
       'Thank you for your trust — our representative will contact you shortly to confirm the details.';
+
+  @override
+  String get bookingSentSummaryTitle => 'Your request';
+
+  @override
+  String get bookingSentCar => 'Car';
+
+  @override
+  String get bookingSentPickup => 'Pickup';
+
+  @override
+  String get bookingSentDropoff => 'Dropoff';
+
+  @override
+  String get bookingSentNoExtras => 'None';
+
+  @override
+  String get bookingSentUnknownPlace => 'A place from our list';
+
+  @override
+  String get bookingSentWhatsapp => 'WhatsApp';
+
+  @override
+  String get bookingSentTelegram => 'Telegram';
 }

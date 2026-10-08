@@ -90,5 +90,13 @@
   "bookingFailedRejected": "Заявка не принята. Проверьте свои данные и даты или выберите другой автомобиль.",
   "bookingFailedNoConnection": "Не удалось отправить заявку. Проверьте подключение к интернету и попробуйте ещё раз.",
   "bookingFailedUnknown": "Что-то пошло не так. Попробуйте ещё раз.",
-  "bookingSentThanks": "Спасибо за доверие — наш представитель скоро свяжется с вами, чтобы уточнить детали."
+  "bookingSentThanks": "Спасибо за доверие — наш представитель скоро свяжется с вами, чтобы уточнить детали.",
+  "bookingSentSummaryTitle": "Ваша заявка",
+  "bookingSentCar": "Автомобиль",
+  "bookingSentPickup": "Получение",
+  "bookingSentDropoff": "Возврат",
+  "bookingSentNoExtras": "Нет",
+  "bookingSentUnknownPlace": "Место из нашего списка",
+  "bookingSentWhatsapp": "WhatsApp",
+  "bookingSentTelegram": "Telegram"
 }
