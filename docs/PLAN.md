@@ -685,7 +685,10 @@ Phase 1 is complete.
   repository; deploy with my approval — DONE. The rules were deployed on 2026-10-08;
   the first valid create is tested from the real app in step 2.7.
 - 2.7 Booking form screen, in two parts: 2.7a the logic, the state and the texts;
-  2.7b the screens and the routes — not started.
+  2.7b the screens and the routes — DONE (both parts). I verified the first real
+  create and the offline behaviour on the emulator: the booking document was correct,
+  and an offline send fails with the "Could not send..." text in about 20 seconds and
+  nothing is queued.
 - 2.8 Confirmation screen — not started.
 - 2.9 App Check (approach proposed first, enabled only with my approval) — not
   started.
