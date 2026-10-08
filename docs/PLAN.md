@@ -632,7 +632,8 @@ Phase 1 is complete.
 - 2.4 Car detail screen with the "Make a booking" button — DONE.
 - 2.5 Booking model and form validation (pure Dart, unit tests) — DONE.
 - 2.6 Firestore rules for bookings (public create only) and the create method in the
-  repository; deploy with my approval — not started.
+  repository; deploy with my approval — DONE. The rules were deployed on 2026-10-08;
+  the first valid create is tested from the real app in step 2.7.
 - 2.7 Booking form screen — not started.
 - 2.8 Confirmation screen — not started.
 - 2.9 App Check (approach proposed first, enabled only with my approval) — not
