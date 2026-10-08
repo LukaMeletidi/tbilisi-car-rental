@@ -85,6 +85,22 @@ void main() {
     );
   });
 
+  test('throws when a location uses the reserved id "other"', () {
+    expect(
+      () => parsePickupLocations(
+        document([location('tbilisiAirport'), location('other')]),
+      ),
+      throwsFormatException,
+    );
+  });
+
+  test('an id that only contains the word "other" is allowed', () {
+    final locations = parsePickupLocations(
+      document([location('otherOffice'), location('Other')]),
+    );
+    expect(locations.map((l) => l.id), ['otherOffice', 'Other']);
+  });
+
   test('throws when a location has no English name', () {
     expect(
       () => parsePickupLocations(

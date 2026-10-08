@@ -157,8 +157,25 @@ Triggered by a "Make a booking" button on a car. Fields:
 Rules:
 - Every date/time field shows a visible label: "Tbilisi time (GMT+4)".
 - Pickup must be in the future. Dropoff must be after pickup. There is no minimum lead
-  time and no maximum rental length.
+  time. The maximum rental length is the form limit of 365 days
+  (bookingMaxRentalDays).
 - "Other" location has the same price as the fixed locations; there is no delivery fee.
+
+Validation decisions (step 2.5); the same limits go into the Firestore rules in
+step 2.6:
+- Text is trimmed; only spaces counts as empty.
+- Full name: 2 to 100 characters.
+- Phone: international format, "+" and 8 to 15 digits; spaces, hyphens, dots and
+  brackets are removed before storing.
+- Email: at most 254 characters, one "@", a domain with a dot.
+- "Other" location: 1 to 200 characters. Notes: at most 500.
+- Pickup must be later than the current moment; dropoff strictly after pickup. Times
+  are entered as Tbilisi time and compared in UTC.
+- The dropoff may be at most 365 days after the pickup (exactly 365 days is allowed).
+  This is a limit of the form, not a pricing rule.
+- A fixed location must be one of the ids in settings; "other" is a reserved id.
+- The car must be active.
+- The checks do not prove that a phone number or an email address exists.
 
 ### 2.4 Confirmation screen
 
@@ -276,20 +293,26 @@ stored inside the document)
 Until the Storage decision (before Phase 4), demo photos are image URLs of freely
 licensed photos, picked by me and stored in `photos`.
 
-bookings (ONE collection for customer requests and confirmed bookings)
-- customer: fullName, phone, whatsapp flag, telegram flag, email
+bookings (ONE collection for customer requests and confirmed bookings; field names
+agreed in step 2.5)
+- customer: map with fullName, phone ("+" and digits only), whatsapp (boolean),
+  telegram (boolean), email
 - carId
 - pickupDateTime, dropoffDateTime (stored in UTC)
-- pickupLocation, dropoffLocation
+- pickupLocation, dropoffLocation: each a map with id (a location id from settings, or
+  "other") and, only for "other", text. "other" is a reserved id: no location in
+  settings may use it.
 - extras: list of selected extras; stored names: snowChains, childSeat, infantSeat,
   boosterSeat
-- notes (<= 500 chars)
-- totalPrice: fixed number, NOT recomputed on display
+- notes: always present, may be empty (<= 500 chars)
+- totalPrice: fixed number in USD with at most two decimals, NOT recomputed on display
 - language (ka/ru/en)
 - status: new | pending | confirmed | cancelled
-- createdAt
+- createdAt (server time)
 - createdBy (only for admin-created bookings)
 - expireAt (set server-side in the last phase; absent until then)
+- Not stored: the number of days and the "individual price" flag. Both are calculated
+  from the two dates.
 
 Statuses:
 - new: submitted by a customer, nobody has handled it yet.
@@ -595,7 +618,7 @@ Phase 1 is complete.
 - 2.3 Settings, read-only: extras prices and locations; rule "settings: public read";
   settings entered by me in the console — DONE.
 - 2.4 Car detail screen with the "Make a booking" button — DONE.
-- 2.5 Booking model and form validation (pure Dart, unit tests) — not started.
+- 2.5 Booking model and form validation (pure Dart, unit tests) — DONE.
 - 2.6 Firestore rules for bookings (public create only) and the create method in the
   repository; deploy with my approval — not started.
 - 2.7 Booking form screen — not started.
