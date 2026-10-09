@@ -888,7 +888,9 @@ Phase 2 is complete.
 Phase 3: admin sign-in and the bookings list with editing (Section 11).
 
 - 3.1 Admin rules in the local file, and admin and signed-in cases in the emulator
-  script. No app change, no deploy — not started.
+  script. No app change, no deploy — DONE. The emulator run passed: 104 of 104
+  public checks and 173 of 173 admin and signed-in checks. The rules are not deployed
+  yet (step 3.3).
 - 3.2 Auth set up in the console by me, the claim script, and one run of it; the key
   deleted afterwards — not started.
 - 3.3 Rules deployed with my approval, a short live check, and (if it is simple) the
