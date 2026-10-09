@@ -765,7 +765,9 @@ Phase 1 is complete.
   Georgian.
 - 2.9 App Check, in two parts:
   - 2.9a The package, activation with the debug provider in Android debug builds, the
-    debug token registered by me; monitoring only, no enforcement — not started.
+    debug token registered by me; monitoring only, no enforcement — DONE. I registered
+    the debug token and verified in the console that Cloud Firestore requests from the
+    emulator are "verified", in monitoring mode.
   - 2.9b Release providers and the enforcement decision — moved to Phase 7 (see Open
     reminders).
 - 2.10 Verify Phase 2 on the Android emulator — not started.
