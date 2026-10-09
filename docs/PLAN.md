@@ -997,7 +997,9 @@ Phase 3: admin sign-in and the bookings list with editing (Section 11).
     attempts were sent to the live database.
   - The admin side is first checked live in steps 3.5 and 3.6.
 - 3.4 Package firebase_auth, the auth repository and its providers, with unit tests;
-  no screen yet — not started.
+  no screen yet — DONE. 522 tests pass, analyze is clean, and the debug APK builds
+  with the new package. The repository was not run against real Firebase; its first
+  real run is step 3.5.
 - 3.5 /admin/login, the redirect, the "no admin access" state, Sign out — not started.
 - 3.6 Bookings list, read only — not started.
 - 3.7 Filter by status and sort by pickup date — not started.
