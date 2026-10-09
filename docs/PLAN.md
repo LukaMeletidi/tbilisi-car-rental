@@ -829,6 +829,10 @@ Phase 0 is complete.
   unchanged expireAt, because an update is checked on the merged document.
 - createdBy is not tied to who created a booking: the rules let an admin add or
   change it on any booking. A known simplification.
+- A second admin account, if ever needed: add the user in the console, then give it
+  the claim with the same script ("set <UID>"), with a new key that is created and
+  deleted in one sitting (Section 8). Sign-up is switched off, so no other account can
+  be created from an app.
 - Known limits after Phase 2:
   - The deployed rules text was never compared directly with the file in the
     repository. The evidence is the deploy output, the anonymous live checks of step
@@ -928,7 +932,15 @@ Phase 3: admin sign-in and the bookings list with editing (Section 11).
   public checks and 173 of 173 admin and signed-in checks. The rules are not deployed
   yet (step 3.3).
 - 3.2 Auth set up in the console by me, the claim script, and one run of it; the key
-  deleted afterwards — not started.
+  deleted afterwards — DONE. Results:
+  - Email/Password sign-in is enabled; one admin account exists. Its e-mail and UID
+    are not written in this repository.
+  - "Enable create (sign-up)" is OFF and "Email enumeration protection" is ON
+    (Authentication > Settings > User actions).
+  - The script ran: "Claims: (none)" before, {"admin":true} after "set", and a fresh
+    "show" read the same from the server. Its first real run worked at once.
+  - The service account key was deleted in the Google Cloud console (the key list is
+    empty) and the JSON file was deleted from the computer.
 - 3.3 Rules deployed with my approval, a short live check, and (if it is simple) the
   deployed rules text compared with the file — not started.
 - 3.4 Package firebase_auth, the auth repository and its providers, with unit tests;
