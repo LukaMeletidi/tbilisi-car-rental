@@ -128,6 +128,7 @@ Search (step 1.10):
 - It searches the brand and the model: every word typed must be contained in
   "brand model", ignoring letter case. An empty search shows all cars.
 - The input is not restricted. Georgian or Russian text simply finds nothing.
+- Known limit: searching "mx5" does not find "MX-5" (punctuation is not ignored).
 - Search and filters combine (both must match). The "Filters (n)" counter does not
   count the search.
 - It runs in the app on the loaded cars: no new Firestore query.
@@ -569,8 +570,13 @@ Implementation decisions (step 2.2):
 5. Calendar + conflict warning
 6. Settings screens (Extras & Prices, Company Info) + About Us page
 7. Cloud Functions + compliance + polish (App Check step 2.9b, consent banner, Privacy
-   Policy, TTL, email, README with screenshots, launcher icon). The launcher icon is still open; it needs
-   the package flutter_launcher_icons, which needs the owner's permission then.
+   Policy, TTL, email, README with screenshots, launcher icon). The launcher icon is
+   still open; it needs the package flutter_launcher_icons, which needs the owner's
+   permission then.
+   README: screenshots; an honest "how I worked" paragraph (architecture and business
+   rules are the owner's decisions, Claude Code writes the code under supervision, the
+   owner reviews and approves every change); a note that iOS could not be tested on
+   Windows.
 
 ## 12. Cloud Functions — LAST PHASE ONLY
 
@@ -681,6 +687,17 @@ Phase 0 is complete.
     documentation gives no time for this direction; expect up to 15 minutes too.
   - My anonymous REST checks against the live database (steps 2.3 and 2.6) stop
     working once Firestore is enforced; that is the intended effect.
+  - Learned in steps 2.9a and 2.10: the debug token is created per app install. After
+    a reinstall (for example after flutter run --release, or an uninstall) a NEW token
+    appears in Logcat (filter DebugAppCheckProvider) and must be registered in the
+    Firebase console > App Check > Apps > Manage debug tokens; the old token can be
+    deleted. After registering, the app must be stopped and started again (flutter
+    run), because the token exchange happens at start; hot reload is not enough.
+  - In the console, requests with no token (release build, web) show up as
+    "Unverified: outdated client", and requests with an unregistered token as
+    "Unverified: invalid". Nothing is enforced.
+  - Never commit or share a debug token. Delete all debug tokens in the console when
+    the project is finished.
 - Analytics consent: Section 9 describes a web consent banner; decide in Phase 7 how
   consent works on Android (proposal: the same consent screen on all platforms, the
   choice stored with shared_preferences, Analytics off until accepted).
@@ -690,8 +707,15 @@ Phase 0 is complete.
 - Public demo: decide in Phase 7 whether it is a hosted web build, an APK, or both.
 - Web URLs keep the # for now; decide clean URLs and the Firebase Hosting rewrite rule
   when we set up Hosting.
-- Georgian font: not bundled; renders fine so far in Chrome and on the Android emulator
-  (short placeholder text only). Re-check in Phase 1 with more text.
+- Georgian font: not bundled. Checked in Phase 2 on the emulator with the full
+  booking flow in Georgian: it looks fine.
+- Offline behaviour (I checked it in step 2.10, after fully closing and reopening the
+  app in airplane mode): the catalog shows the same cars as online, taken from the
+  Firestore cache; the car photos are replaced by a grey placeholder with a car icon;
+  sending a booking shows the "check your internet connection" error and nothing is
+  sent.
+- Russian and Georgian texts: I have not yet read the ru and ka texts of the booking
+  form and the thank-you summary (65 keys). Check them before Phase 7.
 - Language choice is not remembered yet (shared_preferences comes later).
 - Rules tests run on the local Firebase emulator, never against the real project, with
   this command (one line):
@@ -714,6 +738,31 @@ Phase 0 is complete.
 - App bar on other screens: the car detail screen reuses AppBarLogo next to the back
   arrow, with the same toolbar height (decided in step 2.4); the booking form and the
   thank-you screen do the same (step 2.7). Decide again for each new screen.
+- lib/firebase_options.dart has one import split over two lines. The file is
+  generated, so leave it alone.
+- The import cycle between app_router and the screens is accepted: the router imports
+  the screens, and the screens import the router for the route names. It is the one
+  exception to "lib/core does not import lib/features".
+- Known limits after Phase 2:
+  - The deployed rules text was never compared directly with the file in the
+    repository. The evidence is the deploy output, the anonymous live checks of step
+    2.6, and my real bookings being accepted.
+  - The rules do not check the stored total against the car and extras prices (only 0
+    to 1,000,000 USD).
+  - Location ids are checked only by their shape, not against settings.
+  - Spam from a real client is possible: App Check is not enforced, and there is no
+    provider for an Android release build.
+  - A timeout can in rare cases be followed by the first request still arriving, so a
+    retry can create a duplicate booking.
+  - The draft of the booking form lives in memory, including personal data, until it
+    is sent or the app is closed.
+  - Release builds were only smoke tested.
+  - iOS is untested (Windows only).
+  - The date and time pickers were not looked at on a 320 px wide screen.
+  - The booking form has no consent line and no Privacy Policy link yet (Phase 7).
+  - The chosen language is not remembered between app starts.
+  - The Android build prints a Kotlin plugin warning (see the firebase_core reminder
+    above).
 
 ## 16. Phase 1 status
 
@@ -770,4 +819,16 @@ Phase 1 is complete.
     emulator are "verified", in monitoring mode.
   - 2.9b Release providers and the enforcement decision — moved to Phase 7 (see Open
     reminders).
-- 2.10 Verify Phase 2 on the Android emulator — not started.
+- 2.10 Verify Phase 2 on the Android emulator — DONE.
+  - Automatic checks A1 to A8 all passed: analyze, 457 tests, the Firestore rules
+    script (104 of 104), a debug APK build, a web build, a secrets scan of the 203
+    tracked files, a line-length scan, and the rules file identical to HEAD.
+  - I checked by hand: a debug run on the emulator (catalog, search, filters, car
+    page, booking form, thank-you screen, language switch); a release build smoke
+    test on the emulator; the web build in Chrome (a wide window shows 3 columns; an
+    unknown car address shows "This car is not available" with a way back); the
+    offline behaviour; real booking sends (I deleted the test bookings in the console
+    afterwards); the App Check debug token registered in the console and the
+    "Verified requests" count growing again (monitoring only, nothing is enforced).
+
+Phase 2 is complete.
