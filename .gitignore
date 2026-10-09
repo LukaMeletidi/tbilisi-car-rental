@@ -46,3 +46,20 @@ app.*.map.json
 
 # Firebase
 .firebase/
+
+# Admin tools (Node)
+tool/admin/node_modules/
+
+# Keys and secrets must never be in the repository.
+*firebase-adminsdk*.json
+service-account*.json
+service_account*.json
+serviceAccount*.json
+*.pem
+*.p12
+*.key
+*.jks
+*.keystore
+key.properties
+.env
+.env.*

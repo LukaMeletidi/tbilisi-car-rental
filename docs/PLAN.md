@@ -507,6 +507,38 @@ Implementation decisions (step 2.2):
   - cars: an admin may read every car, also a hidden one. Writes stay closed until
     Phase 4. settings: writes stay closed until Phase 6.
   - Everything else, including mail, is denied for an admin too.
+- Admin setup, step by step (step 3.2). Order: the code is committed first, the key
+  is created only afterwards, and steps D to F happen in one sitting.
+  - A. Firebase console > Authentication > Sign-in method: enable Email/Password;
+    leave "Email link" off.
+  - B. Authentication > Users > Add user: the one shared admin account, with a long
+    random password. Copy its "User UID" (the UID is not a secret).
+  - C. Authentication > Settings > User actions: switch "Enable create (sign-up)" off
+    if it is offered. If it is not, leave it: an account without the claim has no
+    rights.
+  - D. Firebase console > Project settings > Service accounts > "Generate new private
+    key". Move the downloaded file at once to C:\keys\tbilisi, a folder outside the
+    repository and outside OneDrive.
+  - E. In tool/admin, in PowerShell: set the variable ADMIN_KEY_FILE to the full path
+    of the key file for this terminal only, then run
+    "node set_admin_claim.mjs <UID>" (shows the account, changes nothing),
+    "node set_admin_claim.mjs set <UID>" (asks for the account's e-mail, then sets
+    admin: true and reads it back), and the first command again. Remove the
+    variable afterwards (Remove-Item Env:ADMIN_KEY_FILE).
+  - F. Google Cloud console > IAM & Admin > Service Accounts > the
+    firebase-adminsdk account > Keys: delete the key. Then delete the JSON file and
+    empty the Recycle Bin.
+  - G. Proof: "Claims: (none)" before and "Claims: {"admin":true}" after. The app
+    sees the claim after the next sign-in (sign out, sign in).
+  - The script (tool/admin/set_admin_claim.mjs) shows by default and changes only
+    with "set" or "remove". It refuses a key inside the repository or inside
+    OneDrive (real paths are compared, so a link cannot trick it), a relative path,
+    and a key of any project other than tbilisi-car-rental. It keeps every other
+    claim, touches no other account and no data, and never prints the key or the
+    path of the key file.
+  - Never commit, and never paste into a chat: the key file or any part of it, the
+    private key, the admin password, an App Check debug token, or a screenshot that
+    shows one of these. .gitignore has patterns for key files as a second net.
 - cars: public read of active cars only (active == true); writes admin only. Until
   admin auth exists (Phase 3), nobody can write.
 - settings: public read; writes admin only.
@@ -579,6 +611,10 @@ Implementation decisions (step 2.2):
   2.6). Since step 3.1 the script also covers the admin and signed-in cases, with
   unsigned test tokens that only the emulator accepts. Its 104 public checks are
   guarded: the script fails when their number changes.
+- The safety checks of the admin claim script have their own tests, run with Node's
+  built-in test runner (no key, no network, no installed package):
+    node --test tool/admin/guards.test.mjs
+  Name the file: with only the folder (node --test tool/admin/) Node 24 fails.
 - Approved exception to "no widget tests": catalog_screen_test.dart covers the catalog
   states (loading, error with "Try again", empty, no match with "Reset filters") and
   the search field (no match by search; Reset clears the search and the filters), with
