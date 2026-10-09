@@ -495,6 +495,10 @@ Implementation decisions (step 2.2):
   prints its contents and refuses to run when the key path is inside the repository
   or when the key's project is not exactly tbilisi-car-rental. After the claim is
   set, the admin signs out and in again: the claim is inside the sign-in token.
+- Live rules: since step 3.3 the live Firestore rules are those of commit 0a7eb27
+  (deployed 2026-10-09, 13:34 UTC). To go back to an earlier version, use the Rules
+  history in the Firebase console (Firestore Database > Rules). A new ruleset reaches
+  new requests within about a minute and open listeners within about 10 minutes.
 - Admin rules (written in step 3.1; deployed in step 3.3):
   - isAdmin(): signed in AND the token has admin == true. A token without the claim,
     or with any other value, is treated exactly like the public.
@@ -834,9 +838,9 @@ Phase 0 is complete.
   deleted in one sitting (Section 8). Sign-up is switched off, so no other account can
   be created from an app.
 - Known limits after Phase 2:
-  - The deployed rules text was never compared directly with the file in the
-    repository. The evidence is the deploy output, the anonymous live checks of step
-    2.6, and my real bookings being accepted.
+  - CLOSED in step 3.3: the deployed rules text was compared directly. The live text
+    equals firestore.rules at commit 0a7eb27 (line endings and trailing spaces
+    ignored).
   - The rules do not check the stored total against the car and extras prices (only 0
     to 1,000,000 USD).
   - Location ids are checked only by their shape, not against settings.
@@ -942,7 +946,20 @@ Phase 3: admin sign-in and the bookings list with editing (Section 11).
   - The service account key was deleted in the Google Cloud console (the key list is
     empty) and the JSON file was deleted from the computer.
 - 3.3 Rules deployed with my approval, a short live check, and (if it is simple) the
-  deployed rules text compared with the file — not started.
+  deployed rules text compared with the file — DONE. Results:
+  - Deployed with "firebase deploy --only firestore:rules --project
+    tbilisi-car-rental" on 2026-10-09 at 13:34 UTC: the file compiled and only the
+    rules were released; no error and no warning.
+  - Six anonymous read-only checks one minute later, all as expected: active cars with
+    the filter 200 (6 cars), all cars without the filter 403, settings/extras and
+    settings/locations 200, bookings get and list 403.
+  - I sent one real test booking from the app on the emulator; it was accepted (the
+    thank-you screen with the summary), and I deleted it in the console.
+  - I copied the live rules text from the console into a file outside the repository;
+    it equals firestore.rules at commit 0a7eb27 (8808 characters, 207 lines).
+  - Skipped: the live check of a hidden car (its id was not known). No refused-write
+    attempts were sent to the live database.
+  - The admin side is first checked live in steps 3.5 and 3.6.
 - 3.4 Package firebase_auth, the auth repository and its providers, with unit tests;
   no screen yet — not started.
 - 3.5 /admin/login, the redirect, the "no admin access" state, Sign out — not started.
