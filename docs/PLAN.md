@@ -483,8 +483,19 @@ Implementation decisions (step 2.2):
   is checked; the settings parser enforces the same shape), and that the total matches
   the prices; the total is an estimate that staff recalculate.
 - `mail` collection (Trigger Email extension): clients must never read or write it.
-- Firebase App Check on the public booking form (reCAPTCHA on web; Android approach in
-  Open reminders).
+- Firebase App Check (step 2.9; details and open points in Open reminders):
+  - What it adds: with enforcement on, Firestore refuses requests that do not carry a
+    token from a registered build of our app. Plain scripts that only know the public
+    web API key are then refused before the rules run.
+  - What it does not do: it does not limit how often a real client writes (valid
+    bookings can still be sent many times from the real app), and it does not identify
+    a person. Firebase itself says it prevents some, but not all, abuse.
+  - Enforcement is per product, not per collection: for Firestore it covers reading
+    the cars and settings too, not only creating bookings. A build without a valid
+    token then cannot load the catalog at all.
+  - Step 2.9a: App Check is activated only in debug builds on Android, with the debug
+    provider, and is NOT enforced (monitoring only). The strict rules for bookings
+    stay the real protection.
 - The admin login route must not appear in public navigation.
 
 ## 9. Analytics & Compliance
@@ -536,7 +547,8 @@ Implementation decisions (step 2.2):
   them too (booking_sent_screen_test.dart), with the sent booking put into its provider
   and the places overridden.
 - Packages installed: firebase_core 4.15.0, flutter_riverpod 3.4.3, go_router 18.0.2,
-  flutter_localizations (Flutter SDK), intl 0.20.2, cloud_firestore 6.10.0.
+  flutter_localizations (Flutter SDK), intl 0.20.2, cloud_firestore 6.10.0,
+  firebase_app_check 0.4.8 (added in step 2.9a).
 - Package approved for Phase 1: cloud_firestore.
 - Packages approved for later: url_launcher, shared_preferences, image_picker
   (Phase 4). Other Firebase packages are added in the phase that first uses them, with
@@ -556,8 +568,8 @@ Implementation decisions (step 2.2):
 4. Fleet management + photo upload
 5. Calendar + conflict warning
 6. Settings screens (Extras & Prices, Company Info) + About Us page
-7. Cloud Functions + compliance + polish (consent banner, Privacy Policy, TTL, email,
-   README with screenshots, launcher icon). The launcher icon is still open; it needs
+7. Cloud Functions + compliance + polish (App Check step 2.9b, consent banner, Privacy
+   Policy, TTL, email, README with screenshots, launcher icon). The launcher icon is still open; it needs
    the package flutter_launcher_icons, which needs the owner's permission then.
 
 ## 12. Cloud Functions — LAST PHASE ONLY
@@ -634,8 +646,41 @@ Phase 0 is complete.
   Firestore streams), paused providers (relevant to real-time admin screens), no
   separate AutoDispose classes, legacy providers moved. Confirm each against the
   installed version when we first use it.
-- App Check: reCAPTCHA is the web mechanism; on Android use Play Integrity (a debug
-  provider for development). Propose the approach in Phase 2 and ask me before enabling.
+- App Check (checked against the official documentation in step 2.9):
+  - Done in step 2.9a: the package firebase_app_check; activation in lib/main.dart only
+    for debug builds on Android, with the debug provider. I register the debug token
+    of each development device by hand in the Firebase console (Security > App Check >
+    Apps > the Android app > Manage debug tokens). The token is a secret: never in a
+    file, never committed, never in a build argument that ends up in the repo.
+  - Not enforced. App Check itself is free on the Spark plan.
+  - Web: nothing yet. reCAPTCHA needs the domain of the site, and the site has no
+    public address (Hosting is undecided). Firebase recommends reCAPTCHA Enterprise
+    for new integrations: 10,000 assessments per month at no cost; on Spark only four
+    score levels can be chosen. Not settled from the documentation: whether creating
+    the key needs a billing account in Google Cloud, and what happens above 10,000
+    without billing. Never add localhost to a production key.
+  - Android release: the app will NOT be published on Google Play (portfolio project),
+    so Play Integrity is not planned. A sideloaded APK then cannot get a real App
+    Check token. The debug provider must never be shipped in a build for users.
+  - iOS: no App Check setup (it cannot be set up or tested on Windows); note it in the
+    README.
+  - LOCK-OUT RISK: enforcing App Check for Firestore while Android users have a
+    sideloaded APK would lock that app out completely (no catalog, no booking).
+  - OPEN for step 2.9b (Phase 7, with the public-demo decision), not decided:
+    (a) no enforcement at all, the rules stay the only protection;
+    (b) enforcement only if the public demo is a hosted web build with reCAPTCHA (and
+        no Android build is handed out, or the Android app is accepted as locked out);
+    (c) another option from the documentation at that time, for example a custom
+        App Check provider with our own server (needs Cloud Functions and Blaze).
+  - Rollout when it is enforced: watch the request metrics first (verified, outdated
+    client, unknown origin, invalid); press Enforce for Cloud Firestore only after a
+    booking was made from the real release build; it can take up to 15 minutes to
+    take effect; check the catalog and one booking at once.
+  - Undo: Firebase console > Security > App Check > Cloud Firestore > Set up >
+    "Unenforced (monitoring only)". No code change or deploy is needed. The
+    documentation gives no time for this direction; expect up to 15 minutes too.
+  - My anonymous REST checks against the live database (steps 2.3 and 2.6) stop
+    working once Firestore is enforced; that is the intended effect.
 - Analytics consent: Section 9 describes a web consent banner; decide in Phase 7 how
   consent works on Android (proposal: the same consent screen on all platforms, the
   choice stored with shared_preferences, Analytics off until accepted).
@@ -718,6 +763,9 @@ Phase 1 is complete.
 - 2.8 Confirmation screen: the thank-you screen with the summary of the sent request
   — DONE. I checked the screen on the emulator after a real send, in English and
   Georgian.
-- 2.9 App Check (approach proposed first, enabled only with my approval) — not
-  started.
+- 2.9 App Check, in two parts:
+  - 2.9a The package, activation with the debug provider in Android debug builds, the
+    debug token registered by me; monitoring only, no enforcement — not started.
+  - 2.9b Release providers and the enforcement decision — moved to Phase 7 (see Open
+    reminders).
 - 2.10 Verify Phase 2 on the Android emulator — not started.
