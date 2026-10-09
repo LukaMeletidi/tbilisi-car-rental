@@ -117,4 +117,38 @@ void main() {
       contains("b.status == '${BookingStatus.newBooking.storedName}'"),
     );
   });
+
+  group('admin bookings (Phase 3)', () {
+    test('the admin key lists are the public keys, plus createdBy', () {
+      final sent = newBookingDocument(booking).keys.toSet();
+      final allowed = ruleList('a.keys().hasOnly([');
+      final required = ruleList('a.keys().hasAll([');
+
+      expect(allowed.toSet(), {...sent, 'createdBy'});
+      expect(allowed.length, sent.length + 1);
+      // createdBy is optional, so it is not in the required list.
+      expect(required.toSet(), sent);
+      expect(required.length, sent.length);
+    });
+
+    test('the admin status list equals the four Dart statuses', () {
+      final statuses = ruleList('a.status in [');
+      expect(statuses.toSet(), {
+        for (final status in BookingStatus.values) status.storedName,
+      });
+      expect(statuses.length, BookingStatus.values.length);
+    });
+
+    test('the admin extras and languages are the public ones', () {
+      expect(
+        ruleList('a.extras.hasOnly(').toSet(),
+        ruleList('b.extras.hasOnly(').toSet(),
+      );
+      expect(rules, contains('a.extras.size() <= ${Extra.values.length}'));
+      expect(
+        ruleList('a.language in [').toSet(),
+        ruleList('b.language in [').toSet(),
+      );
+    });
+  });
 }

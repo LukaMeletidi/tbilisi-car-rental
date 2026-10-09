@@ -2,16 +2,27 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // ---- Who is an admin.
+    // Signed in, and the sign-in token carries the custom claim admin: true.
+    // Only a script with the Admin SDK can set that claim; no app can.
+    // get() with a default: a token without the claim is simply not admin.
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.get('admin', false) == true;
+    }
+
     // Public catalog: anyone can read a car that is active.
     // A list query must itself filter on active == true, or it is denied.
-    // Nobody can write yet; admin writes are added in Phase 3.
+    // An admin can read every car, also a hidden one: the bookings list must
+    // show the car of an old booking. Nobody can write yet; admin writes are
+    // added in Phase 4.
     match /cars/{carId} {
-      allow read: if resource.data.active == true;
+      allow read: if resource.data.active == true || isAdmin();
       allow write: if false;
     }
 
     // Settings (extras prices, locations, later company info): anyone can
-    // read; nobody can write from an app. Admin writes are added in Phase 3.
+    // read; nobody can write from an app. Admin writes are added in Phase 6.
     match /settings/{settingId} {
       allow read: if true;
       allow write: if false;
@@ -115,14 +126,80 @@ service cloud.firestore {
         && b.createdAt == request.time;
     }
 
-    // Bookings: anyone may create a valid request. Nobody can read, change
-    // or delete one from an app. Admin access is added in Phase 3.
-    match /bookings/{bookingId} {
-      allow create: if isValidNewBooking(request.resource.data);
-      allow read, update, delete: if false;
+    // ---- Bookings written by an admin (Phase 3).
+    //
+    // An admin may create a booking by hand and change every field of an
+    // existing one. The document is still checked for its shape, with the
+    // same limits as a customer request. What differs from a customer:
+    // - any of the four statuses, not only "new";
+    // - createdBy (the staff name) is allowed;
+    // - the pickup may be in the past (an old booking is corrected);
+    // - the car must exist but may be hidden.
+    // createdAt is checked by the caller: server time on create, unchanged
+    // on update. expireAt is still not accepted from any app.
+
+    // The car exists; it may be hidden. One document read.
+    function isExistingCar(carId) {
+      return carId is string
+        && carId.matches('^[A-Za-z0-9_-]{1,128}$')
+        && exists(/databases/$(database)/documents/cars/$(carId));
     }
 
-    // Everything else is denied.
+    function isValidAdminBooking(a) {
+      return a.keys().hasOnly([
+               'customer', 'carId', 'pickupDateTime', 'dropoffDateTime',
+               'pickupLocation', 'dropoffLocation', 'extras', 'notes',
+               'totalPrice', 'language', 'status', 'createdAt',
+               'createdBy'])
+        && a.keys().hasAll([
+               'customer', 'carId', 'pickupDateTime', 'dropoffDateTime',
+               'pickupLocation', 'dropoffLocation', 'extras', 'notes',
+               'totalPrice', 'language', 'status', 'createdAt'])
+        && isValidCustomer(a.customer)
+        && isExistingCar(a.carId)
+        && a.pickupDateTime is timestamp
+        && a.dropoffDateTime is timestamp
+        && a.dropoffDateTime > a.pickupDateTime
+        && a.dropoffDateTime
+             <= a.pickupDateTime + duration.value(maxRentalDays(), 'd')
+        && isValidLocation(a.pickupLocation)
+        && isValidLocation(a.dropoffLocation)
+        && a.extras is list
+        && a.extras.size() <= 4
+        && a.extras.hasOnly(
+             ['snowChains', 'childSeat', 'infantSeat', 'boosterSeat'])
+        && a.extras.toSet().size() == a.extras.size()
+        && a.notes is string
+        && a.notes.size() <= notesMaxLength()
+        && a.totalPrice is number
+        && a.totalPrice >= 0
+        && a.totalPrice <= maxTotalPrice()
+        && a.language in ['ka', 'ru', 'en']
+        && a.status in ['new', 'pending', 'confirmed', 'cancelled']
+        && a.createdAt is timestamp
+        // The staff name is optional; when present, 1 to 100 characters.
+        && (!('createdBy' in a)
+             || isTrimmedText(a.createdBy, 1, nameMaxLength()));
+    }
+
+    // Bookings.
+    // - Anyone may create a valid customer request (unchanged).
+    // - An admin may also create a booking by hand, read and list all
+    //   bookings, change one, and delete one.
+    // - Nobody else can read, change or delete a booking.
+    match /bookings/{bookingId} {
+      allow create: if isValidNewBooking(request.resource.data)
+        || (isAdmin()
+             && isValidAdminBooking(request.resource.data)
+             && request.resource.data.createdAt == request.time);
+      allow read, delete: if isAdmin();
+      allow update: if isAdmin()
+        && isValidAdminBooking(request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt;
+    }
+
+    // Everything else is denied, also for an admin. This includes the
+    // "mail" collection, which no app may ever read or write.
     match /{document=**} {
       allow read, write: if false;
     }

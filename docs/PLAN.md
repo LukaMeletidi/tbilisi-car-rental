@@ -288,6 +288,26 @@ embedded map.
 Admin on phones: the bookings list and status changes must work well. The calendar only
 needs horizontal scrolling, no special mobile design.
 
+Phase 3 decisions (the steps are in Section 18):
+- Addresses: /admin (the bookings list) and /admin/login; later admin screens go below
+  /admin. Nothing in the public app links to them.
+- Entry on Android: no visible entry; a long press on the logo in the catalog app bar
+  opens /admin/login. On web the address is typed by hand.
+- A signed-out visitor of anything under /admin is sent to /admin/login. A signed-in
+  account without the admin claim sees "This account has no admin access" and Sign
+  out; no admin data is requested.
+- Admin screens have a plain app bar for now. The navigation shell (bottom bar on
+  phones, side rail on wide screens) comes in Phase 4.
+- A booking document that cannot be read is skipped; the list shows the count
+  "N bookings could not be read" and the reason is logged. The same holds for cars.
+- Delete: a Delete button in the detail screen, with a confirmation; it is permanent.
+  It is the last feature step of Phase 3.
+- No conflict warning in Phase 3: it comes in Phase 5 (Section 3.4). Until then an
+  admin can set "confirmed" without any warning.
+- createdAt is always server time, also for a booking created by hand.
+- The one shared admin password is long and random; there is no password reset flow
+  in the app.
+
 ### 3.1 Bookings list
 
 - Lists all documents in the `bookings` collection (Section 4).
@@ -468,6 +488,25 @@ Implementation decisions (step 2.2):
   Firestore/Storage rules. UI hiding alone is never protection.
 - The claim is set via a one-off Admin SDK script. Document it as an explicit setup
   step, including how the ID token is refreshed after the claim is set.
+  Decided for Phase 3: the script lives in tool/admin/ with its own package.json
+  (package firebase-admin; node_modules is ignored). It uses a service account key
+  that is created, used and deleted in one sitting. The key file stays outside the
+  repository and outside any synced folder and is never committed; the script never
+  prints its contents and refuses to run when the key path is inside the repository
+  or when the key's project is not exactly tbilisi-car-rental. After the claim is
+  set, the admin signs out and in again: the claim is inside the sign-in token.
+- Admin rules (written in step 3.1; deployed in step 3.3):
+  - isAdmin(): signed in AND the token has admin == true. A token without the claim,
+    or with any other value, is treated exactly like the public.
+  - bookings: an admin may read, list, update and delete. The public create is
+    unchanged. An admin may also create a booking by hand.
+  - Admin writes are still checked for their shape, with the same limits as a
+    customer request. Differences: any of the four statuses; createdBy (1 to 100
+    characters) is allowed; the pickup may be in the past; the car must exist but
+    may be hidden. createdAt is server time on create and cannot be changed later.
+  - cars: an admin may read every car, also a hidden one. Writes stay closed until
+    Phase 4. settings: writes stay closed until Phase 6.
+  - Everything else, including mail, is denied for an admin too.
 - cars: public read of active cars only (active == true); writes admin only. Until
   admin auth exists (Phase 3), nobody can write.
 - settings: public read; writes admin only.
@@ -537,7 +576,9 @@ Implementation decisions (step 2.2):
 - Test strategy: unit tests for pricing, overlap and Tbilisi-time conversion, and for
   any other new logic. No widget tests by default. The Firestore rules for bookings
   are tested on the local emulator with tool/check_booking_rules.mjs (decided in step
-  2.6).
+  2.6). Since step 3.1 the script also covers the admin and signed-in cases, with
+  unsigned test tokens that only the emulator accepts. Its 104 public checks are
+  guarded: the script fails when their number changes.
 - Approved exception to "no widget tests": catalog_screen_test.dart covers the catalog
   states (loading, error with "Try again", empty, no match with "Reset filters") and
   the search field (no match by search; Reset clears the search and the filters), with
@@ -687,6 +728,8 @@ Phase 0 is complete.
     documentation gives no time for this direction; expect up to 15 minutes too.
   - My anonymous REST checks against the live database (steps 2.3 and 2.6) stop
     working once Firestore is enforced; that is the intended effect.
+  - The admin panel runs on web too. An enforced Firestore would need an App Check
+    provider for the admin web build as well; add this to the 2.9b decision.
   - Learned in steps 2.9a and 2.10: the debug token is created per app install. After
     a reinstall (for example after flutter run --release, or an uninstall) a NEW token
     appears in Logcat (filter DebugAppCheckProvider) and must be registered in the
@@ -743,6 +786,13 @@ Phase 0 is complete.
 - The import cycle between app_router and the screens is accepted: the router imports
   the screens, and the screens import the router for the route names. It is the one
   exception to "lib/core does not import lib/features".
+- Admin data on the device (accepted in Phase 3 for now): on Android, Firestore keeps
+  a local copy of the bookings an admin has read, also after sign-out. They contain
+  personal data. Revisit at the end of Phase 3.
+- When Phase 7 adds expireAt (TTL), the admin update rule must also allow an
+  unchanged expireAt, because an update is checked on the merged document.
+- createdBy is not tied to who created a booking: the rules let an admin add or
+  change it on any booking. A known simplification.
 - Known limits after Phase 2:
   - The deployed rules text was never compared directly with the file in the
     repository. The evidence is the deploy output, the anonymous live checks of step
@@ -832,3 +882,24 @@ Phase 1 is complete.
     "Verified requests" count growing again (monitoring only, nothing is enforced).
 
 Phase 2 is complete.
+
+## 18. Phase 3 status
+
+Phase 3: admin sign-in and the bookings list with editing (Section 11).
+
+- 3.1 Admin rules in the local file, and admin and signed-in cases in the emulator
+  script. No app change, no deploy — not started.
+- 3.2 Auth set up in the console by me, the claim script, and one run of it; the key
+  deleted afterwards — not started.
+- 3.3 Rules deployed with my approval, a short live check, and (if it is simple) the
+  deployed rules text compared with the file — not started.
+- 3.4 Package firebase_auth, the auth repository and its providers, with unit tests;
+  no screen yet — not started.
+- 3.5 /admin/login, the redirect, the "no admin access" state, Sign out — not started.
+- 3.6 Bookings list, read only — not started.
+- 3.7 Filter by status and sort by pickup date — not started.
+- 3.8 Booking detail and status change — not started.
+- 3.9 Edit all fields; the recomputed total next to the stored one — not started.
+- 3.10 Create a booking by hand (status confirmed, createdBy) — not started.
+- 3.11 Delete a booking, with a confirmation — not started.
+- 3.12 Verify Phase 3 and close it — not started.
