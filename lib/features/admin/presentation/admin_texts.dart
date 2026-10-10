@@ -4,6 +4,7 @@ library;
 
 import 'package:tbilisi_car_rental/core/models/booking_status.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings_filter.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_sign_in_failure.dart';
 import 'package:tbilisi_car_rental/features/catalog/domain/car_display.dart';
 
@@ -27,6 +28,37 @@ const adminTryAgain = 'Try again';
 const adminOfflineNote = 'Offline: showing saved data';
 const adminLoadMore = 'Load more';
 const adminEstimate = 'estimate';
+
+const adminFilterAll = 'All';
+const adminSearchHint = 'Name or phone';
+const adminClearSearch = 'Clear search';
+const adminNoMatch = 'No bookings match.';
+const adminClearFilters = 'Clear filters';
+
+/// The text of a status chip of the filter: "New 2", "All 7".
+String adminChipLabel(String label, int count) => '$label $count';
+
+/// The name of an order of the list.
+String adminSortLabel(AdminBookingsSort sort) {
+  switch (sort) {
+    case AdminBookingsSort.newestFirst:
+      return 'Newest first';
+    case AdminBookingsSort.oldestFirst:
+      return 'Oldest first';
+    case AdminBookingsSort.pickupDate:
+      return 'Pickup date';
+  }
+}
+
+/// The tooltip of the sort button: "Sort: Newest first".
+String adminSortTooltip(AdminBookingsSort sort) =>
+    'Sort: ${adminSortLabel(sort)}';
+
+/// Shown while older bookings can still be loaded: the filter, the counts
+/// and the order only know the loaded ones.
+String adminLoadedOnlyNote(int loaded) =>
+    'Filters and counts cover the $loaded loaded bookings. '
+    'Load more to include older ones.';
 
 const adminNotFoundText = 'This admin page does not exist.';
 const adminBackToBookings = 'Back to the bookings';

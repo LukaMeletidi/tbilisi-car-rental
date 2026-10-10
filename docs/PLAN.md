@@ -410,6 +410,38 @@ Phase 3 decisions (the steps are in Section 18):
     is not counted as unreadable either.
   - Never in the repository: a real name, phone number, e-mail or booking id from the
     real database. Tests use made-up values.
+- Decisions of step 3.7 (filter, search and sort of the bookings list):
+  - Everything works on the bookings that are already loaded (client side). No new
+    Firestore query, no index, no extra reads: the one listener of step 3.6 stays.
+  - Status chips in one row: All, New, Pending, Confirmed, Cancelled, each with its
+    count ("New 2"); one is selected at a time. On a narrow phone the row scrolls
+    sideways.
+  - A search field for the customer's name and phone. Every typed word must be found
+    in the name (upper and lower case ignored) or, for a word with digits, in the
+    phone. A text written like a phone number is compared as digits in one piece, so
+    "555 12" finds "+995555123456". Only the name and the phone are searched.
+  - The counts on the chips follow the search and ignore the chosen chip: each chip
+    shows how many bookings a tap on it would show.
+  - Three orders, in a menu next to the search field: newest first (the default),
+    oldest first, and pickup date (coming pickups first, the soonest on top; past
+    pickups after them, the most recent on top). Bookings that are equal for the
+    chosen order keep the order they were loaded in.
+  - The pickup order needs the current time; the pure code gets it as a parameter and
+    the provider passes it from the clock provider.
+  - While older bookings can still be loaded, a line says "Filters and counts cover
+    the N loaded bookings. Load more to include older ones.", with the real number.
+    "Load more" stays available with a filter active. When nothing matches: "No
+    bookings match." with "Clear filters" (which keeps the order).
+  - The choice lives in memory only. It is kept while the admin stays signed in and
+    is reset to "All, empty search, newest first" whenever the session is not admin,
+    also when the session ends by itself.
+  - The search text can be a name or a phone number: it is never logged and never
+    stored, and the search field tells the keyboard not to learn it (no autocorrect,
+    no suggestions, no autofill hints).
+  - Not built: a car filter and a date filter. The search and the pickup order cover
+    most of that need; the calendar of Phase 5 is the tool for dates.
+  - A status with a wrong value written by hand in the console makes the document
+    unreadable; it is counted in "N bookings could not be read", as before.
 
 ### 3.1 Bookings list
 
@@ -740,7 +772,10 @@ Implementation decisions (step 2.2):
   list has admin_bookings_screen_test.dart (step 3.6), with a fake bookings
   repository (test/support/fake_admin_bookings_repository.dart); the provider that
   ties the listener to the session has admin_bookings_provider_test.dart, which
-  builds no widgets and uses testWidgets only for its controllable clock.
+  builds no widgets and uses testWidgets only for its controllable clock. Step 3.7
+  adds admin_bookings_filter_test.dart (pure filter, search, counts and order),
+  admin_bookings_filter_provider_test.dart (the choice and its reset with the
+  session), and more widget tests in admin_bookings_screen_test.dart.
 - Packages installed: firebase_core 4.15.0, flutter_riverpod 3.4.3, go_router 18.0.2,
   flutter_localizations (Flutter SDK), intl 0.20.2, cloud_firestore 6.10.0,
   firebase_app_check 0.4.8 (added in step 2.9a), firebase_auth 6.7.0 (added in step
@@ -966,6 +1001,13 @@ Phase 0 is complete.
     between is ignored and never shown.
   - A booking document without createdAt is not listed and not counted as unreadable,
     because the query orders by createdAt.
+- Client-side filtering (accepted in step 3.7): the status counts, the search and the
+  order of the admin list cover only the loaded bookings, at first the newest 50.
+  With more than 50 bookings a count such as "New 2" means "2 among the loaded" until
+  "Load more" is pressed; the screen says so in one line. If the business regularly
+  has more than 50 open bookings, move the filter into the Firestore query (this
+  needs composite indexes and an index deploy). Mention this limit in the README
+  (Phase 7).
 - A second admin account, if ever needed: add the user in the console, then give it
   the claim with the same script ("set <UID>"), with a new key that is created and
   deleted in one sitting (Section 8). Sign-up is switched off, so no other account can

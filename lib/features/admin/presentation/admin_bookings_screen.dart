@@ -4,10 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:tbilisi_car_rental/core/widgets/app_bar_logo.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/admin_bookings_filter_provider.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_bookings_provider.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_sign_in_provider.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_texts.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/widgets/admin_booking_card.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/widgets/admin_bookings_controls.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_layout.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/widgets/catalog_message.dart';
 
@@ -74,16 +76,18 @@ class AdminBookingsScreen extends ConsumerWidget {
   }
 }
 
-class _BookingsList extends StatelessWidget {
+class _BookingsList extends ConsumerWidget {
   const _BookingsList({required this.state, required this.onLoadMore});
 
   final AdminBookingsState state;
   final VoidCallback onLoadMore;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
     final unreadable = state.unreadable;
+    // The loaded bookings with the admin's status, search and order applied.
+    final view = ref.watch(adminBookingsViewProvider);
 
     return Center(
       child: ConstrainedBox(
@@ -124,10 +128,40 @@ class _BookingsList extends StatelessWidget {
                 ],
               ),
             ),
-            for (final booking in state.bookings)
+            if (state.bookings.isNotEmpty) ...[
+              AdminBookingsControls(view: view),
+              // Only while older bookings exist that are not loaded: the
+              // filter, the counts and the order do not know them.
+              if (state.hasMore)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
+                  child: Text(
+                    adminLoadedOnlyNote(view.loadedCount),
+                    style: textTheme.bodySmall,
+                  ),
+                ),
+              const SizedBox(height: 8),
+            ],
+            for (final booking in view.visible)
               AdminBookingCard(
                 booking: booking,
                 car: adminCarLabel(booking.carId, state.carsById),
+              ),
+            if (state.bookings.isNotEmpty && view.visible.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Column(
+                  children: [
+                    Text(adminNoMatch, style: textTheme.titleMedium),
+                    const SizedBox(height: 12),
+                    FilledButton(
+                      onPressed: ref
+                          .read(adminBookingsFilterProvider.notifier)
+                          .clear,
+                      child: const Text(adminClearFilters),
+                    ),
+                  ],
+                ),
               ),
             if (state.hasMore) ...[
               const SizedBox(height: 8),
