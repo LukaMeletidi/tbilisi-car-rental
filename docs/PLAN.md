@@ -958,6 +958,14 @@ Phase 0 is complete.
   Firestore (Authentication about 44% verified requests, Firestore about 68%; web
   requests carry no token). Enforcement, if ever, is the Phase 7 decision 2.9b, and
   then the admin web build needs a provider too. Never press Enforce before that.
+- Notes after step 3.6:
+  - The cache question stays open for step 3.12: on Android the bookings an admin has
+    read remain in Firestore's local copy.
+  - Sign out closes the bookings listener first (stop()), then signs out. A session
+    that ends by itself is handled at the next frame; an error that arrives in
+    between is ignored and never shown.
+  - A booking document without createdAt is not listed and not counted as unreadable,
+    because the query orders by createdAt.
 - A second admin account, if ever needed: add the user in the console, then give it
   the claim with the same script ("set <UID>"), with a new key that is created and
   deleted in one sitting (Section 8). Sign-up is switched off, so no other account can
@@ -1097,7 +1105,15 @@ Phase 3: admin sign-in and the bookings list with editing (Section 11).
   - The sign-in survives a restart of the app on Android (no login page flashes) and
     a reload of the page on web.
   - Not verified: that closing the browser signs the admin out (see Open reminders).
-- 3.6 Bookings list, read only — not started.
+- 3.6 Bookings list, read only — DONE. Results:
+  - 643 tests pass and analyze is clean.
+  - I verified the first real admin read by eye, on the Android emulator and in
+    Chrome: the bookings and all cars are read with the deployed rules; the rows
+    (Tbilisi times, days, totals, status chip, "estimate", the "(hidden)" car), the
+    live update from a second device, the offline note, Sign out without a flash,
+    and the admin "not found" page are as planned.
+  - Firestore usage over 24 hours, tests included: about 363 reads, 3 writes and 3
+    deletes (the Spark limit is 50,000 reads a day).
 - 3.7 Filter by status and sort by pickup date — not started.
 - 3.8 Booking detail and status change — not started.
 - 3.9 Edit all fields; the recomputed total next to the stored one — not started.
