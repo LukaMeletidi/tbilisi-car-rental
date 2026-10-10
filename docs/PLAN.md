@@ -1156,7 +1156,14 @@ Phase 3: admin sign-in and the bookings list with editing (Section 11).
     and the admin "not found" page are as planned.
   - Firestore usage over 24 hours, tests included: about 363 reads, 3 writes and 3
     deletes (the Spark limit is 50,000 reads a day).
-- 3.7 Filter by status and sort by pickup date — not started.
+- 3.7 Filter by status, search, and sort (also by pickup date) — DONE. Results:
+  - 705 tests pass and analyze is clean.
+  - I verified by eye, on the Android emulator and in Chrome: the chips and their
+    counts (also when a status is changed in the console), the status filter, the
+    search by name and phone, the three orders, the choice kept while signed in and
+    reset after Sign out, and the five chips fitting side by side in a wide window.
+  - The filter, the counts and the order cover only the loaded bookings (see Open
+    reminders).
 - 3.8 Booking detail and status change — not started.
 - 3.9 Edit all fields; the recomputed total next to the stored one — not started.
 - 3.10 Create a booking by hand (status confirmed, createdBy) — not started.
