@@ -1,6 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:tbilisi_car_rental/features/admin/domain/admin_redirect.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/admin_gate_screens.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/admin_home_screen.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/admin_login_screen.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/admin_session_provider.dart';
 import 'package:tbilisi_car_rental/features/booking/presentation/booking_form_screen.dart';
 import 'package:tbilisi_car_rental/features/booking/presentation/booking_sent_screen.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/car_detail_screen.dart';
@@ -27,11 +33,43 @@ abstract final class AppRoutes {
 
   /// The address of the thank-you screen shown after a request was sent.
   static const bookingSent = '/$bookingSentPattern';
+
+  /// The admin area. Its addresses are defined with the redirect rules in
+  /// admin_redirect.dart; nothing in the public app links to them.
+  static const admin = adminHomePath;
+  static const adminLogin = adminLoginPath;
+  static const adminNoAccess = adminNoAccessPath;
+  static const adminChecking = adminCheckingPath;
 }
 
+/// Tells the router to run its redirect again. The router listens to it;
+/// it is notified whenever the admin session changes (sign-in, sign-out, a
+/// renewed token with other claims).
+class _RouterRefresh extends ChangeNotifier {
+  void sessionChanged() => notifyListeners();
+}
+
+/// "/admin/login" becomes "admin/login": the pattern of a route below [home].
+String _below(String path) => path.substring(1);
+
 final appRouterProvider = Provider<GoRouter>((ref) {
+  final refresh = _RouterRefresh();
+  // Also starts the session provider, so the session is being read from
+  // the first moment on.
+  ref.listen(adminSessionProvider, (previous, next) {
+    refresh.sessionChanged();
+  });
+
   final router = GoRouter(
     initialLocation: AppRoutes.home,
+    refreshListenable: refresh,
+    // Decides for every address. It only ever moves a visitor of the admin
+    // area; for a public address it always answers "stay". The rules for it
+    // are pure Dart and tested in admin_redirect.dart.
+    redirect: (context, state) => adminRedirect(
+      session: ref.read(adminSessionProvider),
+      location: state.uri,
+    ),
     routes: [
       GoRoute(
         path: AppRoutes.home,
@@ -56,10 +94,32 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: AppRoutes.bookingSentPattern,
             builder: (context, state) => const BookingSentScreen(),
           ),
+          // The admin area. The four pages are side by side, NOT one below
+          // the other: a page below "/admin" would have the admin page
+          // built underneath it, also for a visitor who is not signed in.
+          GoRoute(
+            path: _below(AppRoutes.admin),
+            builder: (context, state) => const AdminHomeScreen(),
+          ),
+          GoRoute(
+            path: _below(AppRoutes.adminLogin),
+            builder: (context, state) => const AdminLoginScreen(),
+          ),
+          GoRoute(
+            path: _below(AppRoutes.adminNoAccess),
+            builder: (context, state) => const AdminNoAccessScreen(),
+          ),
+          GoRoute(
+            path: _below(AppRoutes.adminChecking),
+            builder: (context, state) => const AdminCheckingScreen(),
+          ),
         ],
       ),
     ],
   );
-  ref.onDispose(router.dispose);
+  ref.onDispose(() {
+    router.dispose();
+    refresh.dispose();
+  });
   return router;
 });

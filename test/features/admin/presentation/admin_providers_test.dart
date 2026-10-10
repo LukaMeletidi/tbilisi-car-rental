@@ -38,6 +38,9 @@ class FakeAdminAuthRepository implements AdminAuthRepository {
 
   @override
   Future<void> signOut() async => signOuts += 1;
+
+  @override
+  Future<void> keepSignInForBrowserSessionOnly() async {}
 }
 
 late FakeAdminAuthRepository repository;

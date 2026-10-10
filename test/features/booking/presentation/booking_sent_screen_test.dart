@@ -14,12 +14,15 @@ import 'package:tbilisi_car_rental/core/models/extra.dart';
 import 'package:tbilisi_car_rental/core/models/pickup_location.dart';
 import 'package:tbilisi_car_rental/core/router/app_router.dart';
 import 'package:tbilisi_car_rental/core/theme/app_theme.dart';
+import 'package:tbilisi_car_rental/features/admin/data/admin_auth_repository.dart';
 import 'package:tbilisi_car_rental/features/booking/presentation/booking_sent_screen.dart';
 import 'package:tbilisi_car_rental/features/booking/presentation/sent_booking_provider.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/cars_providers.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_screen.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/settings_providers.dart';
 import 'package:tbilisi_car_rental/l10n/generated/app_localizations.dart';
+
+import '../../../support/fake_admin_auth_repository.dart';
 
 const thanksText =
     'Thank you for your trust — our representative will contact you '
@@ -144,6 +147,10 @@ Future<void> pumpSent(
     ProviderScope(
       retry: (retryCount, error) => null,
       overrides: [
+        // The router reads the admin session; this keeps Firebase out.
+        adminAuthRepositoryProvider.overrideWithValue(
+          FakeAdminAuthRepository(),
+        ),
         activeCarsProvider.overrideWith((ref) => Stream.value([car])),
         pickupLocationsProvider.overrideWith(
           (ref) => locationsStream?.call() ?? Stream.value(locations),

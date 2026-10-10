@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tbilisi_car_rental/core/localization/app_language_provider.dart';
 import 'package:tbilisi_car_rental/core/router/app_router.dart';
 import 'package:tbilisi_car_rental/core/theme/app_theme.dart';
+import 'package:tbilisi_car_rental/features/admin/data/admin_auth_repository.dart';
 import 'package:tbilisi_car_rental/firebase_options.dart';
 import 'package:tbilisi_car_rental/l10n/generated/app_localizations.dart';
 
@@ -17,6 +18,9 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await _activateAppCheck();
+  // Web only: the admin sign-in ends when the browser is closed. Does
+  // nothing on Android. Never stops the start of the app.
+  await limitWebSignInToBrowserSession();
   runApp(const ProviderScope(child: TbilisiCarRentalApp()));
 }
 

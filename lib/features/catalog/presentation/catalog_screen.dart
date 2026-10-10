@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:tbilisi_car_rental/core/router/app_router.dart';
 import 'package:tbilisi_car_rental/core/widgets/app_bar_logo.dart';
 import 'package:tbilisi_car_rental/core/widgets/language_menu_button.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/car_filter_provider.dart';
@@ -30,7 +32,7 @@ class CatalogScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: appBarLogoToolbarHeight,
-        title: const AppBarLogo(),
+        title: const _LogoWithAdminEntry(),
         actions: const [LanguageMenuButton()],
       ),
       body: SafeArea(
@@ -103,6 +105,28 @@ class CatalogScreen extends ConsumerWidget {
           },
         ),
       ),
+    );
+  }
+}
+
+/// The logo of the catalog app bar. A long press on it opens the admin
+/// sign-in page: the only way into the admin area on a phone, where no
+/// address can be typed.
+///
+/// It gives no hint to the public: no tooltip, no ripple, no hand cursor,
+/// and nothing extra for screen readers, which still read only the app
+/// name. A normal tap does nothing.
+class _LogoWithAdminEntry extends StatelessWidget {
+  const _LogoWithAdminEntry();
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      // Flutter's standard long press: about half a second.
+      onLongPress: () => context.go(AppRoutes.adminLogin),
+      // Without this, a screen reader would announce a long-press action.
+      excludeFromSemantics: true,
+      child: const AppBarLogo(),
     );
   }
 }

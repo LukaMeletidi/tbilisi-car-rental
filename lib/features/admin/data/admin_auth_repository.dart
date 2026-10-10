@@ -1,6 +1,7 @@
 import 'dart:developer' as developer;
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:tbilisi_car_rental/features/admin/domain/admin_session.dart';
@@ -53,6 +54,38 @@ class AdminAuthRepository {
   }
 
   Future<void> signOut() => _auth.signOut();
+
+  /// On web: keeps the sign-in only for the browser session, so closing the
+  /// browser signs the admin out (the account is shared, and a computer may
+  /// be shared too). Reloading the page does not sign out.
+  ///
+  /// Does nothing on Android and iOS: there the sign-in always stays on the
+  /// device and Firebase does not let an app change that; setPersistence
+  /// exists for web only, so it is never called there.
+  Future<void> keepSignInForBrowserSessionOnly() async {
+    if (!kIsWeb) return;
+    await _auth.setPersistence(Persistence.SESSION);
+  }
+}
+
+/// Called once at app start, before anything reads the session. It never
+/// stops the app: a failure, or no answer within 5 seconds, is logged and
+/// the app starts as usual. It needs no network.
+Future<void> limitWebSignInToBrowserSession() async {
+  if (!kIsWeb) return;
+  try {
+    await AdminAuthRepository(
+      FirebaseAuth.instance,
+    ).keepSignInForBrowserSessionOnly().timeout(const Duration(seconds: 5));
+  } catch (error, stackTrace) {
+    developer.log(
+      'The web sign-in could not be limited to the browser session: '
+      '${error.runtimeType}',
+      name: 'AdminAuthRepository',
+      level: 900, // warning
+      stackTrace: stackTrace,
+    );
+  }
 }
 
 void _logFailure(String what) {

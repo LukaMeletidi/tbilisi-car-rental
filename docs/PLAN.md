@@ -339,6 +339,36 @@ Phase 3 decisions (the steps are in Section 18):
   - On web the sign-in is kept for the browser session only (closing the browser signs
     out). On Android the sign-in stays on the device between app starts; Firebase does
     not let an app change that.
+- Decisions of step 3.5 (the admin pages and the router):
+  - Pages: /admin/login (e-mail, password with a show/hide button, "Sign in"),
+    /admin/checking (only a spinner), /admin/no-access ("This account has no admin
+    access." and Sign out), and /admin, for now a placeholder ("Signed in as an
+    administrator." and Sign out) that reads no data and shows no e-mail. The
+    bookings list replaces it in step 3.6.
+  - The four admin routes sit side by side below the catalog, NOT one below the
+    other: a page below /admin would have the admin page built underneath it, also
+    for a visitor who is not signed in.
+  - The router asks the redirect function for every address and asks again whenever
+    the session changes. Sign out therefore needs no navigation of its own: the
+    session becomes "signed out" and the login page appears.
+  - The session is read from the start of the app, so Firebase Auth listens for every
+    visitor, public ones too. A public visitor is simply "signed out"; accepted.
+  - The back arrow of the login page always goes to the catalog (a typed web address
+    has no page to go back to).
+  - After a refused sign-in the password field is cleared and the e-mail kept. The
+    password exists only in its text field; it is never in a provider, the state or a
+    log. Done on the keyboard, or Enter on web, sends the form.
+  - The long press: on the logo of the catalog app bar only, Flutter's standard long
+    press (about half a second). No tooltip, no ripple, nothing extra for screen
+    readers; a tap does nothing. An admin who is already signed in lands on /admin.
+  - On web, session-only sign-in is set once at app start (web only; a failure or 5
+    seconds without an answer is logged and the app starts anyway).
+  - An address under /admin that does not exist shows go_router's own "page not
+    found" for now.
+  - The admin texts are English constants in one Dart file, not ARB keys. The admin
+    feature reuses the message widget of the catalog feature.
+  - Never in the repository: a real e-mail address, password or UID. Tests use
+    made-up values.
 
 ### 3.1 Bookings list
 
@@ -662,7 +692,10 @@ Implementation decisions (step 2.2):
   form has the same kind of tests (booking_form_screen_test.dart), with the car, the
   settings, the booking repository and the clock overridden. The thank-you screen has
   them too (booking_sent_screen_test.dart), with the sent booking put into its provider
-  and the places overridden.
+  and the places overridden. The admin area has admin_login_screen_test.dart and
+  admin_navigation_test.dart (step 3.5), with a fake auth repository
+  (test/support/fake_admin_auth_repository.dart). Every test that builds the real
+  router needs that fake, because the router reads the admin session.
 - Packages installed: firebase_core 4.15.0, flutter_riverpod 3.4.3, go_router 18.0.2,
   flutter_localizations (Flutter SDK), intl 0.20.2, cloud_firestore 6.10.0,
   firebase_app_check 0.4.8 (added in step 2.9a), firebase_auth 6.7.0 (added in step
