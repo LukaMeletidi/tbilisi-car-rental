@@ -8,9 +8,10 @@ import 'package:tbilisi_car_rental/core/router/app_router.dart';
 import 'package:tbilisi_car_rental/core/theme/app_theme.dart';
 import 'package:tbilisi_car_rental/core/widgets/app_bar_logo.dart';
 import 'package:tbilisi_car_rental/features/admin/data/admin_auth_repository.dart';
+import 'package:tbilisi_car_rental/features/admin/data/admin_bookings_repository.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_session.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_gate_screens.dart';
-import 'package:tbilisi_car_rental/features/admin/presentation/admin_home_screen.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/admin_bookings_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_login_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_texts.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/car_detail_screen.dart';
@@ -19,6 +20,7 @@ import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_screen.
 import 'package:tbilisi_car_rental/l10n/generated/app_localizations.dart';
 
 import '../../../support/fake_admin_auth_repository.dart';
+import '../../../support/fake_admin_bookings_repository.dart';
 
 const car = Car(
   id: 'car-1',
@@ -53,6 +55,7 @@ class _App extends ConsumerWidget {
 }
 
 late FakeAdminAuthRepository repository;
+late FakeAdminBookingsRepository bookingsRepository;
 
 Future<void> settle(WidgetTester tester) async {
   await tester.pump();
@@ -69,12 +72,14 @@ Future<void> pumpApp(
   AdminSession? initial = AdminSession.signedOut,
 }) async {
   repository = FakeAdminAuthRepository(initial: initial);
+  bookingsRepository = FakeAdminBookingsRepository();
   addTearDown(repository.close);
   await tester.pumpWidget(
     ProviderScope(
       retry: (retryCount, error) => null,
       overrides: [
         adminAuthRepositoryProvider.overrideWithValue(repository),
+        adminBookingsRepositoryProvider.overrideWithValue(bookingsRepository),
         activeCarsProvider.overrideWith((ref) => Stream.value([car])),
         carProvider.overrideWith((ref, id) => Stream.value(car)),
       ],
@@ -98,7 +103,8 @@ void expectOnly(Type screen) {
     AdminLoginScreen,
     AdminCheckingScreen,
     AdminNoAccessScreen,
-    AdminHomeScreen,
+    AdminBookingsScreen,
+    AdminNotFoundScreen,
   ]) {
     expect(
       find.byType(type),
@@ -118,7 +124,7 @@ void main() {
 
       expectOnly(AdminLoginScreen);
       expect(address(tester), '/admin/login');
-      expect(find.text(adminHomeSignedIn), findsNothing);
+      expect(bookingsRepository.activeListeners, 0);
     });
 
     testWidgets('an address below /admin leads to the login page and is '
@@ -165,7 +171,7 @@ void main() {
       expectOnly(AdminCheckingScreen);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       expect(find.text(adminSignInTitle), findsNothing);
-      expect(find.text(adminHomeSignedIn), findsNothing);
+      expect(bookingsRepository.activeListeners, 0);
     });
 
     testWidgets('then an admin lands on the admin page', (tester) async {
@@ -175,7 +181,7 @@ void main() {
       repository.report(AdminSession.admin);
       await settle(tester);
 
-      expectOnly(AdminHomeScreen);
+      expectOnly(AdminBookingsScreen);
       expect(address(tester), '/admin');
     });
 
@@ -220,12 +226,13 @@ void main() {
       await tester.tap(find.widgetWithText(FilledButton, adminSignInButton));
       await settle(tester);
 
-      expectOnly(AdminHomeScreen);
+      expectOnly(AdminBookingsScreen);
       expect(address(tester), '/admin');
-      expect(find.text(adminHomeTitle), findsOneWidget);
-      expect(find.text(adminHomeSignedIn), findsOneWidget);
-      // The placeholder shows nothing personal.
-      expect(find.textContaining('@'), findsNothing);
+      // The list is asked for only now, by the admin.
+      expect(bookingsRepository.limits, [50]);
+      bookingsRepository.emit(const []);
+      await settle(tester);
+      expect(find.text(adminNoBookings), findsOneWidget);
     });
 
     testWidgets('an account without the claim sees the no-access page', (
@@ -248,7 +255,7 @@ void main() {
 
       expectOnly(AdminNoAccessScreen);
       expect(find.text(adminNoAccessText), findsOneWidget);
-      expect(find.text(adminHomeSignedIn), findsNothing);
+      expect(bookingsRepository.activeListeners, 0);
     });
 
     testWidgets('an admin who opens the login page goes on to "from"', (
@@ -256,10 +263,10 @@ void main() {
     ) async {
       await pumpApp(tester, initial: AdminSession.admin);
       await open(tester, '/admin/login?from=%2Fadmin');
-      expectOnly(AdminHomeScreen);
+      expectOnly(AdminBookingsScreen);
 
       await open(tester, '/admin/checking');
-      expectOnly(AdminHomeScreen);
+      expectOnly(AdminBookingsScreen);
       expect(address(tester), '/admin');
     });
   });
@@ -270,14 +277,16 @@ void main() {
     ) async {
       await pumpApp(tester, initial: AdminSession.admin);
       await open(tester, '/admin');
-      expectOnly(AdminHomeScreen);
+      expectOnly(AdminBookingsScreen);
+      expect(bookingsRepository.activeListeners, 1);
 
-      await tester.tap(find.widgetWithText(FilledButton, adminSignOutButton));
+      // On the bookings page Sign out is the icon in the app bar.
+      await tester.tap(find.byTooltip(adminSignOutButton));
       await settle(tester);
 
       expect(repository.signOuts, 1);
       expectOnly(AdminLoginScreen);
-      expect(find.text(adminHomeSignedIn), findsNothing);
+      expect(bookingsRepository.activeListeners, 0);
     });
 
     testWidgets('Sign out on the no-access page leads to the login page', (
@@ -380,7 +389,7 @@ void main() {
       await tester.longPress(find.byType(AppBarLogo));
       await settle(tester);
 
-      expectOnly(AdminHomeScreen);
+      expectOnly(AdminBookingsScreen);
     });
 
     testWidgets('gives no hint: no tooltip and no long-press action for '
@@ -413,6 +422,69 @@ void main() {
 
       expect(find.byType(CarDetailScreen), findsOneWidget);
       expectOnly(Null);
+    });
+  });
+
+  group('an address that does not exist', () {
+    testWidgets('under /admin, an admin sees the admin "not found" page', (
+      tester,
+    ) async {
+      await pumpApp(tester, initial: AdminSession.admin);
+      await open(tester, '/admin/whatever');
+
+      expectOnly(AdminNotFoundScreen);
+      expect(find.text(adminNotFoundText), findsOneWidget);
+      // No bookings are asked for on this page.
+      expect(bookingsRepository.limits, isEmpty);
+
+      await tester.tap(find.text(adminBackToBookings));
+      await settle(tester);
+      expectOnly(AdminBookingsScreen);
+      expect(address(tester), '/admin');
+    });
+
+    testWidgets('under /admin, deeper addresses are "not found" as well', (
+      tester,
+    ) async {
+      await pumpApp(tester, initial: AdminSession.admin);
+      await open(tester, '/admin/bookings/abc/edit');
+      expectOnly(AdminNotFoundScreen);
+    });
+
+    testWidgets('under /admin, a visitor who is not an admin never sees it', (
+      tester,
+    ) async {
+      await pumpApp(tester);
+      await open(tester, '/admin/whatever');
+      expectOnly(AdminLoginScreen);
+
+      repository.report(AdminSession.noAccess);
+      await settle(tester);
+      expectOnly(AdminNoAccessScreen);
+      expect(find.text(adminNotFoundText), findsNothing);
+    });
+
+    testWidgets('a visitor who signs in as admin on such an address lands on '
+        'the "not found" page', (tester) async {
+      await pumpApp(tester);
+      await open(tester, '/admin/whatever');
+
+      repository.report(AdminSession.admin);
+      await settle(tester);
+
+      expectOnly(AdminNotFoundScreen);
+    });
+
+    testWidgets('an unknown public address keeps the router\'s own screen', (
+      tester,
+    ) async {
+      await pumpApp(tester, initial: AdminSession.admin);
+      await open(tester, '/no-such-page');
+
+      expectOnly(Null);
+      expect(find.text(adminNotFoundText), findsNothing);
+      expect(find.byType(CatalogScreen), findsNothing);
+      expect(find.textContaining('Page Not Found'), findsOneWidget);
     });
   });
 }

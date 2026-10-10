@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:tbilisi_car_rental/features/admin/domain/admin_redirect.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/admin_bookings_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_gate_screens.dart';
-import 'package:tbilisi_car_rental/features/admin/presentation/admin_home_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_login_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_session_provider.dart';
 import 'package:tbilisi_car_rental/features/booking/presentation/booking_form_screen.dart';
@@ -99,7 +99,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           // built underneath it, also for a visitor who is not signed in.
           GoRoute(
             path: _below(AppRoutes.admin),
-            builder: (context, state) => const AdminHomeScreen(),
+            builder: (context, state) => const AdminBookingsScreen(),
           ),
           GoRoute(
             path: _below(AppRoutes.adminLogin),
@@ -112,6 +112,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: _below(AppRoutes.adminChecking),
             builder: (context, state) => const AdminCheckingScreen(),
+          ),
+          // Every other address under /admin: the admin "not found" page.
+          // It must stay the LAST admin route, because routes are tried in
+          // order. The redirect runs first, so only an admin ever sees it.
+          // An unknown public address does not match and keeps go_router's
+          // own "Page Not Found" screen.
+          GoRoute(
+            path: '${_below(AppRoutes.admin)}/:rest(.*)',
+            builder: (context, state) => const AdminNotFoundScreen(),
           ),
         ],
       ),

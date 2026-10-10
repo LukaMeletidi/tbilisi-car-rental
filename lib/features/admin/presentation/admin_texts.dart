@@ -2,7 +2,10 @@
 /// plain constants here and not in the translation files.
 library;
 
+import 'package:tbilisi_car_rental/core/models/booking_status.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_sign_in_failure.dart';
+import 'package:tbilisi_car_rental/features/catalog/domain/car_display.dart';
 
 const adminSignInTitle = 'Admin sign-in';
 const adminEmailLabel = 'E-mail';
@@ -15,9 +18,71 @@ const adminSignOutButton = 'Sign out';
 
 const adminNoAccessText = 'This account has no admin access.';
 
-const adminHomeTitle = 'Admin';
-const adminHomeSignedIn = 'Signed in as an administrator.';
-const adminHomeComingNext = 'The bookings list comes in the next step.';
+const adminBookingsTitle = 'Bookings';
+const adminTbilisiTimeNote = 'Tbilisi time (GMT+4)';
+const adminNoBookings = 'No bookings yet.';
+const adminBookingsNoAccess = 'You do not have access to the bookings.';
+const adminBookingsLoadError = 'Could not load the bookings.';
+const adminTryAgain = 'Try again';
+const adminOfflineNote = 'Offline: showing saved data';
+const adminLoadMore = 'Load more';
+const adminEstimate = 'estimate';
+
+const adminNotFoundText = 'This admin page does not exist.';
+const adminBackToBookings = 'Back to the bookings';
+
+/// "1 booking could not be read." / "3 bookings could not be read."
+String adminUnreadableBookings(int count) => count == 1
+    ? '1 booking could not be read.'
+    : '$count bookings could not be read.';
+
+/// "1 day" / "5 days".
+String adminDays(int days) => days == 1 ? '1 day' : '$days days';
+
+/// An amount in US dollars: "$225", "$272.50".
+String adminAmount(double amount) => '\$${formatPrice(amount)}';
+
+/// "Received 9 Oct 2026 17:34"; [dateTime] is already formatted.
+String adminReceived(String dateTime) => 'Received $dateTime';
+
+/// The word on the status chip. The chip always shows this text; the
+/// colour alone never carries the meaning.
+String adminStatusLabel(BookingStatus status) {
+  switch (status) {
+    case BookingStatus.newBooking:
+      return 'New';
+    case BookingStatus.pending:
+      return 'Pending';
+    case BookingStatus.confirmed:
+      return 'Confirmed';
+    case BookingStatus.cancelled:
+      return 'Cancelled';
+  }
+}
+
+/// The car line of a row.
+String adminCarText(AdminCarLabel car) {
+  switch (car.state) {
+    case AdminCarState.active:
+      return car.title!;
+    case AdminCarState.hidden:
+      return '${car.title} (hidden)';
+    case AdminCarState.notFound:
+      return 'Car not found';
+    case AdminCarState.notLoaded:
+      return 'Car: not loaded';
+  }
+}
+
+/// The text shown when the bookings could not be loaded.
+String adminBookingsFailureText(AdminBookingsFailure failure) {
+  switch (failure) {
+    case AdminBookingsFailure.permissionDenied:
+      return adminBookingsNoAccess;
+    case AdminBookingsFailure.other:
+      return adminBookingsLoadError;
+  }
+}
 
 /// The text shown for a failed sign-in. The raw code of Firebase is never
 /// shown, and a wrong e-mail is not told apart from a wrong password.

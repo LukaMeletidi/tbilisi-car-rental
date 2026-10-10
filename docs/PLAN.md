@@ -369,6 +369,47 @@ Phase 3 decisions (the steps are in Section 18):
     feature reuses the message widget of the catalog feature.
   - Never in the repository: a real e-mail address, password or UID. Tests use
     made-up values.
+- Decisions of step 3.6 (the bookings list on /admin, read only):
+  - The query: the "bookings" collection, ordered by createdAt, newest first, the
+    newest 50, as a live listener: a new or changed booking appears by itself. "Load
+    more" adds 50 and is offered only when the last answer was exactly as long as the
+    limit. A new sign-in starts again with 50.
+  - Reads: opening the list costs up to 50 booking reads plus one read per car (all
+    cars are read once, also hidden ones, to show the car of each row); each new or
+    changed booking costs 1 read; "Load more" is counted as a fresh query. Spark
+    allows 50,000 reads a day.
+  - The listener exists only while the session is "admin". The provider watches the
+    session and closes the listener itself when it changes; the screen also closes it
+    before it signs out, so nothing is listening when the sign-in token goes. An
+    error that still arrives after a sign-out is not shown.
+  - One row: the customer's name and phone; a status chip that always carries its word
+    (New grey, Pending amber, Confirmed green, Cancelled red); the car; pickup and
+    dropoff as "10 Jan 2026 18:00" in Tbilisi time; the days and the stored total,
+    marked "estimate" for more than 7 days; "Received 9 Oct 2026 17:34". The note
+    "Tbilisi time (GMT+4)" stands once above the list. Rows cannot be tapped yet.
+  - The car line: the title; the title with "(hidden)" for a hidden car; "Car not
+    found" when no car has that id. The stored car id is never shown.
+  - A document that cannot be read as a booking is skipped and counted among the
+    loaded documents: "N bookings could not be read." In debug builds only, the id
+    and the reason of each are listed, never the contents.
+  - States: a spinner; "No bookings yet."; "You do not have access to the bookings."
+    for a refusal of the rules; "Could not load the bookings." with "Try again".
+  - "Offline: showing saved data" appears only when the answers have come from the
+    copy saved on the device for 3 seconds without a break, never on the first such
+    answer, and goes as soon as the server answers.
+  - Dates are converted with the project's one helper (TbilisiDateTime.fromUtc); the
+    English month names of the admin area are a small table in the admin code.
+  - The Firestore cache settings are NOT touched in this step. On Android the
+    bookings an admin has read stay in the local copy; decide in step 3.12.
+  - An unknown address under /admin shows "This admin page does not exist." with a
+    way back to the bookings, only to an admin. An unknown public address keeps
+    go_router's own screen; a public "page not found" page is left for the polish
+    phase.
+  - Known and accepted: the query orders by createdAt, so a document without
+    createdAt (possible only if made by hand in the console) is not listed at all and
+    is not counted as unreadable either.
+  - Never in the repository: a real name, phone number, e-mail or booking id from the
+    real database. Tests use made-up values.
 
 ### 3.1 Bookings list
 
@@ -695,7 +736,11 @@ Implementation decisions (step 2.2):
   and the places overridden. The admin area has admin_login_screen_test.dart and
   admin_navigation_test.dart (step 3.5), with a fake auth repository
   (test/support/fake_admin_auth_repository.dart). Every test that builds the real
-  router needs that fake, because the router reads the admin session.
+  router needs that fake, because the router reads the admin session. The bookings
+  list has admin_bookings_screen_test.dart (step 3.6), with a fake bookings
+  repository (test/support/fake_admin_bookings_repository.dart); the provider that
+  ties the listener to the session has admin_bookings_provider_test.dart, which
+  builds no widgets and uses testWidgets only for its controllable clock.
 - Packages installed: firebase_core 4.15.0, flutter_riverpod 3.4.3, go_router 18.0.2,
   flutter_localizations (Flutter SDK), intl 0.20.2, cloud_firestore 6.10.0,
   firebase_app_check 0.4.8 (added in step 2.9a), firebase_auth 6.7.0 (added in step

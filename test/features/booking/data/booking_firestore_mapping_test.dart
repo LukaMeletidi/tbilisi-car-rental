@@ -124,4 +124,61 @@ void main() {
       throwsArgumentError,
     );
   });
+
+  group('bookingMapFromFirestore', () {
+    Map<String, dynamic> stored() => {
+      ...newBookingDocument(booking()),
+      'createdAt': Timestamp.fromDate(DateTime.utc(2026, 10, 9, 13, 34)),
+    };
+
+    test('turns the three timestamps into UTC dates of the same moment', () {
+      final map = bookingMapFromFirestore(stored());
+
+      for (final field in ['pickupDateTime', 'dropoffDateTime', 'createdAt']) {
+        expect(map[field], isA<DateTime>(), reason: field);
+        expect((map[field] as DateTime).isUtc, true, reason: field);
+      }
+      expect(map['pickupDateTime'], DateTime.utc(2026, 1, 10, 14));
+      expect(map['dropoffDateTime'], DateTime.utc(2026, 1, 15, 16, 30));
+      expect(map['createdAt'], DateTime.utc(2026, 10, 9, 13, 34));
+    });
+
+    test('the result can be read as the booking that was stored', () {
+      final read = Booking.fromMap(
+        'stored-id',
+        bookingMapFromFirestore(stored()),
+      );
+      final original = booking();
+
+      expect(read.id, 'stored-id');
+      expect(read.customer, original.customer);
+      expect(read.pickup, original.pickup);
+      expect(read.dropoff, original.dropoff);
+      expect(read.extras, original.extras);
+      expect(read.totalPrice, original.totalPrice);
+      expect(read.createdAt, DateTime.utc(2026, 10, 9, 13, 34));
+    });
+
+    test('leaves the other fields and the given map unchanged', () {
+      final source = stored();
+      final map = bookingMapFromFirestore(source);
+
+      expect(map['carId'], 'car-1');
+      expect(map['customer'], source['customer']);
+      expect(map.keys.toSet(), source.keys.toSet());
+      expect(source['pickupDateTime'], isA<Timestamp>());
+    });
+
+    test('a date field of another type is left as it is', () {
+      final source = stored()
+        ..['pickupDateTime'] = '2026-01-10'
+        ..remove('createdAt');
+      final map = bookingMapFromFirestore(source);
+
+      expect(map['pickupDateTime'], '2026-01-10');
+      expect(map.containsKey('createdAt'), false);
+      // Reading it as a booking then reports the wrong field.
+      expect(() => Booking.fromMap('id', map), throwsFormatException);
+    });
+  });
 }

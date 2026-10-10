@@ -31,3 +31,22 @@ Map<String, dynamic> newBookingDocument(Booking booking) {
     'createdAt': FieldValue.serverTimestamp(),
   };
 }
+
+/// The fields of a stored booking with their Firestore timestamps turned
+/// into UTC [DateTime] values, ready for Booking.fromMap.
+///
+/// Only the three date fields are touched, and only when they really are
+/// timestamps. A field of another type is left as it is, so that
+/// Booking.fromMap reports it as wrong instead of this function failing.
+Map<String, dynamic> bookingMapFromFirestore(Map<String, dynamic> data) {
+  final result = Map<String, dynamic>.of(data);
+  for (final field in const [
+    'pickupDateTime',
+    'dropoffDateTime',
+    'createdAt',
+  ]) {
+    final value = result[field];
+    if (value is Timestamp) result[field] = value.toDate().toUtc();
+  }
+  return result;
+}
