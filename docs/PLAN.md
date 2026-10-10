@@ -902,6 +902,17 @@ Phase 0 is complete.
   unchanged expireAt, because an update is checked on the merged document.
 - createdBy is not tied to who created a booking: the rules let an admin add or
   change it on any booking. A known simplification.
+- Web sign-in, not verified: the app asks Firebase to keep the admin sign-in for the
+  browser session only, but that closing the browser really signs out was NOT verified
+  on a normal Chrome profile. "flutter run -d chrome" opens a fresh temporary profile
+  each time, so being signed out after reopening proves nothing. Check it on the
+  hosted web build (Phase 7), or with a normal Chrome and a local web server.
+- An unknown address under /admin shows go_router's raw "Page Not Found" screen. A
+  proper admin "not found" page comes in step 3.6.
+- App Check state after step 3.5: Monitoring only, for Authentication and for
+  Firestore (Authentication about 44% verified requests, Firestore about 68%; web
+  requests carry no token). Enforcement, if ever, is the Phase 7 decision 2.9b, and
+  then the admin web build needs a provider too. Never press Enforce before that.
 - A second admin account, if ever needed: add the user in the console, then give it
   the claim with the same script ("set <UID>"), with a new key that is created and
   deleted in one sitting (Section 8). Sign-up is switched off, so no other account can
@@ -1033,7 +1044,14 @@ Phase 3: admin sign-in and the bookings list with editing (Section 11).
   no screen yet — DONE. 522 tests pass, analyze is clean, and the debug APK builds
   with the new package. The repository was not run against real Firebase; its first
   real run is step 3.5.
-- 3.5 /admin/login, the redirect, the "no admin access" state, Sign out — not started.
+- 3.5 /admin/login, the redirect, the "no admin access" state, Sign out — DONE.
+  Results:
+  - 565 tests pass and analyze is clean.
+  - I verified the first real sign-in by eye, on the Android emulator and in Chrome.
+    The admin claim reaches the app: after sign-in the admin page opens.
+  - The sign-in survives a restart of the app on Android (no login page flashes) and
+    a reload of the page on web.
+  - Not verified: that closing the browser signs the admin out (see Open reminders).
 - 3.6 Bookings list, read only — not started.
 - 3.7 Filter by status and sort by pickup date — not started.
 - 3.8 Booking detail and status change — not started.
