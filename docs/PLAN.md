@@ -1590,14 +1590,25 @@ Phase 3: admin sign-in and the bookings list with editing (Section 11).
   - Verified known limit: in Chrome the browser's Back button leaves the edit
     screen without the discard question.
   - The three test bookings were restored to their original values.
-- 3.10 Create a booking by hand (status confirmed, createdBy) — 3.10a done,
-  3.10b not started.
-  - 3.10a (logic, mapping, repository and notifier; no screen, no route): 1195
-    tests pass and analyze is clean. The rules emulator script passes (104 public,
-    233 admin and signed-in); the rules were not changed.
-  - Not yet run against the real database: createBooking. It is first used by the
-    screen of 3.10b and verified by eye there.
+- 3.10 Create a booking by hand (status confirmed, createdBy) — DONE.
+  - 3.10a (logic, mapping, repository and notifier): done. The draft of the form,
+    its validation, the total from today's prices, createdBy "admin", the
+    placeholder for a customer without e-mail, and createBooking in a transaction
+    with one attempt and a 20 second limit that never creates a second booking.
   - 3.10b (the form screen, its route, the "New booking" button, "No e-mail" in
-    the list and the detail, the manual checks) — not started.
+    the detail): done.
+  - 1255 tests pass and analyze is clean. The rules emulator script passes (104
+    public, 233 admin and signed-in); the rules were not changed.
+  - I verified by eye, on the Android emulator and in Chrome: the first real
+    createBooking against the deployed rules (13 fields, createdBy "admin",
+    createdAt from the server, status Confirmed, the stored total and the dates
+    as shown); a booking with "no e-mail"; a pickup in the past; a hidden car;
+    airplane mode with nothing created later; Back asking; a fast double tap
+    making one document; an empty second form; the form opened directly in Chrome
+    and after F5; /new/edit as "not found"; a booking created in Chrome appearing
+    on the emulator by itself; and the short re-check of the edit screen.
+  - Covered by tests only: the "no answer from the server" path.
+  - The "Create Test" bookings were deleted in the console; the original three
+    test bookings stay.
 - 3.11 Delete a booking, with a confirmation — not started.
 - 3.12 Verify Phase 3 and close it — not started.
