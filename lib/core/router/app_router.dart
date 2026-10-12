@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:tbilisi_car_rental/features/admin/domain/admin_redirect.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_booking_detail_screen.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/admin_booking_edit_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_bookings_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_gate_screens.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_login_screen.dart';
@@ -49,6 +50,14 @@ abstract final class AppRoutes {
   /// "/admin/bookings/abc123".
   static String adminBooking(String bookingId) =>
       '$admin/bookings/${Uri.encodeComponent(bookingId)}';
+
+  /// Path pattern of the edit form of one booking, below its detail.
+  static const adminBookingEditPattern = 'edit';
+
+  /// The address of the edit form of one booking:
+  /// "/admin/bookings/abc123/edit".
+  static String adminBookingEdit(String bookingId) =>
+      '${adminBooking(bookingId)}/$adminBookingEditPattern';
 }
 
 /// Tells the router to run its redirect again. The router listens to it;
@@ -120,6 +129,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 builder: (context, state) => AdminBookingDetailScreen(
                   bookingId: state.pathParameters['bookingId']!,
                 ),
+                routes: [
+                  // Below the detail, so Back returns to the detail.
+                  // Opening this address directly builds the list and
+                  // the detail underneath, with their listeners.
+                  GoRoute(
+                    path: AppRoutes.adminBookingEditPattern,
+                    builder: (context, state) => AdminBookingEditScreen(
+                      bookingId: state.pathParameters['bookingId']!,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

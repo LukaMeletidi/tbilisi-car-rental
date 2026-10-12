@@ -558,16 +558,15 @@ Phase 3 decisions (the steps are in Section 18):
   - The key list of the app (admin_booking_document.dart) is tied to the rules by a
     test that reads firestore.rules. The rules emulator script got the updates the
     edit sends (accepted and refused) and the five hand-made documents: 209 admin
-    and signed-in checks now.
+    and signed-in checks (210 since step 3.9b).
   - Known limits of 3.9a:
     - A customer map or a place map with an extra key written by hand is reported
       as a conflict of that part, not as an unknown field. The rules refuse such a
       document anyway.
     - A booking that is deleted while it is being edited replaces the form with
       "does not exist"; the values the admin typed are lost.
-    - The status change of step 3.8 does not have the check for a stored value in
-      another format (next point): on such a hand-made document it still ends with
-      the bare "Not saved. The change was refused." The edit form names the part.
+    - (Closed in step 3.9b: the status change of step 3.8 now has the check for a
+      stored value in another format too, see the next point and step 3.9b.)
   - A stored value the rules refuse, in a part that was not touched. A value
     written by hand in the console can be readable for the app and still refused by
     the rules, which check the whole document on every update. Checked on the
@@ -585,6 +584,80 @@ Phase 3 decisions (the steps are in Section 18):
     store such a value.
   - Nothing is logged except the type of an unexpected error. Rules, ARB files,
     packages and indexes are unchanged.
+- Decisions of step 3.9b (the edit screen):
+  - The form is at /admin/bookings/<id>/edit, below the detail. The detail has an
+    "Edit" icon in its app bar (tooltip "Edit"), only for a booking that is shown,
+    in every status. Back returns to the detail.
+  - After the server confirmed a save the screen returns to the detail, which says
+    "Saved" with the notice it already has for a status change (the edit screen
+    asks the detail's notifier to show it). There is no second mechanism.
+  - The form has its own small admin widgets and English texts (admin_texts.dart).
+    The widgets of the public form are not reused: their labels come from the
+    translations. Reused are only pure functions and the public date and time
+    picker function.
+  - Cards: customer (name, phone, WhatsApp, Telegram, e-mail, language), car, dates
+    and places, extras with today's prices, notes, total. A hidden car is marked
+    "(hidden)". A car that was deleted is shown as "<id> (not found)". A stored
+    place that settings no longer has stays in the list as "<id> (not in the list
+    any more)". A pickup in the past only gets the note "The pickup is in the
+    past."
+  - The price card: "Stored total: 5 days · $225"; when the car, a date or the
+    extras changed, also "New total: 7 days × ($45 car + $6.50 extras) = $360.50"
+    with "The new total uses today's prices."; then the two choices "Keep the
+    stored total ($225)" and "Use the new total ($360.50)", none selected. When the
+    prices cannot be loaded only "Keep" is offered, with the reason.
+  - Save is disabled while nothing changed, while a save runs, and while a needed
+    choice of the total is missing. Other errors do not disable it: pressing Save
+    shows them under their fields, with "Correct the marked fields." above the
+    button, and scrolls to the first card that has one. A stored value in a format
+    the rules refuse is shown at once, before any Save.
+  - The draft in the notifier is the single source of truth. The text controllers
+    are made from it once. Whenever the notifier itself replaces the fields ("Load
+    the current booking", a change elsewhere while the form has no changes) the
+    form is built anew: new controllers from the draft, the old ones disposed.
+  - Changed elsewhere, before saving: a banner "This booking was changed elsewhere
+    (car). Saving will be refused." After a refused save: "This booking was changed
+    elsewhere (car, pickup time). Your changes were not saved." Both offer "Keep
+    editing" and "Load the current booking" (which drops the edits without a
+    second question).
+  - Leaving: Back (the arrow of the app bar and the system Back) with unsaved
+    changes asks "Discard your changes?" with "Keep editing" and "Discard". While a
+    save runs, Back does nothing.
+  - Name, phone, e-mail, address and notes: autocorrect off, suggestions off, no
+    autofill hints.
+  - The date pickers offer 5 calendar years back and 2 ahead (1 January to 31
+    December). The public picker function already takes the range as parameters,
+    so the public file was not changed at all.
+  - The status change of step 3.8 got the stored-format check too: a phone, a name,
+    an e-mail or a place text written by hand in a form the rules refuse is named
+    in one sentence ("Not saved. The phone number is stored in a format the app
+    does not accept. Edit it to correct it.") instead of a bare refusal.
+  - Extra cost of a direct link: opening #/admin/bookings/<id>/edit on web builds
+    the list and the detail underneath. Reads: up to 50 bookings and all cars for
+    the list, 2 for the detail, and for the form the booking once more, all cars
+    once more and the two settings documents. Accepted, as for the detail.
+  - Known limits of 3.9b:
+    - The picker dialogs (calendar and clock) are in the language of the app, not
+      always English, although the admin area is English only. Accepted.
+    - Verified in Chrome: the browser's Back button leaves the edit screen WITHOUT
+      the discard question. The browser changes the address itself and Flutter's
+      PopScope is not consulted. The same goes for a typed address and for closing
+      the tab. Only the arrow of the app bar and the system Back of Android ask.
+      No dart:html code was added for this.
+    - A session that ends while the form is open closes it; the typed values are
+      lost.
+  - Checked by hand by the owner on the Android emulator and in Chrome; all 42
+    steps of the checklist passed:
+    - The first real updateBooking transactions ran against the deployed rules:
+      customer and notes; dates with "Keep the stored total" and with "Use the new
+      total"; a pickup in the past; a hidden car.
+    - Airplane mode: "Not saved. No connection.", and nothing was queued.
+    - "Discard your changes?" on the arrow of the app bar and on the system Back.
+    - The changed-elsewhere banner, and the refusal message after a save, each
+      with both buttons; a total conflict that names the car.
+    - The zzTest check: the status change and the edit both show the sentence
+      about the unknown field.
+    - The three test bookings were restored to their original values.
 
 ### 3.1 Bookings list
 
@@ -930,7 +1003,11 @@ Implementation decisions (step 2.2):
   microseconds), admin_booking_edit_texts_test.dart (the English messages),
   admin_booking_edit_provider_test.dart (the notifier; no widgets), and more tests
   in booking_rules_limits_test.dart (the app's key list equals the rules' list)
-  and booking_firestore_mapping_test.dart (the update of an edit).
+  and booking_firestore_mapping_test.dart (the update of an edit). Step 3.9b
+  adds admin_booking_edit_screen_test.dart (the form with the real router: fields,
+  the total, saving, changed elsewhere, leaving, the route) and
+  admin_price_card_test.dart, and more tests for the detail (the Edit icon, the
+  stored-format message, "Saved" after an edit).
 - Packages installed: firebase_core 4.15.0, flutter_riverpod 3.4.3, go_router 18.0.2,
   flutter_localizations (Flutter SDK), intl 0.20.2, cloud_firestore 6.10.0,
   firebase_app_check 0.4.8 (added in step 2.9a), firebase_auth 6.7.0 (added in step

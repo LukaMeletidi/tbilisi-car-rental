@@ -51,9 +51,17 @@ class AdminBookingEditState {
     this.notice,
     this.noticeFields = const [],
     this.failure,
+    this.formVersion = 0,
   });
 
   final AdminBookingEditStatus status;
+
+  /// Goes up by one whenever the notifier itself replaces the fields of
+  /// the form (the booking arrived, it was changed elsewhere while the
+  /// form had no changes, "Load the current booking", a save). Typing does
+  /// not change it. The screen builds new text controllers for a new
+  /// version: the draft is the single source of truth.
+  final int formVersion;
 
   /// The booking the edit started from. Changes are measured against it,
   /// and the save refuses to overwrite when an edited part of the stored
@@ -144,6 +152,19 @@ class AdminBookingEditState {
   /// True when the form has changes that are not saved.
   bool get isDirty => editedFields.isNotEmpty || draft?.totalChoice != null;
 
+  /// True when a needed choice of the total has not been made.
+  bool get totalChoiceMissing =>
+      (totals?.choiceNeeded ?? false) && draft?.totalChoice == null;
+
+  /// Whether the Save button can be pressed: the form is shown, something
+  /// changed, no save is running, and a needed choice of the total was
+  /// made. Other errors do not disable it: pressing Save shows them.
+  bool get canSave =>
+      status == AdminBookingEditStatus.editing &&
+      !saving &&
+      isDirty &&
+      !totalChoiceMissing;
+
   /// The parts a save would write, as far as the form knows: the parts
   /// the admin changed, and the total when "use the new total" is chosen
   /// and a new total would really be stored.
@@ -183,8 +204,10 @@ class AdminBookingEditState {
     bool? saving,
     AdminBookingSaveNotice? notice,
     List<String> noticeFields = const [],
+    int? formVersion,
   }) {
     return AdminBookingEditState(
+      formVersion: formVersion ?? this.formVersion,
       status: status,
       base: base ?? this.base,
       latest: latest ?? this.latest,
@@ -305,6 +328,7 @@ class AdminBookingEditNotifier extends Notifier<AdminBookingEditState> {
       base: latest,
       draft: AdminBookingDraft.fromBooking(latest),
       showErrors: false,
+      formVersion: state.formVersion + 1,
     );
   }
 
@@ -396,6 +420,7 @@ class AdminBookingEditNotifier extends Notifier<AdminBookingEditState> {
         showErrors: false,
         saving: false,
         notice: notice,
+        formVersion: state.formVersion + 1,
       );
     } else {
       // The form keeps what the admin typed.
@@ -471,16 +496,25 @@ class AdminBookingEditNotifier extends Notifier<AdminBookingEditState> {
         final keepForm =
             state.status == AdminBookingEditStatus.editing &&
             (state.isDirty || state.saving);
+        final shown = state.draft;
+        final next = keepForm && shown != null
+            ? shown
+            : AdminBookingDraft.fromBooking(booking);
+        // New fields for the form only when they really differ from the
+        // ones it shows.
+        final sameFields =
+            shown != null &&
+            draftChanges(shown, next).isEmpty &&
+            shown.totalChoice == next.totalChoice;
         state = AdminBookingEditState(
+          formVersion: sameFields ? state.formVersion : state.formVersion + 1,
           status: AdminBookingEditStatus.editing,
           // With unsaved changes the form keeps its starting point, so the
           // save can tell what was changed elsewhere. Without them the
           // form simply follows the stored booking.
           base: keepForm ? state.base : booking,
           latest: booking,
-          draft: keepForm
-              ? state.draft
-              : AdminBookingDraft.fromBooking(booking),
+          draft: next,
           cars: state.cars,
           locations: state.locations,
           extrasPrices: state.extrasPrices,

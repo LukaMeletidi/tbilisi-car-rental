@@ -156,6 +156,17 @@ class AdminBookingDetailNotifier extends Notifier<AdminBookingDetailState> {
     _listen();
   }
 
+  /// Shows the notice "Saved". The edit screen calls it after the server
+  /// confirmed an edit and before it returns here, so the detail says
+  /// "Saved" with the notice it already has for a status change.
+  void showSaved() {
+    if (state.status != AdminBookingDetailStatus.found) return;
+    state = state.copyWith(
+      saving: state.saving,
+      notice: AdminStatusChangeNotice.saved,
+    );
+  }
+
   /// Removes the notice about the last attempt.
   void dismissNotice() {
     if (state.notice != null) state = state.copyWith(saving: state.saving);

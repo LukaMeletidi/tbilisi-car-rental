@@ -940,6 +940,16 @@ acceptedEdit(
   (f) => f.notes.stringValue === 'Late arrival ',
   { change: (b) => (b.notes = 'Late arrival ') },
 );
+signedIn(
+  'admin status change refused: hand-made: the stored phone has spaces',
+  403,
+  async () => {
+    const id = await seedBooking(
+      (b) => (b.customer.phone = '+995 555 12-34-56'),
+    );
+    return updatePartial(id, { status: 'confirmed' }, ADMIN);
+  },
+);
 refusedEdit('a car that does not exist', { carId: 'noSuchCar' });
 refusedEdit('createdAt sent along and changed', {
   notes: 'Changed by the admin',

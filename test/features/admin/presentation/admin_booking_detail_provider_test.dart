@@ -794,6 +794,49 @@ void main() {
       expect(h.state.noticeFields, isEmpty);
     });
 
+    testWidgets('a stored value in a form the rules refuse: not saved, and '
+        'the part is named', (tester) async {
+      final h = await start(tester);
+      await h.emit(rawBooking('b1', status: 'new'));
+      h.bookings.statusChangeError = const AdminStatusChangeException(
+        AdminStatusChangeFailure.storedFormat,
+        fields: ['phoneStoredFormat'],
+      );
+
+      await h.notifier.changeStatus(BookingStatus.confirmed);
+      await h.flush();
+
+      expect(h.state.saving, false);
+      expect(h.state.notice, AdminStatusChangeNotice.storedFormat);
+      expect(h.state.noticeFields, ['phoneStoredFormat']);
+      expect(h.state.booking!.status, BookingStatus.newBooking);
+    });
+
+    testWidgets('showSaved: the "Saved" notice of a status change, used '
+        'after an edit; only for a booking that is shown', (tester) async {
+      final h = await start(tester);
+
+      h.notifier.showSaved();
+      await h.flush();
+      expect(h.state.notice, isNull);
+
+      await h.emit(rawBooking('b1', status: 'new'));
+      h.notifier.showSaved();
+      await h.flush();
+
+      expect(h.state.notice, AdminStatusChangeNotice.saved);
+      expect(h.state.noticeFields, isEmpty);
+      expect(h.state.saving, false);
+      expect(h.bookings.statusChanges, isEmpty);
+
+      // It stays through a live answer and can be hidden like any notice.
+      await h.emit(rawBooking('b1', fullName: 'Other Person'));
+      expect(h.state.notice, AdminStatusChangeNotice.saved);
+      h.notifier.dismissNotice();
+      await h.flush();
+      expect(h.state.notice, isNull);
+    });
+
     testWidgets('the notice can be hidden', (tester) async {
       final h = await start(tester);
       await h.emit(rawBooking('b1', status: 'new'));

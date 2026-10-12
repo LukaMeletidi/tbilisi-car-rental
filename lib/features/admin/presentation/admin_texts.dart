@@ -136,6 +136,8 @@ String adminStatusNoticeText(
       return 'Not saved. ${adminUnknownFieldsText(fields)}';
     case AdminStatusChangeNotice.noCreatedAt:
       return 'Not saved. $adminNoCreatedAtText';
+    case AdminStatusChangeNotice.storedFormat:
+      return 'Not saved. ${adminStoredFormatNoticeText(fields)}';
     case AdminStatusChangeNotice.unknown:
       return 'Not saved. Please try again.';
   }
@@ -221,6 +223,8 @@ String adminSaveNoticeText(
       return 'Not saved. ${adminUnknownFieldsText(fields)}';
     case AdminBookingSaveNotice.noCreatedAt:
       return 'Not saved. $adminNoCreatedAtText';
+    case AdminBookingSaveNotice.storedFormat:
+      return 'Not saved. ${adminStoredFormatNoticeText(fields)}';
     case AdminBookingSaveNotice.conflict:
       final names = fields.map(adminFieldName).join(', ');
       return names.isEmpty
@@ -239,6 +243,107 @@ String adminSaveNoticeText(
 String adminStoredFormatText(String part) =>
     '$part is stored in a format the app does not accept. '
     'Edit it to correct it.';
+
+/// Said after a write that was not made because a part that is not
+/// written is stored in a form the rules refuse. [errorNames] are the
+/// names of the AdminBookingError values; each gives its sentence, for
+/// example "The phone number is stored in a format the app does not
+/// accept. Edit it to correct it."
+String adminStoredFormatNoticeText(List<String> errorNames) {
+  final sentences = [
+    for (final error in AdminBookingError.values)
+      if (errorNames.contains(error.name)) adminBookingErrorText(error),
+  ];
+  return sentences.isEmpty
+      ? adminStoredFormatText('A value of this booking')
+      : sentences.join(' ');
+}
+
+const adminEditTooltip = 'Edit';
+const adminEditTitle = 'Edit the booking';
+const adminSave = 'Save';
+const adminCorrectFields = 'Correct the marked fields.';
+
+const adminSectionCar = 'Car';
+const adminSectionDates = 'Dates and places';
+const adminSectionExtras = 'Extras';
+const adminSectionNotes = 'Notes';
+const adminSectionTotal = 'Total';
+
+const adminLabelPickupTime = 'Pickup time';
+const adminLabelDropoffTime = 'Drop-off time';
+const adminLabelPickupPlace = 'Pickup place';
+const adminLabelDropoffPlace = 'Drop-off place';
+const adminLabelAddress = 'Address';
+const adminOtherPlace = 'Other place';
+
+const adminPickupInPastNote = 'The pickup is in the past.';
+const adminCarsNotLoaded =
+    'The cars could not be loaded. The car cannot be changed.';
+const adminPlacesNotLoaded =
+    'The places could not be loaded. Only the stored place or another '
+    'address can be chosen.';
+
+/// A car that is hidden from the public: "Toyota Prius, 2019 (hidden)".
+String adminCarHidden(String title) => '$title (hidden)';
+
+/// A car ID that no car has any more: "abc123 (not found)".
+String adminCarNotFound(String carId) => '$carId (not found)';
+
+/// A stored place that settings no longer has.
+String adminPlaceNotInList(String id) => '$id (not in the list any more)';
+
+/// An extra with its current price: "Child seat · $5 per day".
+String adminExtraWithPrice(Extra extra, double? pricePerDay) =>
+    pricePerDay == null
+    ? adminExtraName(extra)
+    : '${adminExtraName(extra)} · ${adminAmount(pricePerDay)} per day';
+
+/// "Stored total: 5 days · $225".
+String adminStoredTotal(int days, double total) =>
+    'Stored total: ${adminDays(days)} · ${adminAmount(total)}';
+
+/// "New total: 7 days × ($45 car + $6.50 extras) = $360.50", with
+/// " · estimate" for more than 7 days.
+String adminNewTotal({
+  required int days,
+  required double carPerDay,
+  required double extrasPerDay,
+  required double total,
+  required bool estimate,
+}) =>
+    'New total: ${adminDays(days)} × (${adminAmount(carPerDay)} car + '
+    '${adminAmount(extrasPerDay)} extras) = ${adminAmount(total)}'
+    '${estimate ? ' · $adminEstimate' : ''}';
+
+const adminNewTotalUsesTodaysPrices = "The new total uses today's prices.";
+const adminTotalStays = 'The total stays as it is.';
+const adminNewTotalNoPrices =
+    'The new total cannot be calculated: the prices could not be loaded.';
+const adminNewTotalNoDates =
+    'The new total cannot be calculated from these dates.';
+
+/// "Keep the stored total ($225)".
+String adminKeepStoredTotal(double total) =>
+    'Keep the stored total (${adminAmount(total)})';
+
+/// "Use the new total ($360.50)".
+String adminUseNewTotal(double total) =>
+    'Use the new total (${adminAmount(total)})';
+
+const adminDiscardTitle = 'Discard your changes?';
+const adminKeepEditing = 'Keep editing';
+const adminDiscard = 'Discard';
+const adminLoadCurrent = 'Load the current booking';
+
+/// The banner shown while the form has changes in parts that were changed
+/// elsewhere: "This booking was changed elsewhere (car). Saving will be
+/// refused." [fields] are stored field names.
+String adminChangedElsewhereBanner(List<String> fields) {
+  final names = fields.map(adminFieldName).join(', ');
+  return 'This booking was changed elsewhere ($names). '
+      'Saving will be refused.';
+}
 
 /// The text for a problem of the edit form.
 String adminBookingErrorText(AdminBookingError error) {

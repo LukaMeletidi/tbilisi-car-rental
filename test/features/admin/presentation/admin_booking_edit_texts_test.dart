@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:tbilisi_car_rental/core/models/extra.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_detail.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_edit.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_texts.dart';
@@ -159,6 +160,77 @@ void main() {
         adminSaveNoticeText(AdminBookingSaveNotice.carMissing),
         'Not saved. This car no longer exists. Choose another car.',
       );
+    });
+
+    test('a stored value in a form the rules refuse: one sentence for '
+        'each part, in the order of the form; a general one when no part '
+        'is known', () {
+      expect(
+        adminStatusNoticeText(
+          AdminStatusChangeNotice.storedFormat,
+          fields: ['phoneStoredFormat'],
+        ),
+        'Not saved. The phone number is stored in a format the app does '
+        'not accept. Edit it to correct it.',
+      );
+      expect(
+        adminStoredFormatNoticeText([
+          'emailStoredFormat',
+          'nameStoredFormat',
+          'somethingElse',
+        ]),
+        'The name is stored in a format the app does not accept. Edit it '
+        'to correct it. The e-mail address is stored in a format the app '
+        'does not accept. Edit it to correct it.',
+      );
+      expect(
+        adminStoredFormatNoticeText(const []),
+        'A value of this booking is stored in a format the app does not '
+        'accept. Edit it to correct it.',
+      );
+      expect(
+        adminSaveNoticeText(
+          AdminBookingSaveNotice.storedFormat,
+          fields: ['phoneStoredFormat'],
+        ),
+        adminStatusNoticeText(
+          AdminStatusChangeNotice.storedFormat,
+          fields: ['phoneStoredFormat'],
+        ),
+      );
+    });
+
+    test('the banner before a save names the parts in words', () {
+      expect(
+        adminChangedElsewhereBanner(['carId', 'notes']),
+        'This booking was changed elsewhere (car, notes). '
+        'Saving will be refused.',
+      );
+    });
+
+    test('the texts of the form: cars, places, extras and totals', () {
+      expect(
+        adminCarHidden('Toyota Prius, 2019'),
+        'Toyota Prius, 2019 (hidden)',
+      );
+      expect(adminCarNotFound('gone-car'), 'gone-car (not found)');
+      expect(
+        adminPlaceNotInList('oldPlace'),
+        'oldPlace (not in the list any more)',
+      );
+      expect(
+        adminExtraWithPrice(Extra.childSeat, 5),
+        'Child seat · \$5 per day',
+      );
+      expect(adminExtraWithPrice(Extra.childSeat, null), 'Child seat');
+      expect(adminStoredTotal(1, 45), 'Stored total: 1 day · \$45');
+      expect(adminKeepStoredTotal(225), 'Keep the stored total (\$225)');
+      expect(adminUseNewTotal(360.5), 'Use the new total (\$360.50)');
+      expect(adminEditTooltip, 'Edit');
+      expect(adminDiscardTitle, 'Discard your changes?');
+      expect(adminKeepEditing, 'Keep editing');
+      expect(adminDiscard, 'Discard');
+      expect(adminLoadCurrent, 'Load the current booking');
     });
 
     test('a conflict names the parts in words', () {

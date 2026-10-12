@@ -127,6 +127,16 @@ class AdminBookingDetailScreen extends ConsumerWidget {
         toolbarHeight: appBarLogoToolbarHeight,
         leading: BackButton(onPressed: back),
         title: const AppBarLogo(),
+        actions: [
+          // Only for a booking that is shown; in every status.
+          if (state.status == AdminBookingDetailStatus.found && booking != null)
+            IconButton(
+              icon: const Icon(Icons.edit),
+              tooltip: adminEditTooltip,
+              onPressed: () =>
+                  context.go(AppRoutes.adminBookingEdit(bookingId)),
+            ),
+        ],
       ),
       body: SafeArea(child: body),
     );
@@ -313,6 +323,7 @@ class _NoticeLine extends StatelessWidget {
       case AdminStatusChangeNotice.bookingMissing:
       case AdminStatusChangeNotice.unknownFields:
       case AdminStatusChangeNotice.noCreatedAt:
+      case AdminStatusChangeNotice.storedFormat:
       case AdminStatusChangeNotice.unknown:
         icon = Icons.error_outline;
         color = scheme.error;

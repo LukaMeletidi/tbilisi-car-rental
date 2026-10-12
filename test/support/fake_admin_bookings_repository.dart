@@ -91,6 +91,16 @@ class FakeAdminBookingsRepository implements AdminBookingsRepository {
     );
   }
 
+  /// Makes EVERY open single-booking listener answer with [document]: the
+  /// detail and the edit form listen to the same booking.
+  void emitBookingToAll(RawBookingDocument? document) {
+    for (final controller in _bookingControllers) {
+      if (controller.hasListener) {
+        controller.add(RawBookingAnswer(document: document, fromCache: false));
+      }
+    }
+  }
+
   /// Makes the newest single-booking listener fail with [error].
   void failBooking(Object error) => _bookingControllers.last.addError(error);
 

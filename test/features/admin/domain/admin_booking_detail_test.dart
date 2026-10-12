@@ -266,6 +266,20 @@ void main() {
     );
   });
 
+  test('a stored value in a form the rules refuse has its own failure and '
+      'notice, with the names of the parts', () {
+    expect(
+      noticeForFailure(AdminStatusChangeFailure.storedFormat),
+      AdminStatusChangeNotice.storedFormat,
+    );
+    const exception = AdminStatusChangeException(
+      AdminStatusChangeFailure.storedFormat,
+      fields: ['phoneStoredFormat'],
+    );
+    expect(exception.fields, ['phoneStoredFormat']);
+    expect(exception.toString(), 'AdminStatusChangeException(storedFormat)');
+  });
+
   test('the wait for the server is 20 seconds', () {
     expect(adminStatusChangeTimeout, const Duration(seconds: 20));
   });

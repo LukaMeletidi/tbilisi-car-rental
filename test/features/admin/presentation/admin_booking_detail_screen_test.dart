@@ -674,6 +674,28 @@ void main() {
       );
     });
 
+    testWidgets('a stored value in a form the rules refuse: one sentence '
+        'names the part, instead of a bare "refused"', (tester) async {
+      await pumpScreen(tester);
+      await emit(tester, rawBooking('b1', status: 'new'));
+      bookings.statusChangeError = const AdminStatusChangeException(
+        AdminStatusChangeFailure.storedFormat,
+        fields: ['phoneStoredFormat'],
+      );
+
+      await tapChange(tester, BookingStatus.confirmed);
+
+      expect(
+        find.text(
+          'Not saved. The phone number is stored in a format the app does '
+          'not accept. Edit it to correct it.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('refused'), findsNothing);
+      expect(chipWord(tester), 'New');
+    });
+
     testWidgets('the message can be hidden', (tester) async {
       await pumpScreen(tester);
       await emit(tester, rawBooking('b1', status: 'new'));
@@ -706,7 +728,47 @@ void main() {
     });
   });
 
-  test('the texts after a change: one "Saved", six "Not saved", and "no '
+  group('the Edit icon', () {
+    for (final status in BookingStatus.values) {
+      testWidgets('is shown for a booking in the status ${status.name}', (
+        tester,
+      ) async {
+        await pumpScreen(tester);
+        await emit(tester, rawBooking('b1', status: status.storedName));
+
+        expect(find.byTooltip(adminEditTooltip), findsOneWidget);
+        expect(find.byIcon(Icons.edit), findsOneWidget);
+      });
+    }
+
+    testWidgets('is not shown while loading, for a missing booking, for an '
+        'unreadable one, or after a failure', (tester) async {
+      await pumpScreen(tester);
+      expect(find.byTooltip(adminEditTooltip), findsNothing);
+
+      await emit(tester, rawBooking('b1', changes: {'status': 'approved'}));
+      expect(find.byTooltip(adminEditTooltip), findsNothing);
+
+      await emit(tester, null);
+      expect(find.byTooltip(adminEditTooltip), findsNothing);
+
+      bookings.failBooking(
+        const AdminBookingsException(AdminBookingsFailure.other),
+      );
+      await settle(tester);
+      expect(find.byTooltip(adminEditTooltip), findsNothing);
+    });
+
+    testWidgets('fits the app bar of a phone 320 wide', (tester) async {
+      await pumpScreen(tester, size: const Size(320, 1800));
+      await emit(tester, rawBooking('b1', status: 'confirmed'));
+
+      expect(find.byTooltip(adminEditTooltip), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  test('the texts after a change: one "Saved", seven "Not saved", and "no '
       'answer" is neither', () {
     final all = {
       for (final notice in AdminStatusChangeNotice.values)
@@ -720,7 +782,7 @@ void main() {
     expect(all[AdminStatusChangeNotice.saved], 'Saved');
     expect(
       all.values.where((text) => text.startsWith('Not saved.')),
-      hasLength(6),
+      hasLength(7),
     );
     expect(all[AdminStatusChangeNotice.noAnswer], isNot(contains('Not saved')));
   });

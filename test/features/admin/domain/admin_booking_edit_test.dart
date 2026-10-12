@@ -564,6 +564,77 @@ void main() {
     });
   });
 
+  group('storedFormatErrorsOfDocument (used by the status change)', () {
+    test('a document as the app writes it: nothing', () {
+      expect(
+        storedFormatErrorsOfDocument('b1', rawBooking('b1').data),
+        isEmpty,
+      );
+    });
+
+    test('the parts stored in a form the rules refuse are found', () {
+      final data = rawBooking(
+        'b1',
+        changes: {
+          'customer': {
+            'fullName': 'Test Person ',
+            'phone': '+995 555 00-00-00',
+            'whatsapp': false,
+            'telegram': false,
+            'email': 'person@example.com ',
+          },
+          'dropoffLocation': {'id': 'other', 'text': 'Made-up Street 2 '},
+          'notes': 'Late arrival ',
+        },
+      ).data;
+
+      expect(storedFormatErrorsOfDocument('b1', data), {
+        AdminBookingError.nameStoredFormat,
+        AdminBookingError.phoneStoredFormat,
+        AdminBookingError.emailStoredFormat,
+        AdminBookingError.dropoffLocationStoredFormat,
+      });
+    });
+
+    test('a document that cannot be read as a booking gives nothing: the '
+        'rules then decide', () {
+      expect(
+        storedFormatErrorsOfDocument(
+          'b1',
+          rawBooking('b1', changes: {'status': 'approved'}).data,
+        ),
+        isEmpty,
+      );
+      expect(storedFormatErrorsOfDocument('b1', const {}), isEmpty);
+    });
+
+    test('storedFormatErrorKinds are exactly the errors of this check', () {
+      expect(storedFormatErrorKinds, {
+        for (final error in AdminBookingError.values)
+          if (error.name.endsWith('StoredFormat')) error,
+      });
+      expect(storedFormatErrorKinds, hasLength(5));
+    });
+  });
+
+  group('adminPickerRange', () {
+    test('5 calendar years back and 2 ahead, whole years', () {
+      final range = adminPickerRange(TbilisiDateTime(2026, 10, 9, 16, 0));
+
+      expect(adminPickerYearsBack, 5);
+      expect(adminPickerYearsAhead, 2);
+      expect(range.first, TbilisiDateTime(2021, 1, 1, 0, 0));
+      expect(range.last, TbilisiDateTime(2028, 12, 31, 23, 59));
+    });
+
+    test('works on 29 February', () {
+      final range = adminPickerRange(TbilisiDateTime(2028, 2, 29, 12, 0));
+
+      expect(range.first, TbilisiDateTime(2023, 1, 1, 0, 0));
+      expect(range.last, TbilisiDateTime(2030, 12, 31, 23, 59));
+    });
+  });
+
   group('the total', () {
     final car = testCar(); // 45 per day
     final dearCar = Car(

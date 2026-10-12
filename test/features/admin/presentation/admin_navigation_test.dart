@@ -11,6 +11,7 @@ import 'package:tbilisi_car_rental/features/admin/data/admin_auth_repository.dar
 import 'package:tbilisi_car_rental/features/admin/data/admin_bookings_repository.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_session.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_booking_detail_screen.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/admin_booking_edit_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_gate_screens.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_bookings_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_login_screen.dart';
@@ -109,6 +110,7 @@ void expectOnly(Type screen) {
     AdminNoAccessScreen,
     AdminBookingsScreen,
     AdminBookingDetailScreen,
+    AdminBookingEditScreen,
     AdminNotFoundScreen,
   ]) {
     expect(
@@ -578,7 +580,10 @@ void main() {
       tester,
     ) async {
       await pumpApp(tester, initial: AdminSession.admin);
-      await open(tester, '/admin/bookings/abc/edit');
+      // "/admin/bookings/abc/edit" is the edit form since step 3.9b.
+      await open(tester, '/admin/bookings/abc/edit/more');
+      expectOnly(AdminNotFoundScreen);
+      await open(tester, '/admin/bookings/abc/other');
       expectOnly(AdminNotFoundScreen);
     });
 

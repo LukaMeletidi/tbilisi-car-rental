@@ -658,6 +658,131 @@ void main() {
     });
   });
 
+  group('the form version (new text controllers)', () {
+    testWidgets('typing and choosing do not change it', (tester) async {
+      final h = await startEditing(tester);
+      final version = h.state.formVersion;
+      expect(version, greaterThan(0));
+
+      h.edit((i) => i.copyWith(notes: 'A note.'));
+      h.notifier.setDraft(h.draft.copyWith(carId: 'car-2'));
+      h.notifier.chooseTotal(AdminTotalChoice.keepStored);
+      h.notifier.dismissNotice();
+
+      expect(h.state.formVersion, version);
+    });
+
+    testWidgets('"Load the current booking" raises it', (tester) async {
+      final h = await startEditing(tester);
+      h.edit((i) => i.copyWith(notes: 'My note.'));
+      await h.emit(rawBooking('b1', changes: {'notes': 'Their note.'}));
+      final version = h.state.formVersion;
+
+      h.notifier.loadCurrent();
+
+      expect(h.state.formVersion, version + 1);
+      expect(h.draft.input.notes, 'Their note.');
+    });
+
+    testWidgets('a change elsewhere raises it only when the form has no '
+        'unsaved changes and the values really differ', (tester) async {
+      final h = await startEditing(tester);
+      final version = h.state.formVersion;
+
+      // The same values again, and a status change: the same fields.
+      await h.emit(rawBooking('b1'));
+      await h.emit(rawBooking('b1', status: 'confirmed'));
+      expect(h.state.formVersion, version);
+
+      await h.emit(rawBooking('b1', fullName: 'Their Name'));
+      expect(h.state.formVersion, version + 1);
+
+      // With unsaved changes the form is left alone.
+      h.edit((i) => i.copyWith(notes: 'My note.'));
+      await h.emit(rawBooking('b1', fullName: 'Another Name'));
+      expect(h.state.formVersion, version + 1);
+      expect(h.draft.input.fullName, 'Their Name');
+    });
+
+    testWidgets('a save raises it: the form shows the cleaned values', (
+      tester,
+    ) async {
+      final h = await startEditing(tester);
+      h.edit((i) => i.copyWith(notes: ' A note. '));
+      final version = h.state.formVersion;
+
+      await h.save();
+
+      expect(h.state.formVersion, version + 1);
+      expect(h.draft.input.notes, 'A note.');
+    });
+
+    testWidgets('a failed save does not: the typed values stay in their '
+        'fields', (tester) async {
+      final h = await startEditing(tester);
+      h.edit((i) => i.copyWith(notes: 'A note.'));
+      h.bookings.updateError = const AdminBookingSaveException(
+        AdminBookingSaveFailure.noConnection,
+      );
+      final version = h.state.formVersion;
+
+      await h.save();
+
+      expect(h.state.formVersion, version);
+    });
+  });
+
+  group('whether Save can be pressed', () {
+    testWidgets('not before the booking is there, and not while nothing '
+        'changed', (tester) async {
+      final h = await start(tester);
+      expect(h.state.canSave, false);
+
+      await h.emit(rawBooking('b1'));
+      expect(h.state.canSave, false);
+    });
+
+    testWidgets('yes after a change, also when a field is not valid: '
+        'pressing Save then shows the errors', (tester) async {
+      final h = await startEditing(tester);
+
+      h.edit((i) => i.copyWith(fullName: ''));
+
+      expect(h.state.errors, isNotEmpty);
+      expect(h.state.canSave, true);
+    });
+
+    testWidgets('not while a needed choice of the total is missing', (
+      tester,
+    ) async {
+      final h = await startEditing(tester);
+
+      h.notifier.setDraft(h.draft.copyWith(carId: 'car-2'));
+      expect(h.state.totalChoiceMissing, true);
+      expect(h.state.canSave, false);
+
+      h.notifier.chooseTotal(AdminTotalChoice.keepStored);
+      expect(h.state.totalChoiceMissing, false);
+      expect(h.state.canSave, true);
+    });
+
+    testWidgets('not while a save is running, and not after it (nothing '
+        'is unsaved then)', (tester) async {
+      final h = await startEditing(tester);
+      h.edit((i) => i.copyWith(notes: 'A note.'));
+      h.bookings.updatePending = Completer<void>();
+
+      final save = h.notifier.save();
+      await h.flush();
+      expect(h.state.canSave, false);
+
+      h.bookings.updatePending!.complete();
+      await save;
+      await h.flush();
+      expect(h.state.canSave, false);
+    });
+  });
+
   group('a half-filled form', () {
     testWidgets('the getters of the state never throw', (tester) async {
       final h = await startEditing(tester);

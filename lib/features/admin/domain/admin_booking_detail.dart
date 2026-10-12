@@ -124,6 +124,11 @@ enum AdminStatusChangeFailure {
   /// change of it.
   noCreatedAt,
 
+  /// A value of the stored document (for example a phone written by hand
+  /// with spaces) is in a form the rules refuse, so they refuse every
+  /// change of it.
+  storedFormat,
+
   /// Anything else.
   unknown,
 }
@@ -151,7 +156,9 @@ class AdminStatusChangeException implements Exception {
 
   final AdminStatusChangeFailure failure;
 
-  /// The names of the unknown fields; empty for every other failure.
+  /// For [AdminStatusChangeFailure.unknownFields] the names of the unknown
+  /// fields; for [AdminStatusChangeFailure.storedFormat] the names of the
+  /// parts, as AdminBookingError names. Otherwise empty.
   final List<String> fields;
 
   @override
@@ -182,6 +189,7 @@ enum AdminStatusChangeNotice {
   bookingMissing,
   unknownFields,
   noCreatedAt,
+  storedFormat,
   unknown,
 }
 
@@ -198,6 +206,8 @@ AdminStatusChangeNotice noticeForFailure(AdminStatusChangeFailure failure) {
       return AdminStatusChangeNotice.unknownFields;
     case AdminStatusChangeFailure.noCreatedAt:
       return AdminStatusChangeNotice.noCreatedAt;
+    case AdminStatusChangeFailure.storedFormat:
+      return AdminStatusChangeNotice.storedFormat;
     case AdminStatusChangeFailure.unknown:
       return AdminStatusChangeNotice.unknown;
   }

@@ -333,6 +333,52 @@ Set<AdminBookingError> storedFormatErrors(
   return errors;
 }
 
+/// The five errors of [storedFormatErrors]. The edit form shows them at
+/// once, not only after the first press of Save: nothing can be saved
+/// until the part is corrected.
+const storedFormatErrorKinds = {
+  AdminBookingError.nameStoredFormat,
+  AdminBookingError.phoneStoredFormat,
+  AdminBookingError.emailStoredFormat,
+  AdminBookingError.pickupLocationStoredFormat,
+  AdminBookingError.dropoffLocationStoredFormat,
+};
+
+/// [storedFormatErrors] for a stored document in which nothing is touched:
+/// what makes the rules refuse every update of it although the app can
+/// read it. The status change uses this, as it sends none of these parts.
+///
+/// [data] is a document whose Firestore timestamps were already turned
+/// into [DateTime] values. A document that cannot be read as a booking
+/// gives no error here; the rules then decide.
+Set<AdminBookingError> storedFormatErrorsOfDocument(
+  String id,
+  Map<String, dynamic> data,
+) {
+  final Booking booking;
+  try {
+    booking = Booking.fromMap(id, data);
+  } on FormatException {
+    return const {};
+  }
+  return storedFormatErrors(booking, AdminBookingDraft.fromBooking(booking));
+}
+
+/// How many calendar years before and after the current one the date
+/// pickers of the edit form offer. An old booking can be corrected.
+const adminPickerYearsBack = 5;
+const adminPickerYearsAhead = 2;
+
+/// The first and the last day the date pickers of the edit form offer:
+/// from 1 January [adminPickerYearsBack] years before [today] to 31
+/// December [adminPickerYearsAhead] years after it (Tbilisi days).
+({TbilisiDateTime first, TbilisiDateTime last}) adminPickerRange(
+  TbilisiDateTime today,
+) => (
+  first: TbilisiDateTime(today.year - adminPickerYearsBack, 1, 1, 0, 0),
+  last: TbilisiDateTime(today.year + adminPickerYearsAhead, 12, 31, 23, 59),
+);
+
 // A free text that is usable once trimmed, but is not stored trimmed.
 bool _hasUncleanText(BookingLocation location) {
   final text = location.text;
@@ -738,6 +784,9 @@ enum AdminBookingSaveFailure {
   /// An edited part was changed elsewhere meanwhile.
   conflict,
 
+  /// A part that is not written is stored in a form the rules refuse.
+  storedFormat,
+
   /// Anything else.
   unknown,
 }
@@ -754,6 +803,7 @@ AdminBookingSaveFailure saveFailureFromCode(String code) {
       return AdminBookingSaveFailure.bookingMissing;
     case AdminStatusChangeFailure.unknownFields:
     case AdminStatusChangeFailure.noCreatedAt:
+    case AdminStatusChangeFailure.storedFormat:
     case AdminStatusChangeFailure.unknown:
       return AdminBookingSaveFailure.unknown;
   }
@@ -769,7 +819,9 @@ class AdminBookingSaveException implements Exception {
 
   /// For [AdminBookingSaveFailure.unknownFields] the unknown field names;
   /// for [AdminBookingSaveFailure.conflict] the stored names of the parts
-  /// that were changed elsewhere. Otherwise empty.
+  /// that were changed elsewhere; for
+  /// [AdminBookingSaveFailure.storedFormat] the names of the
+  /// [AdminBookingError] values. Otherwise empty.
   final List<String> fields;
 
   @override
@@ -801,6 +853,7 @@ enum AdminBookingSaveNotice {
   unknownFields,
   noCreatedAt,
   conflict,
+  storedFormat,
   unknown,
 }
 
@@ -821,6 +874,8 @@ AdminBookingSaveNotice noticeForSaveFailure(AdminBookingSaveFailure failure) {
       return AdminBookingSaveNotice.noCreatedAt;
     case AdminBookingSaveFailure.conflict:
       return AdminBookingSaveNotice.conflict;
+    case AdminBookingSaveFailure.storedFormat:
+      return AdminBookingSaveNotice.storedFormat;
     case AdminBookingSaveFailure.unknown:
       return AdminBookingSaveNotice.unknown;
   }

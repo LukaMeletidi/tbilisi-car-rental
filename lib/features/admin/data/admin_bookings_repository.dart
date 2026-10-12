@@ -141,7 +141,9 @@ class AdminBookingsRepository {
   /// The rules check the whole document on every update. A stored document
   /// with a field they do not know, or without createdAt, would be refused
   /// with a bare "permission denied"; the transaction finds that first and
-  /// reports it by name.
+  /// reports it by name. The same goes for a stored value in a form the
+  /// rules refuse (a phone, a name, an e-mail or the text of a place
+  /// written by hand with spaces).
   ///
   /// It runs in a transaction, tried once. A transaction is never kept in
   /// the offline queue and never changes the saved copy first: without a
@@ -166,6 +168,16 @@ class AdminBookingsRepository {
               final snapshot = await transaction.get(document);
               final stored = _readStored(snapshot.data());
               if (stored.refusal != null) return stored.refusal;
+              // A status change sends none of the customer's values or
+              // places, so one of them stored in a form the rules refuse
+              // would end in a bare "permission denied". Name it instead.
+              final unclean = storedFormatErrorsOfDocument(id, stored.data!);
+              if (unclean.isNotEmpty) {
+                return _Refusal(AdminBookingSaveFailure.storedFormat, [
+                  for (final error in AdminBookingError.values)
+                    if (unclean.contains(error)) error.name,
+                ]);
+              }
               transaction.update(document, {'status': status.storedName});
               return null;
             },
@@ -320,6 +332,8 @@ AdminStatusChangeFailure _statusFailure(AdminBookingSaveFailure failure) {
       return AdminStatusChangeFailure.unknownFields;
     case AdminBookingSaveFailure.noCreatedAt:
       return AdminStatusChangeFailure.noCreatedAt;
+    case AdminBookingSaveFailure.storedFormat:
+      return AdminStatusChangeFailure.storedFormat;
     case AdminBookingSaveFailure.noConnection:
       return AdminStatusChangeFailure.noConnection;
     case AdminBookingSaveFailure.refused:
