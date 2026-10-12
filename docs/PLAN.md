@@ -1419,16 +1419,25 @@ Phase 3: admin sign-in and the bookings list with editing (Section 11).
   - This was the first real transaction against the deployed rules, and it worked.
   - Not seen on a device: the text "No answer from the server. The status shown is
     the current one." It is covered by the tests only.
-- 3.9 Edit all fields; the recomputed total next to the stored one — 3.9a done,
-  3.9b not started.
-  - 3.9a (logic, repository and notifier; no screen, no route): 1031 tests pass and
-    analyze is clean. The rules emulator script passes (104 public, 209 admin and
-    signed-in); the rules were not changed. The status change of step 3.8 now names
-    an unknown field and a missing createdAt.
-  - Not yet run against the real database: updateBooking. It is first used by the
-    screen of 3.9b and verified by eye there.
-  - 3.9b (the edit screen, its route, the Edit button, the manual checks) — not
-    started.
+- 3.9 Edit all fields; the recomputed total next to the stored one — DONE.
+  - 3.9a (logic, repository and notifier): done. The draft of the form, its
+    validation, what changed and the update map, the stored total next to the new
+    one with an explicit choice, the conflict check, and updateBooking in a
+    transaction with one attempt and a 20 second limit.
+  - 3.9b (the edit screen, its route, the Edit icon on the detail): done.
+  - 1115 tests pass and analyze is clean. The rules emulator script passes (104
+    public, 210 admin and signed-in); the rules were not changed.
+  - I verified by eye, on the Android emulator and in Chrome, all 42 steps of the
+    checklist: the first real updateBooking transactions against the deployed
+    rules (customer and notes; dates with "Keep the stored total" and with "Use
+    the new total"; a pickup in the past; a hidden car); airplane mode with
+    nothing queued; "Discard your changes?" on the arrow and on the system Back;
+    the changed-elsewhere banner and the refusal message with both buttons; a
+    total conflict that names the car; the zzTest check (the status change and
+    the edit both show the unknown-field sentence).
+  - Verified known limit: in Chrome the browser's Back button leaves the edit
+    screen without the discard question.
+  - The three test bookings were restored to their original values.
 - 3.10 Create a booking by hand (status confirmed, createdBy) — not started.
 - 3.11 Delete a booking, with a confirmation — not started.
 - 3.12 Verify Phase 3 and close it — not started.
