@@ -10,16 +10,24 @@ import 'package:tbilisi_car_rental/features/booking/domain/booking_rental.dart';
 
 /// One booking in the admin list: a white card with the status, the
 /// customer, the car, the dates in Tbilisi time, the days and the total.
-/// It cannot be tapped yet; the detail screen comes in step 3.8.
+/// With [onTap] the whole card can be tapped; the list opens the detail of
+/// the booking with it.
 class AdminBookingCard extends StatelessWidget {
-  const AdminBookingCard({super.key, required this.booking, required this.car});
+  const AdminBookingCard({
+    super.key,
+    required this.booking,
+    required this.car,
+    this.onTap,
+  });
 
   final Booking booking;
   final AdminCarLabel car;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return AppCard(
+      onTap: onTap,
       child: _CardContent(booking: booking, car: car),
     );
   }

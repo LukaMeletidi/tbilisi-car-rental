@@ -10,6 +10,7 @@ import 'package:tbilisi_car_rental/core/widgets/app_bar_logo.dart';
 import 'package:tbilisi_car_rental/features/admin/data/admin_auth_repository.dart';
 import 'package:tbilisi_car_rental/features/admin/data/admin_bookings_repository.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_session.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/admin_booking_detail_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_gate_screens.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_bookings_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_login_screen.dart';
@@ -17,6 +18,7 @@ import 'package:tbilisi_car_rental/features/admin/presentation/admin_texts.dart'
 import 'package:tbilisi_car_rental/features/catalog/presentation/car_detail_screen.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/cars_providers.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_screen.dart';
+import 'package:tbilisi_car_rental/features/settings/presentation/settings_providers.dart';
 import 'package:tbilisi_car_rental/l10n/generated/app_localizations.dart';
 
 import '../../../support/fake_admin_auth_repository.dart';
@@ -82,6 +84,8 @@ Future<void> pumpApp(
         adminBookingsRepositoryProvider.overrideWithValue(bookingsRepository),
         activeCarsProvider.overrideWith((ref) => Stream.value([car])),
         carProvider.overrideWith((ref, id) => Stream.value(car)),
+        // The booking detail looks the names of the places up.
+        pickupLocationsProvider.overrideWith((ref) => Stream.value(const [])),
       ],
       child: const _App(),
     ),
@@ -104,6 +108,7 @@ void expectOnly(Type screen) {
     AdminCheckingScreen,
     AdminNoAccessScreen,
     AdminBookingsScreen,
+    AdminBookingDetailScreen,
     AdminNotFoundScreen,
   ]) {
     expect(
@@ -422,6 +427,132 @@ void main() {
 
       expect(find.byType(CarDetailScreen), findsOneWidget);
       expectOnly(Null);
+    });
+  });
+
+  group('the detail of a booking', () {
+    testWidgets('a tap on a row opens it, and Back returns to the list', (
+      tester,
+    ) async {
+      await pumpApp(tester, initial: AdminSession.admin);
+      await open(tester, '/admin');
+      bookingsRepository.emit([rawBooking('b1'), rawBooking('b2')]);
+      await settle(tester);
+
+      await tester.tap(find.text('Test Person').first);
+      await settle(tester);
+
+      // The list stays underneath; only the detail is on screen.
+      expectOnly(AdminBookingDetailScreen);
+      expect(address(tester), '/admin/bookings/b1');
+      expect(bookingsRepository.watchedBookingIds, ['b1']);
+      bookingsRepository.emitBooking(rawBooking('b1'));
+      await settle(tester);
+      expect(find.text(adminBookingTitle), findsOneWidget);
+      expect(find.text(adminSectionStatus), findsOneWidget);
+
+      await tester.tap(find.byType(BackButton));
+      await settle(tester);
+
+      expectOnly(AdminBookingsScreen);
+      expect(address(tester), '/admin');
+      // The detail closed its listener; the list kept its own.
+      expect(bookingsRepository.activeBookingListeners, 0);
+      expect(bookingsRepository.activeListeners, 1);
+      expect(bookingsRepository.limits, [50]);
+    });
+
+    testWidgets('"Back to the bookings" of a missing booking opens the list', (
+      tester,
+    ) async {
+      await pumpApp(tester, initial: AdminSession.admin);
+      await open(tester, '/admin/bookings/gone');
+      bookingsRepository.emitBooking(null);
+      await settle(tester);
+      expect(find.text(adminBookingMissing), findsOneWidget);
+
+      await tester.tap(find.text(adminBackToBookings));
+      await settle(tester);
+
+      expectOnly(AdminBookingsScreen);
+      expect(address(tester), '/admin');
+    });
+
+    testWidgets('its address opened directly by an admin shows it; the list '
+        'underneath starts its listener too', (tester) async {
+      await pumpApp(tester, initial: AdminSession.admin);
+      await open(tester, '/admin/bookings/b1');
+
+      expectOnly(AdminBookingDetailScreen);
+      expect(address(tester), '/admin/bookings/b1');
+      expect(bookingsRepository.watchedBookingIds, ['b1']);
+      // The accepted extra cost of a direct link: up to 50 reads.
+      expect(bookingsRepository.limits, [50]);
+    });
+
+    testWidgets('signed out: the login page, and nothing is asked for; '
+        'after the sign-in the admin lands on the booking', (tester) async {
+      await pumpApp(tester);
+      await open(tester, '/admin/bookings/b1');
+
+      expectOnly(AdminLoginScreen);
+      expect(address(tester), '/admin/login?from=%2Fadmin%2Fbookings%2Fb1');
+      expect(bookingsRepository.watchedBookingIds, isEmpty);
+      expect(bookingsRepository.limits, isEmpty);
+
+      repository.report(AdminSession.admin);
+      await settle(tester);
+
+      expectOnly(AdminBookingDetailScreen);
+      expect(address(tester), '/admin/bookings/b1');
+      expect(bookingsRepository.watchedBookingIds, ['b1']);
+    });
+
+    for (final session in [null, AdminSession.noAccess]) {
+      testWidgets('${session?.name ?? 'unknown'}: never the booking, and '
+          'nothing is asked for', (tester) async {
+        await pumpApp(tester, initial: session);
+        await open(tester, '/admin/bookings/b1');
+
+        expectOnly(session == null ? AdminCheckingScreen : AdminNoAccessScreen);
+        expect(bookingsRepository.watchedBookingIds, isEmpty);
+        expect(bookingsRepository.limits, isEmpty);
+      });
+    }
+
+    testWidgets('a session that ends while it is open closes it and both '
+        'listeners', (tester) async {
+      await pumpApp(tester, initial: AdminSession.admin);
+      await open(tester, '/admin/bookings/b1');
+      bookingsRepository.emitBooking(rawBooking('b1'));
+      await settle(tester);
+      expect(find.text('Test Person'), findsOneWidget);
+
+      repository.report(AdminSession.noAccess);
+      await settle(tester);
+
+      expectOnly(AdminNoAccessScreen);
+      expect(find.text('Test Person'), findsNothing);
+      expect(bookingsRepository.activeBookingListeners, 0);
+      expect(bookingsRepository.activeListeners, 0);
+    });
+
+    testWidgets('an ID of an impossible shape in the address: "does not '
+        'exist", and Firestore is not asked for it', (tester) async {
+      await pumpApp(tester, initial: AdminSession.admin);
+      await open(tester, '/admin/bookings/a%20b');
+
+      expectOnly(AdminBookingDetailScreen);
+      expect(find.text(adminBookingMissing), findsOneWidget);
+      expect(bookingsRepository.watchedBookingIds, isEmpty);
+    });
+
+    testWidgets('"/admin/bookings" without an ID is "not found"', (
+      tester,
+    ) async {
+      await pumpApp(tester, initial: AdminSession.admin);
+      await open(tester, '/admin/bookings');
+      expectOnly(AdminNotFoundScreen);
     });
   });
 

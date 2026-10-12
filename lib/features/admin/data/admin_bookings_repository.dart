@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:tbilisi_car_rental/core/models/booking_status.dart';
 import 'package:tbilisi_car_rental/core/models/car.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_detail.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
 import 'package:tbilisi_car_rental/features/booking/data/booking_firestore_mapping.dart';
 import 'package:tbilisi_car_rental/features/catalog/data/car_parsing.dart';
@@ -75,6 +78,117 @@ class AdminBookingsRepository {
       Error.throwWithStackTrace(mapAdminBookingsError(error), stackTrace);
     }
   }
+
+  /// One booking, live: a new answer comes whenever the document changes or
+  /// is deleted. [RawBookingAnswer.document] is null when there is no
+  /// document with [id].
+  ///
+  /// Metadata changes are included, so that an answer from the copy saved
+  /// on the device is followed by one from the server;
+  /// [RawBookingAnswer.fromCache] says which of the two an answer is. A
+  /// missing document in the saved copy does not mean the booking does not
+  /// exist; readBookingAnswer makes that difference.
+  ///
+  /// The dates are turned into UTC DateTime values here. An error is
+  /// reported as an [AdminBookingsException].
+  Stream<RawBookingAnswer> watchBooking(String id) {
+    return _firestore
+        .collection('bookings')
+        .doc(id)
+        .snapshots(includeMetadataChanges: true)
+        .map((snapshot) {
+          final data = snapshot.data();
+          return RawBookingAnswer(
+            document: data == null
+                ? null
+                : (id: snapshot.id, data: bookingMapFromFirestore(data)),
+            fromCache: snapshot.metadata.isFromCache,
+          );
+        })
+        .handleError((Object error, StackTrace stackTrace) {
+          Error.throwWithStackTrace(mapAdminBookingsError(error), stackTrace);
+        });
+  }
+
+  /// One car by its ID, also a hidden one. Null when no car has that ID or
+  /// when its document cannot be read as a car (that is logged).
+  ///
+  /// Throws an [AdminBookingsException] when the car cannot be loaded.
+  Future<Car?> readCar(String id) async {
+    try {
+      final snapshot = await _firestore.collection('cars').doc(id).get();
+      final data = snapshot.data();
+      if (data == null) return null;
+      final cars = parseCars([
+        (id: snapshot.id, data: data),
+      ], onSkipped: _logSkippedCar);
+      return cars.isEmpty ? null : cars.single;
+    } catch (error, stackTrace) {
+      Error.throwWithStackTrace(mapAdminBookingsError(error), stackTrace);
+    }
+  }
+
+  /// Changes the status of the booking [id] to [status] and returns once
+  /// the server has confirmed it.
+  ///
+  /// Only the field "status" is written. The Firestore rules accept that
+  /// from an admin; any other field (for example an "updatedAt") would be
+  /// refused by them.
+  ///
+  /// It runs in a transaction, tried once. A transaction is never kept in
+  /// the offline queue and never changes the saved copy first: without a
+  /// connection it fails instead of being sent later. The transaction
+  /// reads the booking first, so a booking that was deleted meanwhile is
+  /// noticed.
+  ///
+  /// Throws an [AdminStatusChangeException] when the change was certainly
+  /// not saved, and an [AdminStatusChangeNoAnswer] when the server did not
+  /// answer within [timeout]; then the change may still have arrived.
+  Future<void> changeStatus(
+    String id,
+    BookingStatus status, {
+    Duration timeout = adminStatusChangeTimeout,
+  }) async {
+    final document = _firestore.collection('bookings').doc(id);
+    final bool found;
+    try {
+      found = await _firestore
+          .runTransaction<bool>(
+            (transaction) async {
+              final snapshot = await transaction.get(document);
+              if (!snapshot.exists) return false;
+              transaction.update(document, {'status': status.storedName});
+              return true;
+            },
+            timeout: timeout,
+            maxAttempts: 1,
+          )
+          // The plugin's own timeout does not cover every platform and
+          // every stage of the transaction, so the wait is limited here too.
+          .timeout(timeout);
+    } on TimeoutException {
+      throw const AdminStatusChangeNoAnswer();
+    } catch (error, stackTrace) {
+      Error.throwWithStackTrace(mapStatusChangeError(error), stackTrace);
+    }
+    if (!found) {
+      throw const AdminStatusChangeException(
+        AdminStatusChangeFailure.bookingMissing,
+      );
+    }
+  }
+}
+
+/// Turns an error of the status change into an [AdminStatusChangeException]
+/// with its reason: no connection ("unavailable", "deadline-exceeded"),
+/// refused by the rules ("permission-denied"), the booking is gone
+/// ("not-found"), or unknown. Screens never see a Firestore error type.
+AdminStatusChangeException mapStatusChangeError(Object error) {
+  if (error is AdminStatusChangeException) return error;
+  if (error is FirebaseException) {
+    return AdminStatusChangeException(statusChangeFailureFromCode(error.code));
+  }
+  return const AdminStatusChangeException(AdminStatusChangeFailure.unknown);
 }
 
 /// Turns an error of Firestore into an [AdminBookingsException], so screens

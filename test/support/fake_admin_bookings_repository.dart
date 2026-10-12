@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:tbilisi_car_rental/core/models/booking_status.dart';
 import 'package:tbilisi_car_rental/core/models/car.dart';
 import 'package:tbilisi_car_rental/features/admin/data/admin_bookings_repository.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_detail.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
 
 /// Stands in for Firestore in tests of the admin bookings list. Nothing
@@ -54,6 +56,72 @@ class FakeAdminBookingsRepository implements AdminBookingsRepository {
     if (carsPending != null) await carsPending!.future;
     if (carsError != null) throw carsError!;
     return cars;
+  }
+
+  /// Every single booking that was asked for, by its ID, in order.
+  final watchedBookingIds = <String>[];
+
+  final _bookingControllers = <StreamController<RawBookingAnswer>>[];
+
+  /// How many single bookings are being listened to right now.
+  var activeBookingListeners = 0;
+
+  /// Every car that was read by its ID, in order.
+  final carIdsRead = <String>[];
+
+  /// When set, readCar fails with it.
+  Object? carError;
+
+  /// Every status change that was asked for, in order.
+  final statusChanges = <({String id, BookingStatus status})>[];
+
+  /// When set, changeStatus waits for it.
+  Completer<void>? statusChangePending;
+
+  /// When set, changeStatus fails with it.
+  Object? statusChangeError;
+
+  /// Makes the newest single-booking listener answer with [document]; null
+  /// means "there is no such document".
+  void emitBooking(RawBookingDocument? document, {bool fromCache = false}) {
+    _bookingControllers.last.add(
+      RawBookingAnswer(document: document, fromCache: fromCache),
+    );
+  }
+
+  /// Makes the newest single-booking listener fail with [error].
+  void failBooking(Object error) => _bookingControllers.last.addError(error);
+
+  @override
+  Stream<RawBookingAnswer> watchBooking(String id) {
+    watchedBookingIds.add(id);
+    final controller = StreamController<RawBookingAnswer>(
+      onListen: () => activeBookingListeners += 1,
+      onCancel: () => activeBookingListeners -= 1,
+    );
+    _bookingControllers.add(controller);
+    return controller.stream;
+  }
+
+  @override
+  Future<Car?> readCar(String id) async {
+    carIdsRead.add(id);
+    if (carError != null) throw carError!;
+    for (final car in cars) {
+      if (car.id == id) return car;
+    }
+    return null;
+  }
+
+  @override
+  Future<void> changeStatus(
+    String id,
+    BookingStatus status, {
+    Duration timeout = adminStatusChangeTimeout,
+  }) async {
+    statusChanges.add((id: id, status: status));
+    if (statusChangePending != null) await statusChangePending!.future;
+    if (statusChangeError != null) throw statusChangeError!;
   }
 }
 

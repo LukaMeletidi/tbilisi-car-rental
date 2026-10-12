@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:tbilisi_car_rental/core/router/app_router.dart';
 import 'package:tbilisi_car_rental/core/widgets/app_bar_logo.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_bookings_filter_provider.dart';
@@ -10,6 +12,7 @@ import 'package:tbilisi_car_rental/features/admin/presentation/admin_sign_in_pro
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_texts.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/widgets/admin_booking_card.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/widgets/admin_bookings_controls.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/widgets/admin_note.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_layout.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/widgets/catalog_message.dart';
 
@@ -105,11 +108,14 @@ class _BookingsList extends ConsumerWidget {
                   Text(adminTbilisiTimeNote, style: textTheme.bodySmall),
                   if (state.showOfflineNote) ...[
                     const SizedBox(height: 8),
-                    const _Note(icon: Icons.cloud_off, text: adminOfflineNote),
+                    const AdminNote(
+                      icon: Icons.cloud_off,
+                      text: adminOfflineNote,
+                    ),
                   ],
                   if (unreadable.isNotEmpty) ...[
                     const SizedBox(height: 8),
-                    _Note(
+                    AdminNote(
                       icon: Icons.warning_amber,
                       text: adminUnreadableBookings(unreadable.length),
                     ),
@@ -146,6 +152,9 @@ class _BookingsList extends ConsumerWidget {
               AdminBookingCard(
                 booking: booking,
                 car: adminCarLabel(booking.carId, state.carsById),
+                onTap: booking.id == null
+                    ? null
+                    : () => context.go(AppRoutes.adminBooking(booking.id!)),
               ),
             if (state.bookings.isNotEmpty && view.visible.isEmpty)
               Padding(
@@ -181,26 +190,6 @@ class _BookingsList extends ConsumerWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// A short line with an icon, on the purple page.
-class _Note extends StatelessWidget {
-  const _Note({required this.icon, required this.text});
-
-  final IconData icon;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 20),
-        const SizedBox(width: 12),
-        Expanded(child: Text(text)),
-      ],
     );
   }
 }

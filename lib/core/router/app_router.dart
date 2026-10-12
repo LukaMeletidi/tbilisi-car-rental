@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:tbilisi_car_rental/features/admin/domain/admin_redirect.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/admin_booking_detail_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_bookings_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_gate_screens.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_login_screen.dart';
@@ -40,6 +41,14 @@ abstract final class AppRoutes {
   static const adminLogin = adminLoginPath;
   static const adminNoAccess = adminNoAccessPath;
   static const adminChecking = adminCheckingPath;
+
+  /// Path pattern of the detail of one booking, below [admin].
+  static const adminBookingPattern = 'bookings/:bookingId';
+
+  /// The address of one booking of the admin area:
+  /// "/admin/bookings/abc123".
+  static String adminBooking(String bookingId) =>
+      '$admin/bookings/${Uri.encodeComponent(bookingId)}';
 }
 
 /// Tells the router to run its redirect again. The router listens to it;
@@ -94,12 +103,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: AppRoutes.bookingSentPattern,
             builder: (context, state) => const BookingSentScreen(),
           ),
-          // The admin area. The four pages are side by side, NOT one below
-          // the other: a page below "/admin" would have the admin page
-          // built underneath it, also for a visitor who is not signed in.
+          // The admin area. The gate pages (login, no access, checking)
+          // are side by side with the admin page, NOT below it: a page
+          // below "/admin" has the bookings list built underneath it, and
+          // that must never happen for a visitor who is not an admin.
           GoRoute(
             path: _below(AppRoutes.admin),
             builder: (context, state) => const AdminBookingsScreen(),
+            routes: [
+              // Admin content, so it IS below the list: Back returns to
+              // the list. The redirect runs first, so only an admin ever
+              // gets here. Opening this address directly also builds the
+              // list underneath, which starts the list's listener.
+              GoRoute(
+                path: AppRoutes.adminBookingPattern,
+                builder: (context, state) => AdminBookingDetailScreen(
+                  bookingId: state.pathParameters['bookingId']!,
+                ),
+              ),
+            ],
           ),
           GoRoute(
             path: _below(AppRoutes.adminLogin),

@@ -2,7 +2,10 @@
 /// plain constants here and not in the translation files.
 library;
 
+import 'package:tbilisi_car_rental/core/localization/app_language.dart';
 import 'package:tbilisi_car_rental/core/models/booking_status.dart';
+import 'package:tbilisi_car_rental/core/models/extra.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_detail.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings_filter.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_sign_in_failure.dart';
@@ -62,6 +65,112 @@ String adminLoadedOnlyNote(int loaded) =>
 
 const adminNotFoundText = 'This admin page does not exist.';
 const adminBackToBookings = 'Back to the bookings';
+
+const adminBookingTitle = 'Booking';
+const adminBookingMissing =
+    'This booking does not exist. It may have been deleted.';
+const adminBookingUnreadable = 'This booking cannot be read.';
+const adminBookingLoadError = 'Could not load the booking.';
+const adminBookingNoAccess = 'You do not have access to this booking.';
+
+const adminSectionStatus = 'Status';
+const adminSectionCustomer = 'Customer';
+const adminSectionRental = 'Rental';
+const adminSaving = 'Saving…';
+const adminDismissNotice = 'Hide this message';
+
+const adminLabelName = 'Name';
+const adminLabelPhone = 'Phone';
+const adminLabelEmail = 'E-mail';
+const adminLabelLanguage = 'Language of the customer';
+const adminLabelCar = 'Car';
+const adminLabelPickup = 'Pickup';
+const adminLabelDropoff = 'Drop-off';
+const adminLabelExtras = 'Extras';
+const adminLabelNotes = 'Notes';
+const adminLabelTotal = 'Days and total';
+const adminOnWhatsapp = 'WhatsApp';
+const adminOnTelegram = 'Telegram';
+const adminNoExtras = 'None';
+
+/// Shown for a fixed place whose name cannot be looked up.
+const adminUnknownPlace = 'A place from our list';
+
+const adminConfirmTitle = 'Change the status?';
+const adminConfirmYes = 'Change';
+const adminConfirmNo = 'Keep';
+
+/// The button that changes the status: "Set to Confirmed".
+String adminChangeTo(BookingStatus status) =>
+    'Set to ${adminStatusLabel(status)}';
+
+/// The question before a change that is hard on the customer.
+String adminConfirmText(BookingStatus from, BookingStatus to) =>
+    'The status changes from "${adminStatusLabel(from)}" to '
+    '"${adminStatusLabel(to)}".';
+
+/// What is said after an attempt to change the status. Only "Saved" means
+/// the server confirmed it. "No answer" does not say "not saved": the change
+/// may still have arrived, and the status on screen is the stored one.
+String adminStatusNoticeText(AdminStatusChangeNotice notice) {
+  switch (notice) {
+    case AdminStatusChangeNotice.saved:
+      return 'Saved';
+    case AdminStatusChangeNotice.noAnswer:
+      return 'No answer from the server. '
+          'The status shown is the current one.';
+    case AdminStatusChangeNotice.noConnection:
+      return 'Not saved. No connection.';
+    case AdminStatusChangeNotice.refused:
+      return 'Not saved. The change was refused.';
+    case AdminStatusChangeNotice.bookingMissing:
+      return 'Not saved. This booking no longer exists.';
+    case AdminStatusChangeNotice.unknown:
+      return 'Not saved. Please try again.';
+  }
+}
+
+/// The English name of an extra.
+String adminExtraName(Extra extra) {
+  switch (extra) {
+    case Extra.snowChains:
+      return 'Snow chains';
+    case Extra.childSeat:
+      return 'Child seat';
+    case Extra.infantSeat:
+      return 'Infant seat';
+    case Extra.boosterSeat:
+      return 'Booster seat';
+  }
+}
+
+/// The language the customer used: "Georgian (ka)".
+String adminLanguageLabel(AppLanguage language) {
+  switch (language) {
+    case AppLanguage.en:
+      return 'English (en)';
+    case AppLanguage.ka:
+      return 'Georgian (ka)';
+    case AppLanguage.ru:
+      return 'Russian (ru)';
+  }
+}
+
+/// "Created by Nino"; only for a booking made by an admin.
+String adminCreatedBy(String name) => 'Created by $name';
+
+/// "Booking ID: abc123".
+String adminBookingIdText(String id) => 'Booking ID: $id';
+
+/// The text shown when one booking could not be loaded.
+String adminBookingFailureText(AdminBookingsFailure failure) {
+  switch (failure) {
+    case AdminBookingsFailure.permissionDenied:
+      return adminBookingNoAccess;
+    case AdminBookingsFailure.other:
+      return adminBookingLoadError;
+  }
+}
 
 /// "1 booking could not be read." / "3 bookings could not be read."
 String adminUnreadableBookings(int count) => count == 1

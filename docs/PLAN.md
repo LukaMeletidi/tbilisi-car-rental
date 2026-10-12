@@ -442,6 +442,56 @@ Phase 3 decisions (the steps are in Section 18):
     most of that need; the calendar of Phase 5 is the tool for dates.
   - A status with a wrong value written by hand in the console makes the document
     unreadable; it is counted in "N bookings could not be read", as before.
+- Decisions of step 3.8 (booking detail and status change):
+  - A tap on a row of the list opens the detail, at /admin/bookings/<id>. It is built
+    below the list, so Back returns to the list. The redirect of step 3.4 already
+    covers the address: only an admin ever sees it, and a signed-out visitor is sent
+    to the login page and on to the booking after the sign-in.
+  - The detail has its own live read of that one document (one read, plus one for
+    its car), so a change made elsewhere, or a deletion, shows at once. It is tied to
+    the admin session like the list and is closed when the screen is left.
+  - Shown: the status, the customer (name, phone, WhatsApp/Telegram, e-mail, the
+    language used), the car, pickup and drop-off in Tbilisi time with the place, the
+    extras, the notes when there are any, the days and the stored total ("estimate"
+    for more than 7 days), "Received ...", "Created by ..." when set, and the booking
+    ID in small text. The phone, the e-mail and the ID are selectable text. Every
+    value is the stored one; nothing is calculated again from current prices. Only
+    the English names of the fixed places come from settings, with the neutral text
+    "A place from our list" when they cannot be found.
+  - Any status can follow any other. The status card shows the chip of the list (same
+    words, same colours) and one button for each other status.
+  - A question "Change the status?" is asked only for the two changes that are hard
+    on a customer: to Cancelled, and away from Confirmed. All other changes happen
+    at once.
+  - A change writes only the field "status", in a transaction that is tried once and
+    waits up to 20 seconds for the server. Nothing is queued while offline. During
+    the wait the buttons are disabled and the card says "Saving…".
+  - The chip always follows the live read, never the attempt. "Saved" appears only
+    after the server's answer. A failure says "Not saved." with the reason: "No
+    connection." (unavailable, deadline-exceeded), "The change was refused."
+    (permission-denied), "This booking no longer exists." (the document is gone),
+    "Please try again." (anything else).
+  - A transaction that gives up after 20 seconds may still have been committed. The
+    text is then not "Not saved" but "No answer from the server. The status shown is
+    the current one."
+  - The change runs in two stages: a check, then the write. The check is empty today;
+    the conflict warning of Phase 5 will be put there.
+  - "Offline: showing saved data" uses the same pure function and the same 3-second
+    rule as the list. The status buttons stay enabled; a change then fails with "No
+    connection." because a transaction needs the server.
+  - A booking that does not exist (also one deleted while it is open) shows "This
+    booking does not exist. It may have been deleted." The saved copy of the device
+    not having it is not taken as "does not exist": the screen waits for the server
+    and says "Could not load the booking." after 3 seconds. An ID that cannot be a
+    document ID (anything but letters, digits, "_" and "-") is "does not exist"
+    without asking Firestore. A document that cannot be read as a booking shows
+    "This booking cannot be read."; the reason is shown in debug builds only.
+  - Extra cost of a direct link: the list is built under the detail, so opening
+    #/admin/bookings/<id> on web also starts the list's listener (up to 50 reads)
+    next to the 2 reads of the detail. Accepted.
+  - Not stored: who changed the status and when. The rules refuse any field outside
+    the fixed list (see Open reminders).
+  - No customer data is logged. Rules, ARB files, packages and indexes are unchanged.
 
 ### 3.1 Bookings list
 
@@ -775,7 +825,12 @@ Implementation decisions (step 2.2):
   builds no widgets and uses testWidgets only for its controllable clock. Step 3.7
   adds admin_bookings_filter_test.dart (pure filter, search, counts and order),
   admin_bookings_filter_provider_test.dart (the choice and its reset with the
-  session), and more widget tests in admin_bookings_screen_test.dart.
+  session), and more widget tests in admin_bookings_screen_test.dart. Step 3.8
+  adds admin_booking_detail_test.dart (pure: reading one answer, the selectable
+  statuses, when to ask, the error codes), admin_booking_detail_provider_test.dart
+  (the live read, the session tie, the offline note and the status change; no
+  widgets, testWidgets for the clock), admin_booking_detail_screen_test.dart, and
+  navigation tests for the detail in admin_navigation_test.dart.
 - Packages installed: firebase_core 4.15.0, flutter_riverpod 3.4.3, go_router 18.0.2,
   flutter_localizations (Flutter SDK), intl 0.20.2, cloud_firestore 6.10.0,
   firebase_app_check 0.4.8 (added in step 2.9a), firebase_auth 6.7.0 (added in step
@@ -1008,6 +1063,13 @@ Phase 0 is complete.
   has more than 50 open bookings, move the filter into the Firestore query (this
   needs composite indexes and an index deploy). Mention this limit in the README
   (Phase 7).
+- "Last changed" is not stored (accepted in step 3.8): a status change writes only
+  "status". Fields such as updatedAt or updatedBy would be refused by the Firestore
+  rules, whose key list for a booking is fixed. Adding them needs a change of
+  firestore.rules (and of the emulator script) and a separate, approved deploy.
+- A direct link to a booking starts the list too (accepted in step 3.8): on web,
+  opening #/admin/bookings/<id> builds the list underneath, so its listener reads up
+  to 50 bookings in addition to the 2 reads of the detail.
 - A second admin account, if ever needed: add the user in the console, then give it
   the claim with the same script ("set <UID>"), with a new key that is created and
   deleted in one sitting (Section 8). Sign-up is switched off, so no other account can
