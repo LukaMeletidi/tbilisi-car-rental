@@ -1226,7 +1226,22 @@ Phase 3: admin sign-in and the bookings list with editing (Section 11).
     reset after Sign out, and the five chips fitting side by side in a wide window.
   - The filter, the counts and the order cover only the loaded bookings (see Open
     reminders).
-- 3.8 Booking detail and status change — not started.
+- 3.8 Booking detail and status change — DONE.
+  - 821 tests pass and analyze is clean. The rules emulator script still passes
+    (104 public, 173 admin and signed-in); the rules were not changed.
+  - I verified by eye, on the Android emulator and in Chrome: the detail shows every
+    field and matches the console; a status change shows "Saving…", then "Saved",
+    and the console document has only the status field changed; the confirmation
+    asks for "to Cancelled" and "away from Confirmed" ("Keep" changes nothing);
+    offline the page shows "Offline: showing saved data" and a change ends with
+    "Not saved. No connection."; nothing was queued after the connection came back;
+    a booking deleted in the console while it was open showed "This booking does
+    not exist. It may have been deleted."; in Chrome a reload on the detail
+    address, a made-up id and /#/admin/bookings without an id behave as planned;
+    the live update between the emulator and Chrome works.
+  - This was the first real transaction against the deployed rules, and it worked.
+  - Not seen on a device: the text "No answer from the server. The status shown is
+    the current one." It is covered by the tests only.
 - 3.9 Edit all fields; the recomputed total next to the stored one — not started.
 - 3.10 Create a booking by hand (status confirmed, createdBy) — not started.
 - 3.11 Delete a booking, with a confirmation — not started.
