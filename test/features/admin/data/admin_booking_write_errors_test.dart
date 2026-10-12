@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:tbilisi_car_rental/features/admin/data/admin_bookings_repository.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_delete.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_detail.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_edit.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_new.dart';
@@ -157,6 +158,61 @@ void main() {
       ]) {
         expect(
           mapBookingCreateError(firestoreError(code)).failure.name,
+          mapStatusChangeError(firestoreError(code)).failure.name,
+          reason: code,
+        );
+      }
+    });
+  });
+
+  group('an error of deleting a booking', () {
+    test('"unavailable" and "deadline exceeded" become noConnection', () {
+      for (final code in ['unavailable', 'deadline-exceeded']) {
+        expect(
+          mapBookingDeleteError(firestoreError(code)).failure,
+          AdminBookingDeleteFailure.noConnection,
+          reason: code,
+        );
+      }
+    });
+
+    test('"permission denied" becomes refused', () {
+      expect(
+        mapBookingDeleteError(firestoreError('permission-denied')).failure,
+        AdminBookingDeleteFailure.refused,
+      );
+    });
+
+    test('any other code, and any other error, becomes unknown', () {
+      for (final code in ['not-found', 'aborted', 'failed-precondition', '']) {
+        expect(
+          mapBookingDeleteError(firestoreError(code)).failure,
+          AdminBookingDeleteFailure.unknown,
+          reason: code,
+        );
+      }
+      expect(
+        mapBookingDeleteError(StateError('made up')).failure,
+        AdminBookingDeleteFailure.unknown,
+      );
+    });
+
+    test('an error that is already the app\'s own is passed on', () {
+      const own = AdminBookingDeleteException(
+        AdminBookingDeleteFailure.statusChanged,
+      );
+      expect(mapBookingDeleteError(own), same(own));
+    });
+
+    test('the codes for "no connection" and "refused" are mapped exactly '
+        'as for a status change', () {
+      for (final code in [
+        'unavailable',
+        'deadline-exceeded',
+        'permission-denied',
+      ]) {
+        expect(
+          mapBookingDeleteError(firestoreError(code)).failure.name,
           mapStatusChangeError(firestoreError(code)).failure.name,
           reason: code,
         );

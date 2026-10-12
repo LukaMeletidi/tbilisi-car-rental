@@ -3,12 +3,15 @@
 library;
 
 import 'package:tbilisi_car_rental/core/localization/app_language.dart';
+import 'package:tbilisi_car_rental/core/models/booking.dart';
 import 'package:tbilisi_car_rental/core/models/booking_status.dart';
 import 'package:tbilisi_car_rental/core/models/extra.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_delete.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_detail.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_edit.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_new.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/admin_date_format.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings_filter.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_sign_in_failure.dart';
 import 'package:tbilisi_car_rental/features/catalog/domain/car_display.dart';
@@ -412,6 +415,56 @@ String adminCreateNoticeText(AdminBookingCreateNotice notice) {
       return 'Not saved. This car no longer exists. Choose another car.';
     case AdminBookingCreateNotice.unknown:
       return 'Not saved. Please try again.';
+  }
+}
+
+const adminDeleteButton = 'Delete this booking';
+const adminDeleteTitle = 'Delete this booking?';
+const adminDeleteYes = 'Delete';
+const adminDeleting = 'Deleting…';
+const adminDeleteCannotBeUndone =
+    'This cannot be undone. To keep the booking but mark it as not taking '
+    'place, set its status to Cancelled instead.';
+const adminDeleteConfirmedWarning =
+    'This booking is confirmed. The customer expects the car.';
+
+/// The lines of the question "Delete this booking?" that say WHICH booking
+/// it is: the customer's name, the car, the pickup in Tbilisi time and
+/// the status.
+List<String> adminDeleteDialogLines(Booking booking, AdminCarLabel car) => [
+  booking.customer.fullName,
+  adminCarText(car),
+  'Pickup: ${formatAdminUtc(booking.pickup)}',
+  'Status: ${adminStatusLabel(booking.status)}',
+];
+
+/// What the detail says after an attempt to delete that left the booking
+/// on screen. "No answer" does not say "not deleted": the booking may be
+/// gone, and then the page says so by itself.
+String adminDeleteNoticeText(AdminBookingDeleteNotice notice) {
+  switch (notice) {
+    case AdminBookingDeleteNotice.noAnswer:
+      return 'No answer from the server. If the booking is still shown '
+          'here, it was not deleted.';
+    case AdminBookingDeleteNotice.noConnection:
+      return 'Not deleted. No connection.';
+    case AdminBookingDeleteNotice.refused:
+      return 'Not deleted. The change was refused.';
+    case AdminBookingDeleteNotice.statusChanged:
+      return 'Not deleted. The status of this booking was changed '
+          'elsewhere. Look at it again.';
+    case AdminBookingDeleteNotice.unknown:
+      return 'Not deleted. Please try again.';
+  }
+}
+
+/// What the bookings list says once after a booking is gone.
+String adminDeletedNoticeText(AdminDeletedNotice notice) {
+  switch (notice) {
+    case AdminDeletedNotice.deleted:
+      return 'Booking deleted.';
+    case AdminDeletedNotice.alreadyDeleted:
+      return 'This booking was already deleted.';
   }
 }
 

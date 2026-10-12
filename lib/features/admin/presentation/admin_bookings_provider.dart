@@ -9,6 +9,7 @@ import 'package:tbilisi_car_rental/core/time/clock_provider.dart';
 import 'package:tbilisi_car_rental/features/admin/data/admin_bookings_repository.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_session.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/admin_deleted_notice_provider.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_session_provider.dart';
 
 /// Where the admin bookings list stands.
@@ -113,6 +114,11 @@ class AdminBookingsNotifier extends Notifier<AdminBookingsState> {
   @override
   AdminBookingsState build() {
     ref.onDispose(_stopListening);
+    // When the list is left, its one-time notice "Booking deleted." is
+    // forgotten. Done right after the clean-up, because Riverpod does not
+    // allow another provider to be changed inside it.
+    final deletedNotice = ref.read(adminDeletedNoticeProvider.notifier);
+    ref.onDispose(() => scheduleMicrotask(deletedNotice.clear));
 
     final session = ref.watch(adminSessionProvider);
     if (session != AdminSession.admin) {

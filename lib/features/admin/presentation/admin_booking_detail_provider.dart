@@ -8,10 +8,12 @@ import 'package:tbilisi_car_rental/core/models/booking_status.dart';
 import 'package:tbilisi_car_rental/core/models/car.dart';
 import 'package:tbilisi_car_rental/core/time/clock_provider.dart';
 import 'package:tbilisi_car_rental/features/admin/data/admin_bookings_repository.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_delete.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_detail.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_session.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_created_booking_provider.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/admin_deleted_notice_provider.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_session_provider.dart';
 
 /// Where the detail of one booking stands.
@@ -47,6 +49,9 @@ class AdminBookingDetailState {
     this.saving = false,
     this.notice,
     this.noticeFields = const [],
+    this.deleting = false,
+    this.deleteNotice,
+    this.deleted,
   });
 
   final AdminBookingDetailStatus status;
@@ -78,14 +83,34 @@ class AdminBookingDetailState {
   /// the app does not know. Names only, never values.
   final List<String> noticeFields;
 
+  /// True while a delete is running: every action is disabled.
+  final bool deleting;
+
+  /// What to tell the admin about an attempt to delete that left the
+  /// booking on screen.
+  final AdminBookingDeleteNotice? deleteNotice;
+
+  /// Set once the booking is gone because of a delete started here: the
+  /// screen then returns to the list, which says this once.
+  final AdminDeletedNotice? deleted;
+
+  /// True while a status change or a delete runs, and after a delete
+  /// succeeded: nothing can be started.
+  bool get busy => saving || deleting || deleted != null;
+
   /// A copy with other values. [notice] and [noticeFields] are always set
-  /// anew: leaving them out removes the notice.
+  /// anew: leaving them out removes the notice. [deleteNotice] is kept
+  /// unless [clearDeleteNotice] is true.
   AdminBookingDetailState copyWith({
     AdminCarLabel? car,
     bool? showOfflineNote,
     bool? saving,
     AdminStatusChangeNotice? notice,
     List<String> noticeFields = const [],
+    bool? deleting,
+    AdminBookingDeleteNotice? deleteNotice,
+    bool clearDeleteNotice = false,
+    AdminDeletedNotice? deleted,
   }) {
     return AdminBookingDetailState(
       status: status,
@@ -97,6 +122,11 @@ class AdminBookingDetailState {
       saving: saving ?? this.saving,
       notice: notice,
       noticeFields: noticeFields,
+      deleting: deleting ?? this.deleting,
+      deleteNotice: clearDeleteNotice
+          ? null
+          : deleteNotice ?? this.deleteNotice,
+      deleted: deleted ?? this.deleted,
     );
   }
 }
@@ -125,11 +155,21 @@ class AdminBookingDetailNotifier extends Notifier<AdminBookingDetailState> {
   // ignored.
   int _generation = 0;
 
+  // True when the live read said "missing" while a delete started here was
+  // running: the booking is gone, whatever the transaction then answers.
+  bool _goneWhileDeleting = false;
+
   bool get _isAdmin => ref.read(adminSessionProvider) == AdminSession.admin;
 
   @override
   AdminBookingDetailState build() {
     ref.onDispose(_stopListening);
+    _goneWhileDeleting = false;
+    // Opening a booking ends the list's one-time notice "Booking deleted."
+    // (it was about another booking). Done right after this build, because
+    // Riverpod does not allow another provider to be changed inside it.
+    final deletedNotice = ref.read(adminDeletedNoticeProvider.notifier);
+    scheduleMicrotask(deletedNotice.clear);
     // When this detail is left, a marker "just created" for its booking
     // that was never used (the booking was not found) is forgotten.
     final created = ref.read(adminCreatedBookingProvider.notifier);
@@ -191,7 +231,7 @@ class AdminBookingDetailNotifier extends Notifier<AdminBookingDetailState> {
   /// [AdminBookingDetailState.notice] says what happened.
   Future<void> changeStatus(BookingStatus status) async {
     final booking = state.booking;
-    if (!_isAdmin || state.saving) return;
+    if (!_isAdmin || state.busy) return;
     if (state.status != AdminBookingDetailStatus.found || booking == null) {
       return;
     }
@@ -234,6 +274,88 @@ class AdminBookingDetailNotifier extends Notifier<AdminBookingDetailState> {
       notice: notice,
       noticeFields: noticeFields,
     );
+  }
+
+  /// Removes the notice about the last attempt to delete.
+  void dismissDeleteNotice() {
+    if (state.deleteNotice == null) return;
+    state = state.copyWith(
+      saving: state.saving,
+      notice: state.notice,
+      noticeFields: state.noticeFields,
+      clearDeleteNotice: true,
+    );
+  }
+
+  /// Deletes the booking. [shownStatus] is the status the admin saw in the
+  /// question "Delete this booking?"; when it is not the status any more,
+  /// nothing is deleted and the admin is told to look again.
+  ///
+  /// While it runs, [AdminBookingDetailState.deleting] is true and a second
+  /// call does nothing; a status change cannot be started either.
+  ///
+  /// The live read of the booking can be faster than the answer of the
+  /// transaction. While a delete started here runs, a "missing" from the
+  /// live read is the expected outcome: the page does not turn into "does
+  /// not exist", it waits for the transaction. Afterwards:
+  /// - the booking is gone (the transaction said so, or the live read did,
+  ///   whatever the transaction then reported):
+  ///   [AdminBookingDetailState.deleted] is set and the screen returns to
+  ///   the list;
+  /// - otherwise the booking stays on screen and
+  ///   [AdminBookingDetailState.deleteNotice] says why. After "no answer"
+  ///   the live read tells: as long as the booking is shown, it exists.
+  Future<void> deleteBooking({required BookingStatus shownStatus}) async {
+    final booking = state.booking;
+    if (!_isAdmin || state.busy) return;
+    if (state.status != AdminBookingDetailStatus.found || booking == null) {
+      return;
+    }
+
+    // Stage 1: check. The booking on screen must still have the status
+    // the admin confirmed.
+    if (booking.status != shownStatus) {
+      state = state.copyWith(
+        deleteNotice: AdminBookingDeleteNotice.statusChanged,
+      );
+      return;
+    }
+    _goneWhileDeleting = false;
+    state = state.copyWith(deleting: true, clearDeleteNotice: true);
+
+    // Stage 2: delete, and wait for the server's answer.
+    AdminBookingDeleteResult? result;
+    AdminBookingDeleteNotice? notice;
+    try {
+      result = await ref
+          .read(adminBookingsRepositoryProvider)
+          .deleteBooking(bookingId, shownStatus: shownStatus);
+    } on AdminBookingDeleteNoAnswer {
+      notice = AdminBookingDeleteNotice.noAnswer;
+    } on AdminBookingDeleteException catch (error) {
+      notice = noticeForDeleteFailure(error.failure);
+    } catch (error) {
+      developer.log(
+        'A delete failed with an error of type ${error.runtimeType}',
+        name: 'AdminBookingDetailNotifier',
+        level: 900, // warning
+      );
+      notice = AdminBookingDeleteNotice.unknown;
+    }
+    if (!ref.mounted || !_isAdmin) return;
+
+    final outcome = deletedOutcome(
+      result: result,
+      notice: notice,
+      goneInLiveRead: _goneWhileDeleting,
+    );
+    if (outcome != null) {
+      // Gone. "deleting" stays true: nothing more can be started while
+      // the screen returns to the list.
+      state = state.copyWith(deleted: outcome, clearDeleteNotice: true);
+    } else {
+      state = state.copyWith(deleting: false, deleteNotice: notice);
+    }
   }
 
   /// Stage 1 of a status change. Returns true when the change may go ahead.
@@ -291,6 +413,13 @@ class AdminBookingDetailNotifier extends Notifier<AdminBookingDetailState> {
         // above gives up after a while.
         return;
       case AdminBookingReadState.missing:
+        // A delete started here is running, or has just succeeded: this
+        // is what it was meant to do. The page does not flash "does not
+        // exist"; deleteBooking finishes the job.
+        if (state.deleting || state.deleted != null) {
+          _goneWhileDeleting = true;
+          return;
+        }
         state = AdminBookingDetailState(
           status: AdminBookingDetailStatus.missing,
           notice: state.notice,
@@ -320,6 +449,9 @@ class AdminBookingDetailNotifier extends Notifier<AdminBookingDetailState> {
           saving: state.saving,
           notice: justCreated ? AdminStatusChangeNotice.saved : state.notice,
           noticeFields: justCreated ? const [] : state.noticeFields,
+          deleting: state.deleting,
+          deleteNotice: state.deleteNotice,
+          deleted: state.deleted,
         );
         if (booking.carId != _carIdAskedFor) _loadCar(booking.carId);
     }

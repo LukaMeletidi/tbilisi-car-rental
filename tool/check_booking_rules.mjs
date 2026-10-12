@@ -1196,6 +1196,75 @@ signedIn('admin delete: the booking is really gone', 404, () =>
   send('GET', `${DOCUMENTS}/bookings/${deletedId}`, { headers: OWNER }),
 );
 
+// E2. Deleting a booking (step 3.11). The rule is "delete: if isAdmin()":
+// an admin may delete any booking, and the stored document is NOT checked,
+// unlike on an update. Everybody else is refused, and then the booking is
+// still there.
+function deleteBookingAs(id, headers) {
+  return send('DELETE', `${DOCUMENTS}/bookings/${id}`, { headers });
+}
+
+// Accepted, and afterwards the document is really gone.
+function deletedByAdmin(name, change) {
+  signedIn(`admin delete: ${name}`, 200, async () => {
+    const id = await seedBooking(change);
+    const result = await deleteBookingAs(id, ADMIN);
+    if (result.status !== 200) return result;
+    return (await storedBooking(id)) === null
+      ? result
+      : { status: 0, text: 'accepted, but the booking is still there' };
+  });
+}
+
+// Refused, and afterwards the document is still there, unchanged.
+function deleteRefused(name, headers) {
+  signedIn(`delete refused: ${name}`, 403, async () => {
+    const id = await seedBooking((b) => (b.status = 'confirmed'));
+    const result = await deleteBookingAs(id, headers);
+    if (result.status !== 403) return result;
+    const fields = await storedBooking(id);
+    return fields !== null &&
+      fields.status.stringValue === 'confirmed' &&
+      Object.keys(fields).length === 12
+      ? result
+      : { status: 0, text: 'refused, but the booking is gone or changed' };
+  });
+}
+
+for (const status of ['new', 'pending', 'confirmed', 'cancelled']) {
+  deletedByAdmin(`a booking with the status "${status}"`, (b) => {
+    b.status = status;
+  });
+}
+deletedByAdmin('a booking made by an admin (with createdBy)', (b) => {
+  b.createdBy = 'admin';
+});
+// The app could not UPDATE these two (the rules check the whole document
+// on an update), but it can delete them: that is the way to remove a
+// broken document.
+deletedByAdmin('a hand-made document with an unknown field', (b) => {
+  b.zzTest = true;
+});
+deletedByAdmin('a hand-made document with a phone the rules refuse', (b) => {
+  b.customer.phone = '+995 555 12-34-56';
+});
+signedIn('admin delete: a document without createdAt', 200, async () => {
+  const id = await seedRaw(validBooking());
+  const result = await deleteBookingAs(id, ADMIN);
+  if (result.status !== 200) return result;
+  return (await storedBooking(id)) === null
+    ? result
+    : { status: 0, text: 'accepted, but the booking is still there' };
+});
+// Deleting what is not there is not an error for the server. The app does
+// not rely on this: its transaction reads first and says "already
+// deleted".
+signedIn('admin delete: a booking that does not exist (no error)', 200, () =>
+  deleteBookingAs('noSuchBookingToDelete', ADMIN),
+);
+deleteRefused('signed in without the claim', NO_CLAIM);
+deleteRefused('no sign-in', {});
+
 // F. Admin and the other collections: nothing may be written, and "mail"
 // may not even be read.
 const mark = { body: { fields: encodeFields({ ruleCheck: true }) } };

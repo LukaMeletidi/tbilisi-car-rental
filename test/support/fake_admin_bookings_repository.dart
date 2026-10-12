@@ -4,6 +4,7 @@ import 'package:tbilisi_car_rental/core/models/booking.dart';
 import 'package:tbilisi_car_rental/core/models/booking_status.dart';
 import 'package:tbilisi_car_rental/core/models/car.dart';
 import 'package:tbilisi_car_rental/features/admin/data/admin_bookings_repository.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_delete.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_detail.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_edit.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_new.dart';
@@ -156,6 +157,30 @@ class FakeAdminBookingsRepository implements AdminBookingsRepository {
     updates.add((id: id, base: base, changes: changes));
     if (updatePending != null) await updatePending!.future;
     if (updateError != null) throw updateError!;
+  }
+
+  /// Every delete that was asked for, in order.
+  final deletes = <({String id, BookingStatus shownStatus})>[];
+
+  /// When set, deleteBooking waits for it.
+  Completer<void>? deletePending;
+
+  /// When set, deleteBooking fails with it.
+  Object? deleteError;
+
+  /// What deleteBooking answers when it does not fail.
+  var deleteResult = AdminBookingDeleteResult.deleted;
+
+  @override
+  Future<AdminBookingDeleteResult> deleteBooking(
+    String id, {
+    required BookingStatus shownStatus,
+    Duration timeout = adminStatusChangeTimeout,
+  }) async {
+    deletes.add((id: id, shownStatus: shownStatus));
+    if (deletePending != null) await deletePending!.future;
+    if (deleteError != null) throw deleteError!;
+    return deleteResult;
   }
 
   /// How many IDs were handed out. They are "new-1", "new-2", ...

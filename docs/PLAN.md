@@ -584,6 +584,66 @@ Phase 3 decisions (the steps are in Section 18):
     store such a value.
   - Nothing is logged except the type of an unexpected error. Rules, ARB files,
     packages and indexes are unchanged.
+- Decisions of step 3.11 (deleting a booking):
+  - The action is only on the detail, at the very end of the page under the
+    booking ID: a red text button "Delete this booking" in a white card. It is not
+    in the app bar, where a slip of the finger is easy. It is shown for a booking
+    that is found, in every status.
+  - The question "Delete this booking?" says which booking it is (the customer's
+    name, the car, the pickup in Tbilisi time, the status), then "This cannot be
+    undone. To keep the booking but mark it as not taking place, set its status to
+    Cancelled instead." For a confirmed booking there is one more line: "This
+    booking is confirmed. The customer expects the car." The buttons are "Keep" and
+    a red "Delete".
+  - Only a tap on "Delete" deletes. "Keep", a tap beside the question and Back all
+    close it without deleting.
+  - The rules: "delete: if isAdmin()". An admin may delete any booking; the stored
+    document is not checked (unlike on an update), so a hand-made document with an
+    unknown field, a phone in another format or no createdAt can be deleted too.
+    Everybody else is refused. No rules change was needed.
+  - The delete is a transaction with one attempt and a 20 second limit; nothing is
+    queued while offline. It reads the booking first. No booking: nothing is
+    written, "already deleted". The status is no longer the one the admin saw in
+    the question: nothing is deleted. Otherwise the document is deleted.
+  - Only a changed status stops a delete (somebody confirming or cancelling the
+    booking changes what a delete means); changed notes or dates do not. The status
+    is compared twice: with the booking on screen when "Delete" is tapped, and
+    with the stored document inside the transaction.
+  - While it runs the page says "Deleting…"; the delete button, the status buttons
+    and the pencil are disabled, and a second call does nothing.
+  - After the booking is gone the app returns to the list, which says once
+    "Booking deleted." (or "This booking was already deleted."). The list updates
+    by itself. A detail or an edit form open on another device shows "This booking
+    does not exist. It may have been deleted."
+  - The live read can be faster than the transaction. While a delete started on
+    this device runs, a "missing" from the live read is the expected outcome: the
+    page does not turn into "does not exist", it waits for the transaction. If the
+    transaction then reports no answer or a failure although the live read said
+    "missing", the booking is gone all the same: the list says "Booking deleted."
+  - Not deleted, the booking stays on screen: "Not deleted. No connection.", "Not
+    deleted. The change was refused.", "Not deleted. The status of this booking was
+    changed elsewhere. Look at it again.", "Not deleted. Please try again." After
+    no answer in time: "No answer from the server. If the booking is still shown
+    here, it was not deleted."; when it was deleted after all, the page says "does
+    not exist" by itself.
+  - The notice on the list is a one-time marker like the "Saved" marker of step
+    3.10b: in memory only, without any data of the booking, not set when nobody is
+    signed in as an admin. It goes when it is closed, when the list is left, when
+    another booking or the "new booking" form is opened, and when the session
+    ends.
+  - Nothing is logged except the type of an unexpected error. Rules, ARB files,
+    packages and indexes are unchanged. The rules emulator script got the delete
+    cases: 244 admin and signed-in checks now.
+  - Known limits of 3.11:
+    - A delete cannot be undone, and there is no archive. The placement of the
+      button and the question are the only guard.
+    - A booking that cannot be read ("This booking cannot be read.") has no delete
+      button; remove such a document in the Firebase console.
+    - The "no answer from the server" path cannot be forced by hand; it is covered
+      by tests only.
+  - Checked by hand by the owner on the Android emulator and in Chrome, with two
+    throw-away bookings (made-up names only, no real data); every item of the
+    checklist passed. The "no answer" path is covered by tests only.
 - Decisions of step 3.10b (the "new booking" screen):
   - The form is at /admin/bookings/new, below the list; Back returns to the list.
     A floating button "New booking" (white, purple text) is always on the list
@@ -1159,7 +1219,13 @@ Implementation decisions (step 2.2):
   status, "no e-mail", the total, saving, "no answer", leaving, a second form,
   the route) and admin_created_booking_provider_test.dart (the one-time "Saved"
   marker and the detail), and more tests for the list (the button and the room
-  below) and the detail ("No e-mail").
+  below) and the detail ("No e-mail"). Step 3.11 adds
+  admin_booking_delete_test.dart (pure: the stronger warning, the status check,
+  the failures, the outcome when the live read is faster, the texts) and
+  admin_booking_delete_screen_test.dart (the button, the question, "only Delete
+  deletes", the race, the notice on the list; with the real router), and more
+  tests in admin_booking_detail_provider_test.dart (the delete of the notifier)
+  and admin_booking_write_errors_test.dart.
 - Packages installed: firebase_core 4.15.0, flutter_riverpod 3.4.3, go_router 18.0.2,
   flutter_localizations (Flutter SDK), intl 0.20.2, cloud_firestore 6.10.0,
   firebase_app_check 0.4.8 (added in step 2.9a), firebase_auth 6.7.0 (added in step

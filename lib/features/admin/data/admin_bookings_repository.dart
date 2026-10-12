@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tbilisi_car_rental/core/models/booking.dart';
 import 'package:tbilisi_car_rental/core/models/booking_status.dart';
 import 'package:tbilisi_car_rental/core/models/car.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_delete.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_detail.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_document.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_edit.dart';
@@ -359,7 +360,72 @@ class AdminBookingsRepository {
         );
     }
   }
+
+  /// Deletes the booking [id] and returns once the server has confirmed
+  /// it. A delete cannot be undone.
+  ///
+  /// It runs in a transaction, tried once, like [changeStatus]: nothing is
+  /// kept in the offline queue. The transaction reads the booking first:
+  /// - there is none: nothing is written and
+  ///   [AdminBookingDeleteResult.alreadyDeleted] is returned;
+  /// - its status is no longer [shownStatus], the one the admin saw when
+  ///   they confirmed (somebody changed it meanwhile): nothing is deleted;
+  /// - otherwise the document is deleted.
+  ///
+  /// The rules let an admin delete any booking; unlike an update, the
+  /// stored document is not checked, so a hand-made document with a field
+  /// the app does not know can be deleted too.
+  ///
+  /// Throws an [AdminBookingDeleteException] when the booking was
+  /// certainly not deleted, and an [AdminBookingDeleteNoAnswer] when the
+  /// server did not answer within [timeout]; then it may be gone.
+  Future<AdminBookingDeleteResult> deleteBooking(
+    String id, {
+    required BookingStatus shownStatus,
+    Duration timeout = adminStatusChangeTimeout,
+  }) async {
+    final document = _firestore.collection('bookings').doc(id);
+    final _DeleteOutcome outcome;
+    try {
+      outcome = await _firestore
+          .runTransaction<_DeleteOutcome>(
+            (transaction) async {
+              final snapshot = await transaction.get(document);
+              final data = snapshot.data();
+              if (data == null) return _DeleteOutcome.alreadyDeleted;
+              if (statusChangedElsewhere(
+                shown: shownStatus,
+                storedStatus: data['status'],
+              )) {
+                return _DeleteOutcome.statusChanged;
+              }
+              transaction.delete(document);
+              return _DeleteOutcome.deleted;
+            },
+            timeout: timeout,
+            maxAttempts: 1,
+          )
+          .timeout(timeout);
+    } on TimeoutException {
+      throw const AdminBookingDeleteNoAnswer();
+    } catch (error, stackTrace) {
+      Error.throwWithStackTrace(mapBookingDeleteError(error), stackTrace);
+    }
+    switch (outcome) {
+      case _DeleteOutcome.deleted:
+        return AdminBookingDeleteResult.deleted;
+      case _DeleteOutcome.alreadyDeleted:
+        return AdminBookingDeleteResult.alreadyDeleted;
+      case _DeleteOutcome.statusChanged:
+        throw const AdminBookingDeleteException(
+          AdminBookingDeleteFailure.statusChanged,
+        );
+    }
+  }
 }
+
+/// How the transaction of a delete ended.
+enum _DeleteOutcome { deleted, alreadyDeleted, statusChanged }
 
 /// How the transaction of a create ended.
 enum _CreateOutcome { created, alreadyCreated, carMissing }
@@ -423,6 +489,18 @@ AdminStatusChangeFailure _statusFailure(AdminBookingSaveFailure failure) {
     case AdminBookingSaveFailure.unknown:
       return AdminStatusChangeFailure.unknown;
   }
+}
+
+/// Turns an error of deleting a booking into an
+/// [AdminBookingDeleteException] with its reason; the same mapping of
+/// Firestore codes as for a status change. Screens never see a Firestore
+/// error type.
+AdminBookingDeleteException mapBookingDeleteError(Object error) {
+  if (error is AdminBookingDeleteException) return error;
+  if (error is FirebaseException) {
+    return AdminBookingDeleteException(deleteFailureFromCode(error.code));
+  }
+  return const AdminBookingDeleteException(AdminBookingDeleteFailure.unknown);
 }
 
 /// Turns an error of creating a booking into an

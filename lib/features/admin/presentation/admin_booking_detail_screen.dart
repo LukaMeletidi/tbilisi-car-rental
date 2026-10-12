@@ -11,11 +11,13 @@ import 'package:tbilisi_car_rental/core/models/extra.dart';
 import 'package:tbilisi_car_rental/core/router/app_router.dart';
 import 'package:tbilisi_car_rental/core/widgets/app_bar_logo.dart';
 import 'package:tbilisi_car_rental/core/widgets/app_card.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_delete.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_detail.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_new.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_date_format.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_booking_detail_provider.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/admin_deleted_notice_provider.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_texts.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/widgets/admin_booking_card.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/widgets/admin_note.dart';
@@ -54,6 +56,27 @@ class AdminBookingDetailScreen extends ConsumerWidget {
         .changeStatus(to);
   }
 
+  /// Asks "Delete this booking?" and deletes only after a tap on
+  /// "Delete". "Keep", a tap beside the dialog and Back all close it
+  /// without a result, and without a result nothing is deleted.
+  Future<void> _delete(
+    BuildContext context,
+    WidgetRef ref,
+    Booking booking,
+    AdminCarLabel car,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => _DeleteDialog(booking: booking, car: car),
+    );
+    if (confirmed != true || !context.mounted) return;
+    // The status the admin saw in the question goes along: when it is
+    // not the status any more, nothing is deleted.
+    await ref
+        .read(adminBookingDetailProvider(bookingId).notifier)
+        .deleteBooking(shownStatus: booking.status);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(adminBookingDetailProvider(bookingId));
@@ -62,6 +85,15 @@ class AdminBookingDetailScreen extends ConsumerWidget {
     final notice = state.notice;
 
     void back() => context.go(AppRoutes.admin);
+
+    // The booking is gone because of a delete started here: leave the
+    // one-time notice for the list ("Booking deleted.") and return to it.
+    ref.listen(adminBookingDetailProvider(bookingId), (previous, next) {
+      final deleted = next.deleted;
+      if (deleted == null || previous?.deleted == deleted) return;
+      ref.read(adminDeletedNoticeProvider.notifier).show(deleted);
+      back();
+    });
     final backButton = FilledButton(
       onPressed: back,
       child: const Text(adminBackToBookings),
@@ -120,6 +152,8 @@ class AdminBookingDetailScreen extends ConsumerWidget {
                 booking: booking,
                 onChange: (to) => _change(context, ref, booking.status, to),
                 onDismissNotice: notifier.dismissNotice,
+                onDelete: () => _delete(context, ref, booking, state.car),
+                onDismissDeleteNotice: notifier.dismissDeleteNotice,
               );
     }
 
@@ -134,8 +168,10 @@ class AdminBookingDetailScreen extends ConsumerWidget {
             IconButton(
               icon: const Icon(Icons.edit),
               tooltip: adminEditTooltip,
-              onPressed: () =>
-                  context.go(AppRoutes.adminBookingEdit(bookingId)),
+              // Not while this booking is being deleted.
+              onPressed: state.deleting || state.deleted != null
+                  ? null
+                  : () => context.go(AppRoutes.adminBookingEdit(bookingId)),
             ),
         ],
       ),
@@ -151,6 +187,8 @@ class _Detail extends StatelessWidget {
     required this.booking,
     required this.onChange,
     required this.onDismissNotice,
+    required this.onDelete,
+    required this.onDismissDeleteNotice,
   });
 
   final String bookingId;
@@ -158,6 +196,8 @@ class _Detail extends StatelessWidget {
   final Booking booking;
   final ValueChanged<BookingStatus> onChange;
   final VoidCallback onDismissNotice;
+  final VoidCallback onDelete;
+  final VoidCallback onDismissDeleteNotice;
 
   @override
   Widget build(BuildContext context) {
@@ -192,6 +232,8 @@ class _Detail extends StatelessWidget {
               child: _StatusContent(
                 status: booking.status,
                 saving: state.saving,
+                // No status change while the booking is being deleted.
+                locked: state.deleting || state.deleted != null,
                 notice: state.notice,
                 noticeFields: state.noticeFields,
                 onChange: onChange,
@@ -218,6 +260,17 @@ class _Detail extends StatelessWidget {
                 style: textTheme.bodySmall,
               ),
             ),
+            // At the very end of the page, away from the other actions.
+            AppCard(
+              child: _DeleteContent(
+                deleting: state.deleting || state.deleted != null,
+                enabled: !state.busy,
+                notice: state.deleteNotice,
+                onDelete: onDelete,
+                onDismissNotice: onDismissDeleteNotice,
+              ),
+            ),
+            const SizedBox(height: 12),
           ],
         ),
       ),
@@ -231,6 +284,7 @@ class _StatusContent extends StatelessWidget {
   const _StatusContent({
     required this.status,
     required this.saving,
+    required this.locked,
     required this.notice,
     required this.noticeFields,
     required this.onChange,
@@ -239,6 +293,9 @@ class _StatusContent extends StatelessWidget {
 
   final BookingStatus status;
   final bool saving;
+
+  /// True while the booking is being deleted: the choices are disabled.
+  final bool locked;
   final AdminStatusChangeNotice? notice;
   final List<String> noticeFields;
   final ValueChanged<BookingStatus> onChange;
@@ -262,7 +319,7 @@ class _StatusContent extends StatelessWidget {
             for (final choice in selectableStatuses(status))
               OutlinedButton(
                 // Disabled while a change is running: no second change.
-                onPressed: saving ? null : () => onChange(choice),
+                onPressed: saving || locked ? null : () => onChange(choice),
                 child: Text(adminChangeTo(choice)),
               ),
           ],
@@ -508,6 +565,148 @@ class _Field extends StatelessWidget {
           const SizedBox(height: 2),
           ...children,
         ],
+      ),
+    );
+  }
+}
+
+/// The delete action of the detail, inside a white card: a red text
+/// button, "Deleting…" while it runs, and what is said when the booking
+/// was not deleted.
+class _DeleteContent extends StatelessWidget {
+  const _DeleteContent({
+    required this.deleting,
+    required this.enabled,
+    required this.notice,
+    required this.onDelete,
+    required this.onDismissNotice,
+  });
+
+  final bool deleting;
+
+  /// False while a status change or a delete runs.
+  final bool enabled;
+
+  final AdminBookingDeleteNotice? notice;
+  final VoidCallback onDelete;
+  final VoidCallback onDismissNotice;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final notice = this.notice;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextButton.icon(
+          onPressed: enabled ? onDelete : null,
+          style: TextButton.styleFrom(foregroundColor: scheme.error),
+          icon: const Icon(Icons.delete_outline),
+          label: const Text(adminDeleteButton),
+        ),
+        if (deleting) ...[
+          const SizedBox(height: 8),
+          const Row(
+            children: [
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              SizedBox(width: 12),
+              Text(adminDeleting),
+            ],
+          ),
+        ],
+        if (notice != null && !deleting) ...[
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(
+                notice == AdminBookingDeleteNotice.noAnswer
+                    ? Icons.help_outline
+                    : Icons.error_outline,
+                size: 20,
+                color: notice == AdminBookingDeleteNotice.noAnswer
+                    ? scheme.onSurface
+                    : scheme.error,
+              ),
+              const SizedBox(width: 12),
+              Expanded(child: Text(adminDeleteNoticeText(notice))),
+              IconButton(
+                icon: const Icon(Icons.close, size: 20),
+                tooltip: adminDismissNotice,
+                onPressed: onDismissNotice,
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// "Delete this booking?" White, with dark text. It says which booking it
+/// is, that a delete cannot be undone, and that "Cancelled" is the softer
+/// way; for a confirmed booking, one more line.
+///
+/// Only "Delete" answers true. "Keep" answers false; a tap beside the
+/// dialog and Back answer nothing. The caller deletes only for true.
+class _DeleteDialog extends StatelessWidget {
+  const _DeleteDialog({required this.booking, required this.car});
+
+  final Booking booking;
+  final AdminCarLabel car;
+
+  @override
+  Widget build(BuildContext context) {
+    return OnWhite(
+      child: Builder(
+        builder: (context) {
+          final theme = Theme.of(context);
+          return AlertDialog(
+            backgroundColor: Colors.white,
+            title: const Text(adminDeleteTitle),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final line in adminDeleteDialogLines(booking, car))
+                    Text(line, style: theme.textTheme.bodyLarge),
+                  const SizedBox(height: 12),
+                  if (deleteNeedsStrongWarning(booking.status)) ...[
+                    Text(
+                      adminDeleteConfirmedWarning,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.error,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  const Text(adminDeleteCannotBeUndone),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text(adminConfirmNo),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: theme.colorScheme.error,
+                  foregroundColor: theme.colorScheme.onError,
+                ),
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text(adminDeleteYes),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

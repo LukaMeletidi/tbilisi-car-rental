@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +11,7 @@ import 'package:tbilisi_car_rental/features/admin/data/admin_bookings_repository
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_edit.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_new.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_session.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/admin_deleted_notice_provider.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_session_provider.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/settings_providers.dart';
 
@@ -200,6 +202,11 @@ class AdminBookingNewNotifier extends Notifier<AdminBookingNewState> {
   @override
   AdminBookingNewState build() {
     _generation += 1;
+    // Opening the form ends the list's one-time notice "Booking deleted.".
+    // Done right after this build, because Riverpod does not allow another
+    // provider to be changed inside it.
+    final deletedNotice = ref.read(adminDeletedNoticeProvider.notifier);
+    scheduleMicrotask(deletedNotice.clear);
     final session = ref.watch(adminSessionProvider);
     if (session != AdminSession.admin) return const AdminBookingNewState();
 

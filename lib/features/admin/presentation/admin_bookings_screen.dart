@@ -9,6 +9,7 @@ import 'package:tbilisi_car_rental/core/widgets/app_bar_logo.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_bookings_filter_provider.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_bookings_provider.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/admin_deleted_notice_provider.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_sign_in_provider.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_texts.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/widgets/admin_booking_card.dart';
@@ -39,6 +40,8 @@ class AdminBookingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(adminBookingsProvider);
     final notifier = ref.read(adminBookingsProvider.notifier);
+    // Set by the detail right after a booking was deleted; shown once.
+    final deleted = ref.watch(adminDeletedNoticeProvider);
 
     final Widget body;
     switch (state.status) {
@@ -75,7 +78,42 @@ class AdminBookingsScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: SafeArea(child: body),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Above everything, so it is seen also when the list is empty.
+            if (deleted != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 8, 0),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: carDetailMaxWidth,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: AdminNote(
+                            icon: Icons.check_circle_outline,
+                            text: adminDeletedNoticeText(deleted),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 20),
+                          tooltip: adminDismissNotice,
+                          onPressed: ref
+                              .read(adminDeletedNoticeProvider.notifier)
+                              .clear,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            Expanded(child: body),
+          ],
+        ),
+      ),
       // Always there on this page, also for an empty list. White with
       // purple text, like the filled buttons of the app.
       floatingActionButton: FloatingActionButton.extended(

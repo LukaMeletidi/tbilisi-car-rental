@@ -9,6 +9,7 @@ import 'package:tbilisi_car_rental/core/time/clock_provider.dart';
 import 'package:tbilisi_car_rental/features/admin/data/admin_auth_repository.dart';
 import 'package:tbilisi_car_rental/features/admin/data/admin_bookings_repository.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_detail.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_delete.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_session.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_booking_detail_provider.dart';
@@ -850,6 +851,423 @@ void main() {
       expect(h.state.notice, isNull);
       expect(h.state.status, AdminBookingDetailStatus.found);
       expect(h.state.booking, isNotNull);
+    });
+  });
+
+  group('deleting', () {
+    Future<Harness> shown(WidgetTester tester, {String status = 'new'}) async {
+      final h = await start(tester);
+      await h.emit(rawBooking('b1', status: status));
+      return h;
+    }
+
+    testWidgets('deletes once, this booking, with the status that was shown; '
+        'then the booking counts as deleted', (tester) async {
+      final h = await shown(tester, status: 'pending');
+
+      await h.notifier.deleteBooking(shownStatus: BookingStatus.pending);
+      await h.flush();
+
+      expect(h.bookings.deletes, [
+        (id: 'b1', shownStatus: BookingStatus.pending),
+      ]);
+      expect(h.state.deleted, AdminDeletedNotice.deleted);
+      expect(h.state.deleteNotice, isNull);
+      // Nothing more can be started while the screen leaves.
+      expect(h.state.busy, true);
+    });
+
+    testWidgets('"deleting" lasts until the server has answered; nothing '
+        'else can be started meanwhile', (tester) async {
+      final h = await shown(tester);
+      h.bookings.deletePending = Completer<void>();
+
+      final delete = h.notifier.deleteBooking(
+        shownStatus: BookingStatus.newBooking,
+      );
+      await h.flush();
+      expect(h.state.deleting, true);
+      expect(h.state.busy, true);
+      expect(h.state.deleted, isNull);
+
+      await h.notifier.changeStatus(BookingStatus.confirmed);
+      await h.flush();
+      expect(h.bookings.statusChanges, isEmpty);
+
+      await h.elapse(const Duration(seconds: 5));
+      expect(h.state.deleting, true);
+
+      h.bookings.deletePending!.complete();
+      await delete;
+      await h.flush();
+      expect(h.state.deleted, AdminDeletedNotice.deleted);
+    });
+
+    testWidgets('a second call while one is running does nothing', (
+      tester,
+    ) async {
+      final h = await shown(tester);
+      h.bookings.deletePending = Completer<void>();
+
+      final first = h.notifier.deleteBooking(
+        shownStatus: BookingStatus.newBooking,
+      );
+      await h.flush();
+      await h.notifier.deleteBooking(shownStatus: BookingStatus.newBooking);
+      await h.notifier.deleteBooking(shownStatus: BookingStatus.newBooking);
+      expect(h.bookings.deletes, hasLength(1));
+
+      h.bookings.deletePending!.complete();
+      await first;
+      await h.flush();
+      await h.notifier.deleteBooking(shownStatus: BookingStatus.newBooking);
+      expect(h.bookings.deletes, hasLength(1));
+    });
+
+    testWidgets('two calls in the same moment delete once', (tester) async {
+      final h = await shown(tester);
+
+      await Future.wait([
+        h.notifier.deleteBooking(shownStatus: BookingStatus.newBooking),
+        h.notifier.deleteBooking(shownStatus: BookingStatus.newBooking),
+      ]);
+      await h.flush();
+
+      expect(h.bookings.deletes, hasLength(1));
+    });
+
+    testWidgets('not while a status change is running', (tester) async {
+      final h = await shown(tester);
+      h.bookings.statusChangePending = Completer<void>();
+      final change = h.notifier.changeStatus(BookingStatus.pending);
+      await h.flush();
+
+      await h.notifier.deleteBooking(shownStatus: BookingStatus.newBooking);
+      expect(h.bookings.deletes, isEmpty);
+
+      h.bookings.statusChangePending!.complete();
+      await change;
+      await h.flush();
+    });
+
+    testWidgets('nothing is deleted before the booking is shown, or when '
+        'not an admin', (tester) async {
+      final h = await start(tester);
+      await h.notifier.deleteBooking(shownStatus: BookingStatus.newBooking);
+      await h.emit(null);
+      await h.notifier.deleteBooking(shownStatus: BookingStatus.newBooking);
+      expect(h.bookings.deletes, isEmpty);
+
+      final other = await start(tester, session: AdminSession.noAccess);
+      await other.notifier.deleteBooking(shownStatus: BookingStatus.newBooking);
+      expect(other.bookings.deletes, isEmpty);
+    });
+
+    testWidgets('the status on screen is no longer the one the admin '
+        'confirmed: nothing is sent, and it says so', (tester) async {
+      final h = await shown(tester, status: 'new');
+      // Somebody confirmed it while the question was open.
+      await h.emit(rawBooking('b1', status: 'confirmed'));
+
+      await h.notifier.deleteBooking(shownStatus: BookingStatus.newBooking);
+      await h.flush();
+
+      expect(h.bookings.deletes, isEmpty);
+      expect(h.state.deleteNotice, AdminBookingDeleteNotice.statusChanged);
+      expect(h.state.deleting, false);
+      expect(h.state.deleted, isNull);
+    });
+
+    testWidgets('the transaction finds the status changed: not deleted, '
+        'said so', (tester) async {
+      final h = await shown(tester);
+      h.bookings.deleteError = const AdminBookingDeleteException(
+        AdminBookingDeleteFailure.statusChanged,
+      );
+
+      await h.notifier.deleteBooking(shownStatus: BookingStatus.newBooking);
+      await h.flush();
+
+      expect(h.state.deleteNotice, AdminBookingDeleteNotice.statusChanged);
+      expect(h.state.deleted, isNull);
+      expect(h.state.status, AdminBookingDetailStatus.found);
+    });
+
+    const failures = {
+      AdminBookingDeleteFailure.noConnection:
+          AdminBookingDeleteNotice.noConnection,
+      AdminBookingDeleteFailure.refused: AdminBookingDeleteNotice.refused,
+      AdminBookingDeleteFailure.unknown: AdminBookingDeleteNotice.unknown,
+    };
+    for (final entry in failures.entries) {
+      testWidgets('${entry.key.name}: not deleted; the booking stays on '
+          'screen and the delete can be tried again', (tester) async {
+        final h = await shown(tester);
+        h.bookings.deleteError = AdminBookingDeleteException(entry.key);
+
+        await h.notifier.deleteBooking(shownStatus: BookingStatus.newBooking);
+        await h.flush();
+
+        expect(h.state.deleting, false);
+        expect(h.state.busy, false);
+        expect(h.state.deleteNotice, entry.value);
+        expect(h.state.deleted, isNull);
+        expect(h.state.status, AdminBookingDetailStatus.found);
+        expect(h.state.booking, isNotNull);
+
+        h.bookings.deleteError = null;
+        await h.notifier.deleteBooking(shownStatus: BookingStatus.newBooking);
+        await h.flush();
+        expect(h.bookings.deletes, hasLength(2));
+        expect(h.state.deleted, AdminDeletedNotice.deleted);
+        expect(h.state.deleteNotice, isNull);
+      });
+    }
+
+    testWidgets('an error of an unexpected type is "please try again"', (
+      tester,
+    ) async {
+      final h = await shown(tester);
+      h.bookings.deleteError = StateError('made up');
+
+      await h.notifier.deleteBooking(shownStatus: BookingStatus.newBooking);
+      await h.flush();
+
+      expect(h.state.deleteNotice, AdminBookingDeleteNotice.unknown);
+    });
+
+    testWidgets('already deleted (the transaction found none): the booking '
+        'counts as gone, with its own words', (tester) async {
+      final h = await shown(tester);
+      h.bookings.deleteResult = AdminBookingDeleteResult.alreadyDeleted;
+
+      await h.notifier.deleteBooking(shownStatus: BookingStatus.newBooking);
+      await h.flush();
+
+      expect(h.state.deleted, AdminDeletedNotice.alreadyDeleted);
+    });
+
+    testWidgets('no answer, and the booking is still there: it stays on '
+        'screen; the live read tells later', (tester) async {
+      final h = await shown(tester);
+      h.bookings.deleteError = const AdminBookingDeleteNoAnswer();
+
+      await h.notifier.deleteBooking(shownStatus: BookingStatus.newBooking);
+      await h.flush();
+
+      expect(h.state.deleteNotice, AdminBookingDeleteNotice.noAnswer);
+      expect(h.state.deleted, isNull);
+      expect(h.state.deleting, false);
+      expect(h.state.status, AdminBookingDetailStatus.found);
+
+      // Still shown after another answer: it was not deleted.
+      await h.emit(rawBooking('b1'));
+      expect(h.state.status, AdminBookingDetailStatus.found);
+      expect(h.state.deleteNotice, AdminBookingDeleteNotice.noAnswer);
+
+      // It did go after all: the page says so by itself.
+      await h.emit(null);
+      expect(h.state.status, AdminBookingDetailStatus.missing);
+    });
+
+    testWidgets('the notice of a failed delete can be hidden; the notice '
+        'of a status change is left alone', (tester) async {
+      final h = await shown(tester);
+      h.bookings.deleteError = const AdminBookingDeleteException(
+        AdminBookingDeleteFailure.noConnection,
+      );
+      await h.notifier.deleteBooking(shownStatus: BookingStatus.newBooking);
+      await h.flush();
+      // A status change afterwards keeps the notice of the delete.
+      await h.notifier.changeStatus(BookingStatus.pending);
+      await h.flush();
+      expect(h.state.notice, AdminStatusChangeNotice.saved);
+      expect(h.state.deleteNotice, AdminBookingDeleteNotice.noConnection);
+
+      h.notifier.dismissDeleteNotice();
+
+      expect(h.state.deleteNotice, isNull);
+      expect(h.state.notice, AdminStatusChangeNotice.saved);
+    });
+
+    testWidgets('a new attempt to delete removes an old notice of a status '
+        'change: it is about something else now', (tester) async {
+      final h = await shown(tester);
+      await h.notifier.changeStatus(BookingStatus.pending);
+      await h.flush();
+      await h.emit(rawBooking('b1', status: 'pending'));
+      expect(h.state.notice, AdminStatusChangeNotice.saved);
+      h.bookings.deleteError = const AdminBookingDeleteException(
+        AdminBookingDeleteFailure.noConnection,
+      );
+
+      await h.notifier.deleteBooking(shownStatus: BookingStatus.pending);
+      await h.flush();
+
+      expect(h.state.notice, isNull);
+      expect(h.state.deleteNotice, AdminBookingDeleteNotice.noConnection);
+    });
+
+    group('the live read is faster than the transaction', () {
+      testWidgets('"missing" during the delete does NOT turn the page into '
+          '"does not exist"; the answer "deleted" then finishes it', (
+        tester,
+      ) async {
+        final h = await shown(tester);
+        h.bookings.deletePending = Completer<void>();
+        final delete = h.notifier.deleteBooking(
+          shownStatus: BookingStatus.newBooking,
+        );
+        await h.flush();
+
+        await h.emit(null);
+
+        expect(h.state.status, AdminBookingDetailStatus.found);
+        expect(h.state.booking, isNotNull);
+        expect(h.state.deleting, true);
+        expect(h.state.deleted, isNull);
+
+        h.bookings.deletePending!.complete();
+        await delete;
+        await h.flush();
+        expect(h.state.deleted, AdminDeletedNotice.deleted);
+        expect(h.state.status, AdminBookingDetailStatus.found);
+      });
+
+      testWidgets('"missing" during the delete, then NO ANSWER from the '
+          'transaction: the booking is gone, "Booking deleted."', (
+        tester,
+      ) async {
+        final h = await shown(tester);
+        h.bookings
+          ..deletePending = Completer<void>()
+          ..deleteError = const AdminBookingDeleteNoAnswer();
+        final delete = h.notifier.deleteBooking(
+          shownStatus: BookingStatus.newBooking,
+        );
+        await h.flush();
+        await h.emit(null);
+
+        h.bookings.deletePending!.complete();
+        await delete;
+        await h.flush();
+
+        expect(h.state.deleted, AdminDeletedNotice.deleted);
+        expect(h.state.deleteNotice, isNull);
+      });
+
+      for (final failure in AdminBookingDeleteFailure.values) {
+        testWidgets('"missing" during the delete, then the failure '
+            '${failure.name}: still gone, "Booking deleted."', (tester) async {
+          final h = await shown(tester);
+          h.bookings
+            ..deletePending = Completer<void>()
+            ..deleteError = AdminBookingDeleteException(failure);
+          final delete = h.notifier.deleteBooking(
+            shownStatus: BookingStatus.newBooking,
+          );
+          await h.flush();
+          await h.emit(null);
+
+          h.bookings.deletePending!.complete();
+          await delete;
+          await h.flush();
+
+          expect(h.state.deleted, AdminDeletedNotice.deleted);
+          expect(h.state.deleteNotice, isNull);
+          expect(h.state.status, AdminBookingDetailStatus.found);
+        });
+      }
+
+      testWidgets('"missing" during the delete, then "already deleted": '
+          'gone, with those words', (tester) async {
+        final h = await shown(tester);
+        h.bookings
+          ..deletePending = Completer<void>()
+          ..deleteResult = AdminBookingDeleteResult.alreadyDeleted;
+        final delete = h.notifier.deleteBooking(
+          shownStatus: BookingStatus.newBooking,
+        );
+        await h.flush();
+        await h.emit(null);
+
+        h.bookings.deletePending!.complete();
+        await delete;
+        await h.flush();
+
+        expect(h.state.deleted, AdminDeletedNotice.alreadyDeleted);
+      });
+
+      testWidgets('the usual order, the answer first and "missing" after: '
+          'the page still does not flash "does not exist"', (tester) async {
+        final h = await shown(tester);
+
+        await h.notifier.deleteBooking(shownStatus: BookingStatus.newBooking);
+        await h.flush();
+        expect(h.state.deleted, AdminDeletedNotice.deleted);
+
+        await h.emit(null);
+
+        expect(h.state.status, AdminBookingDetailStatus.found);
+        expect(h.state.deleted, AdminDeletedNotice.deleted);
+      });
+
+      testWidgets('a "missing" of an earlier, failed attempt is not carried '
+          'into the next one', (tester) async {
+        final h = await shown(tester);
+        h.bookings.deleteError = const AdminBookingDeleteException(
+          AdminBookingDeleteFailure.noConnection,
+        );
+        await h.notifier.deleteBooking(shownStatus: BookingStatus.newBooking);
+        await h.flush();
+        expect(h.state.deleted, isNull);
+
+        await h.notifier.deleteBooking(shownStatus: BookingStatus.newBooking);
+        await h.flush();
+
+        // Again a certain failure with the booking still there.
+        expect(h.state.deleted, isNull);
+        expect(h.state.deleteNotice, AdminBookingDeleteNotice.noConnection);
+      });
+
+      testWidgets('a live answer with the booking during the delete keeps '
+          '"deleting"', (tester) async {
+        final h = await shown(tester);
+        h.bookings.deletePending = Completer<void>();
+        final delete = h.notifier.deleteBooking(
+          shownStatus: BookingStatus.newBooking,
+        );
+        await h.flush();
+
+        await h.emit(rawBooking('b1', fullName: 'Other Person'));
+        expect(h.state.deleting, true);
+
+        h.bookings.deletePending!.complete();
+        await delete;
+        await h.flush();
+        expect(h.state.deleted, AdminDeletedNotice.deleted);
+      });
+    });
+
+    testWidgets('the session ends during the delete: nothing is reported '
+        'and nothing breaks', (tester) async {
+      final h = await shown(tester);
+      h.bookings.deletePending = Completer<void>();
+      final delete = h.notifier.deleteBooking(
+        shownStatus: BookingStatus.newBooking,
+      );
+      await h.flush();
+
+      h.auth.report(AdminSession.signedOut);
+      await h.flush();
+      h.bookings.deletePending!.complete();
+      await delete;
+      await h.flush();
+
+      expect(h.state.status, AdminBookingDetailStatus.inactive);
+      expect(h.state.deleted, isNull);
+      expect(h.state.deleting, false);
+      expect(tester.takeException(), isNull);
     });
   });
 }
