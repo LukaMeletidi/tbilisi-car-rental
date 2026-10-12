@@ -1676,5 +1676,15 @@ Phase 3: admin sign-in and the bookings list with editing (Section 11).
   - Covered by tests only: the "no answer from the server" path.
   - The "Create Test" bookings were deleted in the console; the original three
     test bookings stay.
-- 3.11 Delete a booking, with a confirmation — not started.
+- 3.11 Delete a booking, with a confirmation — DONE.
+  - 1339 tests pass and analyze is clean. The rules emulator script passes (104
+    public, 244 admin and signed-in); the rules were not changed.
+  - I verified by eye, on the Android emulator and in Chrome, with two throw-away
+    bookings: the content of the question; "Keep", a tap outside and the system
+    Back delete nothing; airplane mode ("Not deleted. No connection."); a fast
+    double tap (the list with "Booking deleted.", no flash of "does not exist");
+    the x on the notice; and a confirmed booking deleted in Chrome while its detail
+    was open on the emulator, which then showed "This booking does not exist."
+  - Covered by tests only: the "no answer from the server" path.
+  - The two throw-away bookings are gone; the original three test bookings stay.
 - 3.12 Verify Phase 3 and close it — not started.
