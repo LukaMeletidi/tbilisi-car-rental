@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tbilisi_car_rental/features/admin/data/admin_bookings_repository.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_detail.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_edit.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_new.dart';
 
 /// These tests only turn made-up errors into the app's own failures. They
 /// do not contact Firebase.
@@ -105,6 +106,61 @@ void main() {
         mapBookingSaveError(firestoreError('permission-denied')).fields,
         isEmpty,
       );
+    });
+  });
+
+  group('an error of creating a booking', () {
+    test('"unavailable" and "deadline exceeded" become noConnection', () {
+      for (final code in ['unavailable', 'deadline-exceeded']) {
+        expect(
+          mapBookingCreateError(firestoreError(code)).failure,
+          AdminBookingCreateFailure.noConnection,
+          reason: code,
+        );
+      }
+    });
+
+    test('"permission denied" becomes refused', () {
+      expect(
+        mapBookingCreateError(firestoreError('permission-denied')).failure,
+        AdminBookingCreateFailure.refused,
+      );
+    });
+
+    test('any other code, and any other error, becomes unknown', () {
+      for (final code in ['not-found', 'already-exists', 'aborted', '']) {
+        expect(
+          mapBookingCreateError(firestoreError(code)).failure,
+          AdminBookingCreateFailure.unknown,
+          reason: code,
+        );
+      }
+      expect(
+        mapBookingCreateError(StateError('made up')).failure,
+        AdminBookingCreateFailure.unknown,
+      );
+    });
+
+    test('an error that is already the app\'s own is passed on', () {
+      const own = AdminBookingCreateException(
+        AdminBookingCreateFailure.carMissing,
+      );
+      expect(mapBookingCreateError(own), same(own));
+    });
+
+    test('the codes for "no connection" and "refused" are mapped exactly '
+        'as for a status change', () {
+      for (final code in [
+        'unavailable',
+        'deadline-exceeded',
+        'permission-denied',
+      ]) {
+        expect(
+          mapBookingCreateError(firestoreError(code)).failure.name,
+          mapStatusChangeError(firestoreError(code)).failure.name,
+          reason: code,
+        );
+      }
     });
   });
 

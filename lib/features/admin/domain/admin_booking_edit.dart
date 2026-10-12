@@ -199,9 +199,14 @@ enum AdminBookingError {
 /// settings; null while they are not loaded. A fixed place is accepted
 /// when it is in [locations], or when it is the place [base] already has
 /// (a place that was removed from settings stays possible).
+///
+/// [base] is the stored booking that is edited. Without it (a booking that
+/// is being created) there is no "place the booking already has", so a
+/// fixed place must be in [locations], and nothing is checked for being
+/// stored in another format.
 Set<AdminBookingError> validateAdminBooking(
   AdminBookingDraft draft, {
-  required Booking base,
+  Booking? base,
   required Set<String>? carIds,
   required List<PickupLocation>? locations,
 }) {
@@ -260,7 +265,7 @@ Set<AdminBookingError> validateAdminBooking(
   };
   final pickupLocationError = _locationError(
     input.pickupLocation,
-    {...knownIds, base.pickupLocation.id},
+    {...knownIds, ?base?.pickupLocation.id},
     required: AdminBookingError.pickupLocationRequired,
     unknown: AdminBookingError.pickupLocationUnknown,
     textRequired: AdminBookingError.pickupLocationTextRequired,
@@ -270,7 +275,7 @@ Set<AdminBookingError> validateAdminBooking(
 
   final dropoffLocationError = _locationError(
     input.dropoffLocation,
-    {...knownIds, base.dropoffLocation.id},
+    {...knownIds, ?base?.dropoffLocation.id},
     required: AdminBookingError.dropoffLocationRequired,
     unknown: AdminBookingError.dropoffLocationUnknown,
     textRequired: AdminBookingError.dropoffLocationTextRequired,
@@ -282,7 +287,7 @@ Set<AdminBookingError> validateAdminBooking(
     errors.add(AdminBookingError.notesTooLong);
   }
 
-  errors.addAll(storedFormatErrors(base, draft));
+  if (base != null) errors.addAll(storedFormatErrors(base, draft));
   return errors;
 }
 

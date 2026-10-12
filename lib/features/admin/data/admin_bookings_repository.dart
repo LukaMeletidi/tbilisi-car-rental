@@ -10,6 +10,7 @@ import 'package:tbilisi_car_rental/core/models/car.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_detail.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_document.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_edit.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_new.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
 import 'package:tbilisi_car_rental/features/booking/data/booking_firestore_mapping.dart';
 import 'package:tbilisi_car_rental/features/catalog/data/car_parsing.dart';
@@ -282,7 +283,86 @@ class AdminBookingsRepository {
       throw AdminBookingSaveException(refusal.failure, fields: refusal.fields);
     }
   }
+
+  /// A new, unused ID for a booking. Firestore makes it on the device; no
+  /// request is sent. The "new booking" form asks for one when it opens and
+  /// uses it for every attempt to save, so that a repeated attempt can
+  /// never create a second booking.
+  String newBookingId() => _firestore.collection('bookings').doc().id;
+
+  /// Creates [booking] as the document [id] and returns once the server
+  /// has confirmed it.
+  ///
+  /// It runs in a transaction, tried once, like [changeStatus]: nothing is
+  /// kept in the offline queue. The transaction
+  /// - reads the document [id] first. When it exists, nothing is written
+  ///   and [AdminBookingCreateResult.alreadyCreated] is returned: an
+  ///   earlier attempt with this ID, whose answer never arrived, did
+  ///   create it. So a booking is never created twice;
+  /// - reads the car: it must exist (it may be hidden), as the rules
+  ///   require;
+  /// - creates the document, with createdAt set by the server.
+  ///
+  /// Throws an [AdminBookingCreateException] when the booking was
+  /// certainly not created, and an [AdminBookingCreateNoAnswer] when the
+  /// server did not answer within [timeout]; then the booking may exist,
+  /// and calling this again with the same [id] tells.
+  Future<AdminBookingCreateResult> createBooking(
+    String id,
+    Booking booking, {
+    Duration timeout = adminStatusChangeTimeout,
+  }) async {
+    if (!isPlausibleBookingId(id) || id == adminNewBookingPathSegment) {
+      throw ArgumentError.value(id, 'id', 'cannot be the ID of a booking');
+    }
+    final data = adminNewBookingDocument(booking);
+    final document = _firestore.collection('bookings').doc(id);
+    final _CreateOutcome outcome;
+    try {
+      outcome = await _firestore
+          .runTransaction<_CreateOutcome>(
+            (transaction) async {
+              final existing = await transaction.get(document);
+              if (existing.exists) return _CreateOutcome.alreadyCreated;
+
+              // The rules allow the same characters in the ID of a car as
+              // in a booking ID.
+              final carId = booking.carId;
+              if (!isPlausibleBookingId(carId)) {
+                return _CreateOutcome.carMissing;
+              }
+              final car = await transaction.get(
+                _firestore.collection('cars').doc(carId),
+              );
+              if (!car.exists) return _CreateOutcome.carMissing;
+
+              transaction.set(document, data);
+              return _CreateOutcome.created;
+            },
+            timeout: timeout,
+            maxAttempts: 1,
+          )
+          .timeout(timeout);
+    } on TimeoutException {
+      throw const AdminBookingCreateNoAnswer();
+    } catch (error, stackTrace) {
+      Error.throwWithStackTrace(mapBookingCreateError(error), stackTrace);
+    }
+    switch (outcome) {
+      case _CreateOutcome.created:
+        return AdminBookingCreateResult.created;
+      case _CreateOutcome.alreadyCreated:
+        return AdminBookingCreateResult.alreadyCreated;
+      case _CreateOutcome.carMissing:
+        throw const AdminBookingCreateException(
+          AdminBookingCreateFailure.carMissing,
+        );
+    }
+  }
 }
+
+/// How the transaction of a create ended.
+enum _CreateOutcome { created, alreadyCreated, carMissing }
 
 /// Why a transaction did not write, decided before the write.
 class _Refusal {
@@ -343,6 +423,18 @@ AdminStatusChangeFailure _statusFailure(AdminBookingSaveFailure failure) {
     case AdminBookingSaveFailure.unknown:
       return AdminStatusChangeFailure.unknown;
   }
+}
+
+/// Turns an error of creating a booking into an
+/// [AdminBookingCreateException] with its reason; the same mapping of
+/// Firestore codes as for a status change. Screens never see a Firestore
+/// error type.
+AdminBookingCreateException mapBookingCreateError(Object error) {
+  if (error is AdminBookingCreateException) return error;
+  if (error is FirebaseException) {
+    return AdminBookingCreateException(createFailureFromCode(error.code));
+  }
+  return const AdminBookingCreateException(AdminBookingCreateFailure.unknown);
 }
 
 /// Turns an error of saving an edit into an [AdminBookingSaveException]

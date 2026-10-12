@@ -9,6 +9,8 @@ import 'package:tbilisi_car_rental/core/models/booking_status.dart';
 import 'package:tbilisi_car_rental/core/models/extra.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_document.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_edit.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_new.dart';
+import 'package:tbilisi_car_rental/features/booking/domain/booking_form_validation.dart';
 import 'package:tbilisi_car_rental/features/booking/data/booking_firestore_mapping.dart';
 import 'package:tbilisi_car_rental/features/booking/domain/booking_limits.dart';
 
@@ -164,6 +166,66 @@ void main() {
         AdminBookingField.values.map((field) => field.storedKey),
         isNot(contains('createdAt')),
       );
+    });
+
+    test('the keys of a booking an admin creates are exactly the keys '
+        'isValidAdminBooking allows', () {
+      final created = adminNewBookingDocument(
+        Booking(
+          customer: booking.customer,
+          carId: booking.carId,
+          pickup: booking.pickup,
+          dropoff: booking.dropoff,
+          pickupLocation: booking.pickupLocation,
+          dropoffLocation: booking.dropoffLocation,
+          extras: booking.extras,
+          notes: booking.notes,
+          totalPrice: booking.totalPrice,
+          language: booking.language,
+          status: BookingStatus.confirmed,
+          createdBy: adminCreatedByValue,
+        ),
+      );
+      final allowed = ruleList('a.keys().hasOnly([');
+      final required = ruleList('a.keys().hasAll([');
+
+      expect(created.keys.toSet(), allowed.toSet());
+      expect(created.keys.length, allowed.length);
+      expect(created.keys.toSet().containsAll(required), true);
+    });
+
+    test('the create rule wants createdAt to be the server time', () {
+      expect(
+        rules,
+        contains('request.resource.data.createdAt == request.time'),
+      );
+    });
+
+    test('"admin" as createdBy is what the rules accept: 1 to 100 '
+        'characters, no space at either end', () {
+      expect(rules, contains('isTrimmedText(a.createdBy, 1, nameMaxLength())'));
+      expect(adminCreatedByValue.length, greaterThanOrEqualTo(1));
+      expect(
+        adminCreatedByValue.length,
+        lessThanOrEqualTo(ruleNumber('nameMaxLength')),
+      );
+      expect(RegExp(r'^\S([\s\S]*\S)?$').hasMatch(adminCreatedByValue), true);
+    });
+
+    test('the "no e-mail" placeholder passes the e-mail pattern of the '
+        'rules and the app', () {
+      // The pattern of isValidCustomer, written as a Dart pattern.
+      const pattern = r'^[^@\s]+@[^@\s.]+(\.[^@\s.]+)+$';
+      expect(
+        rules,
+        contains(r"c.email.matches('^[^@\\s]+@[^@\\s.]+(\\.[^@\\s.]+)+$')"),
+      );
+      expect(RegExp(pattern).hasMatch(noEmailPlaceholder), true);
+      expect(
+        noEmailPlaceholder.length,
+        lessThanOrEqualTo(ruleNumber('emailMaxLength')),
+      );
+      expect(isValidEmail(noEmailPlaceholder), true);
     });
 
     test('the admin status list equals the four Dart statuses', () {

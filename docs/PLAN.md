@@ -584,6 +584,67 @@ Phase 3 decisions (the steps are in Section 18):
     store such a value.
   - Nothing is logged except the type of an unexpected error. Rules, ARB files,
     packages and indexes are unchanged.
+- Decisions of step 3.10a (creating a booking by hand: logic, mapping, repository
+  and notifier; the screen, the route and the button come in 3.10b):
+  - Fields: the customer (name, phone, WhatsApp, Telegram, e-mail), the language
+    (English when the form opens), the car, pickup and drop-off time and place, the
+    extras, the notes, and the status: all four can be chosen, Confirmed is
+    preselected. No car and no dates are preselected.
+  - createdBy is the fixed word "admin", in one named constant. There is one shared
+    admin account, so the address of the account adds no information and must not
+    end up in the data. No address and no UID is read or written for it.
+  - A customer without e-mail: the rules require an e-mail, so the form has the
+    switch "The customer has no e-mail", which stores the placeholder
+    none@no-email.invalid (one named constant). The ending ".invalid" is reserved;
+    such an address can never receive mail. Checked on the emulator: the rules
+    accept it. Screens show "No e-mail" instead (3.10b). ANYTHING THAT SENDS MAIL
+    (the last phase) MUST SKIP THIS ADDRESS.
+  - Validation is the one of the edit form without a stored booking: a fixed place
+    must be in settings, and nothing is "stored in another format". A pickup in the
+    past and a hidden car are allowed. With the switch on, the e-mail field is not
+    checked.
+  - The total is always calculated from today's prices: days x (the car's price
+    per day + the extras per day). There is no typed amount. The form shows "Total:
+    5 days × ($45 car + $5 extras) = $250" (with "estimate" above 7 days) and "The
+    total uses today's prices."; before a car and the dates are chosen "Choose a
+    car and the dates to see the total."; when the prices cannot be loaded "The
+    total cannot be calculated: the prices could not be loaded.", and then nothing
+    can be saved (a new booking has no stored total to fall back on). A total above
+    1,000,000 is an error.
+  - No duplicates. The ID of the document is made once, when the form opens
+    (Firestore makes it on the device, without a request), and every attempt of
+    that form uses it. The save is a transaction with one attempt and a 20 second
+    limit; nothing is queued. It reads the document first: when it exists, nothing
+    is written and the booking counts as saved; otherwise it reads the car (it must
+    exist) and creates the document with the server time as createdAt.
+  - "No answer from the server" means the booking MAY exist. The form is then
+    locked (the stored values could otherwise differ from the shown ones), the
+    message is "No answer from the server. Press "Check again": the booking will
+    not be created twice.", and only "Check again" is offered. It runs the same
+    transaction with the same ID and the same booking. When that gives no certain
+    answer either, the message is "Still no answer from the server. ..." and the
+    form stays locked. Only "the car no longer exists" opens the form again: then
+    the transaction has looked and the booking does not exist.
+  - The notifier tells the screen "the booking may already exist"
+    (mayAlreadyExist), for the warning on Back in 3.10b.
+  - The other failures: "Not saved. No connection.", "Not saved. The booking was
+    refused.", "Not saved. This car no longer exists. Choose another car.", "Not
+    saved. Please try again."
+  - The save has the two stages of the edit: a check (the fields and the total),
+    then the write; the place for the conflict warning of Phase 5 is there and
+    empty. A second call while one runs does nothing.
+  - "new" would pass as a booking ID (/admin/bookings/new is the address of the
+    form), so the repository refuses to create a booking with that ID.
+  - validateAdminBooking takes the stored booking as an optional value now; the
+    tests of step 3.9 pass unchanged.
+  - The rules emulator script got the document the form creates, with a chosen ID
+    (accepted and refused), and "a second create with the same ID changes nothing":
+    233 admin and signed-in checks now. The keys of the created document, the word
+    "admin" and the placeholder are tied to firestore.rules by tests.
+  - Nothing is logged except the type of an unexpected error. Rules, ARB files,
+    packages and indexes are unchanged.
+  - Not yet run against the real database: createBooking. It is first used by the
+    screen of 3.10b and verified by eye there.
 - Decisions of step 3.9b (the edit screen):
   - The form is at /admin/bookings/<id>/edit, below the detail. The detail has an
     "Edit" icon in its app bar (tooltip "Edit"), only for a booking that is shown,
@@ -1007,7 +1068,13 @@ Implementation decisions (step 2.2):
   adds admin_booking_edit_screen_test.dart (the form with the real router: fields,
   the total, saving, changed elsewhere, leaving, the route) and
   admin_price_card_test.dart, and more tests for the detail (the Edit icon, the
-  stored-format message, "Saved" after an edit).
+  stored-format message, "Saved" after an edit). Step 3.10a adds
+  admin_booking_new_test.dart (pure: the draft, validation, the total and its
+  texts, the booking that is created, the failures),
+  admin_booking_new_provider_test.dart (the notifier: the ID made once, the two
+  stages, "no answer" and "Check again"; no widgets), and more tests in
+  booking_firestore_mapping_test.dart, booking_rules_limits_test.dart and
+  admin_booking_write_errors_test.dart.
 - Packages installed: firebase_core 4.15.0, flutter_riverpod 3.4.3, go_router 18.0.2,
   flutter_localizations (Flutter SDK), intl 0.20.2, cloud_firestore 6.10.0,
   firebase_app_check 0.4.8 (added in step 2.9a), firebase_auth 6.7.0 (added in step
@@ -1438,6 +1505,14 @@ Phase 3: admin sign-in and the bookings list with editing (Section 11).
   - Verified known limit: in Chrome the browser's Back button leaves the edit
     screen without the discard question.
   - The three test bookings were restored to their original values.
-- 3.10 Create a booking by hand (status confirmed, createdBy) — not started.
+- 3.10 Create a booking by hand (status confirmed, createdBy) — 3.10a done,
+  3.10b not started.
+  - 3.10a (logic, mapping, repository and notifier; no screen, no route): 1195
+    tests pass and analyze is clean. The rules emulator script passes (104 public,
+    233 admin and signed-in); the rules were not changed.
+  - Not yet run against the real database: createBooking. It is first used by the
+    screen of 3.10b and verified by eye there.
+  - 3.10b (the form screen, its route, the "New booking" button, "No e-mail" in
+    the list and the detail, the manual checks) — not started.
 - 3.11 Delete a booking, with a confirmation — not started.
 - 3.12 Verify Phase 3 and close it — not started.

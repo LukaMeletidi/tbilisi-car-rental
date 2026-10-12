@@ -182,6 +182,68 @@ void main() {
     });
   });
 
+  group('adminNewBookingDocument', () {
+    final adminBooking = booking(
+      status: BookingStatus.confirmed,
+      createdBy: 'admin',
+    );
+
+    test('has the 13 keys an admin may write: the 12 of a request and '
+        'createdBy', () {
+      final document = adminNewBookingDocument(adminBooking);
+
+      expect(document.keys.toSet(), {
+        ...newBookingDocument(booking()).keys,
+        'createdBy',
+      });
+      expect(document, hasLength(13));
+      expect(document['createdBy'], 'admin');
+      expect(document['status'], 'confirmed');
+    });
+
+    test('the dates are timestamps and createdAt is the server time', () {
+      final document = adminNewBookingDocument(adminBooking);
+
+      expect(
+        document['pickupDateTime'],
+        Timestamp.fromDate(DateTime.utc(2026, 1, 10, 14)),
+      );
+      expect(
+        document['dropoffDateTime'],
+        Timestamp.fromDate(DateTime.utc(2026, 1, 15, 16, 30)),
+      );
+      expect(document['createdAt'], isA<FieldValue>());
+      expect(document['createdAt'], FieldValue.serverTimestamp());
+    });
+
+    test('every status can be written', () {
+      for (final status in BookingStatus.values) {
+        final document = adminNewBookingDocument(
+          booking(status: status, createdBy: 'admin'),
+        );
+        expect(document['status'], status.storedName);
+      }
+    });
+
+    test('a booking with an ID, with a createdAt, or without a usable '
+        'createdBy is refused', () {
+      for (final wrong in [
+        booking(id: 'b1', status: BookingStatus.confirmed, createdBy: 'admin'),
+        booking(
+          status: BookingStatus.confirmed,
+          createdBy: 'admin',
+          createdAt: DateTime.utc(2026),
+        ),
+        booking(status: BookingStatus.confirmed),
+        booking(status: BookingStatus.confirmed, createdBy: ''),
+        booking(status: BookingStatus.confirmed, createdBy: ' admin'),
+        booking(status: BookingStatus.confirmed, createdBy: 'admin '),
+      ]) {
+        expect(() => adminNewBookingDocument(wrong), throwsArgumentError);
+      }
+    });
+  });
+
   group('bookingUpdateToFirestore', () {
     test('dates become timestamps; everything else is passed on', () {
       final map = bookingUpdateToFirestore({

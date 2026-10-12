@@ -1048,6 +1048,142 @@ signedIn('admin create refused: status missing', 403, () =>
   create(adminBooking((b) => delete b.status), { headers: ADMIN }),
 );
 
+// D2. The document the "new booking" form creates (step 3.10). It mirrors
+// adminNewBookingDocument and createBooking of the app: a chosen document
+// ID, a write that only succeeds while the document does not exist, the 13
+// fields (createdBy is the fixed word "admin"), and createdAt set by the
+// server.
+let nextNew = 0;
+
+function appBooking(change = () => {}) {
+  return booking((b) => {
+    b.status = 'confirmed';
+    b.createdBy = 'admin';
+    b.language = 'en';
+    change(b);
+  });
+}
+
+// Creates [data] as the document [id] the way the app's transaction does.
+function createWithId(id, data, { headers = ADMIN, serverCreatedAt = true } = {}) {
+  const write = {
+    update: {
+      name: `${DATABASE}/documents/bookings/${id}`,
+      fields: encodeFields(data),
+    },
+    currentDocument: { exists: false },
+  };
+  if (serverCreatedAt) {
+    write.updateTransforms = [
+      { fieldPath: 'createdAt', setToServerValue: 'REQUEST_TIME' },
+    ];
+  }
+  return send('POST', `${DOCUMENTS}:commit`, {
+    body: { writes: [write] },
+    headers,
+  });
+}
+
+function acceptedNew(name, change = () => {}, isRight = () => true) {
+  signedIn(`admin new booking: ${name}`, 200, async () => {
+    nextNew += 1;
+    const id = `newBooking${nextNew}`;
+    const result = await createWithId(id, appBooking(change));
+    return andStored(
+      result,
+      id,
+      (f) =>
+        Object.keys(f).length === 13 &&
+        f.createdAt.timestampValue !== undefined &&
+        f.createdBy.stringValue === 'admin' &&
+        isRight(f),
+    );
+  });
+}
+
+function refusedNew(name, change, options) {
+  signedIn(`admin new booking refused: ${name}`, 403, () => {
+    nextNew += 1;
+    return createWithId(`newBooking${nextNew}`, appBooking(change), options);
+  });
+}
+
+for (const status of ['confirmed', 'new', 'pending', 'cancelled']) {
+  acceptedNew(
+    `status "${status}", createdBy "admin"`,
+    (b) => (b.status = status),
+    (f) => f.status.stringValue === status,
+  );
+}
+acceptedNew(
+  'the placeholder for a customer without e-mail',
+  (b) => (b.customer.email = 'none@no-email.invalid'),
+  (f) => mapOf(f.customer).email.stringValue === 'none@no-email.invalid',
+);
+acceptedNew('a hidden car', (b) => (b.carId = INACTIVE_CAR));
+acceptedNew('a pickup in the past', (b) => {
+  b.pickupDateTime = new Date(now - 10 * DAY);
+  b.dropoffDateTime = new Date(now - 5 * DAY);
+});
+acceptedNew(
+  'no extras, empty notes, another place as a text',
+  (b) => {
+    b.extras = [];
+    b.notes = '';
+    b.dropoffLocation = { id: 'other', text: 'Hotel in Batumi' };
+  },
+  (f) => (f.extras.arrayValue.values ?? []).length === 0,
+);
+acceptedNew('all four extras and a total with cents', (b) => {
+  b.extras = ['snowChains', 'childSeat', 'infantSeat', 'boosterSeat'];
+  b.totalPrice = 307.5;
+});
+
+// A second create with the same ID must not replace the first booking. The
+// app never sends one (its transaction reads first); this is the server's
+// own answer to it, which is not "accepted".
+signedIn(
+  'admin new booking: a second create with the same ID changes nothing',
+  200,
+  async () => {
+    const id = 'newBookingTwice';
+    const first = await createWithId(id, appBooking());
+    if (first.status !== 200) return first;
+    const second = await createWithId(
+      id,
+      appBooking((b) => (b.notes = 'A second booking')),
+    );
+    if (second.status === 200) {
+      return { status: 0, text: 'the second create was accepted' };
+    }
+    return andStored(
+      first,
+      id,
+      (f) => f.notes.stringValue === 'Late arrival',
+    );
+  },
+);
+
+refusedNew('createdAt not set by the server', () => {}, {
+  serverCreatedAt: false,
+});
+refusedNew(
+  'createdAt a fixed date',
+  (b) => (b.createdAt = new Date('2020-01-01T00:00:00Z')),
+  { serverCreatedAt: false },
+);
+refusedNew('a car that does not exist', (b) => (b.carId = 'noSuchCar'));
+refusedNew('createdBy empty', (b) => (b.createdBy = ''));
+refusedNew('createdBy of 101 characters', (b) => (b.createdBy = letters(101)));
+refusedNew('createdBy with a space at the end', (b) => (b.createdBy = 'admin '));
+refusedNew('an unknown field', (b) => (b.updatedAt = new Date(now)));
+refusedNew('an empty e-mail', (b) => (b.customer.email = ''));
+refusedNew('no e-mail field', (b) => delete b.customer.email);
+refusedNew('a total above the maximum', (b) => (b.totalPrice = 1000000.01));
+refusedNew('a phone with spaces', (b) => (b.customer.phone = '+995 555 123456'));
+refusedNew('signed in without the claim', () => {}, { headers: NO_CLAIM });
+refusedNew('no sign-in', () => {}, { headers: {} });
+
 // E. Admin delete.
 let deletedId;
 signedIn('admin delete: delete a booking', 200, async () => {

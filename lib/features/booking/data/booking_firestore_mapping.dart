@@ -32,6 +32,36 @@ Map<String, dynamic> newBookingDocument(Booking booking) {
   };
 }
 
+/// The Firestore document for a booking an admin creates by hand.
+///
+/// The two UTC dates become Firestore timestamps and createdAt is set to
+/// the server time, as the rules require. The result has the 13 keys the
+/// rules accept from an admin: the 12 of a customer request and createdBy.
+///
+/// Throws an [ArgumentError] when [booking] already has an ID or a
+/// createdAt, or has no createdBy (or one with a space at either end): the
+/// rules would refuse such a document.
+Map<String, dynamic> adminNewBookingDocument(Booking booking) {
+  final createdBy = booking.createdBy;
+  if (booking.id != null ||
+      booking.createdAt != null ||
+      createdBy == null ||
+      createdBy.isEmpty ||
+      createdBy.trim() != createdBy) {
+    throw ArgumentError.value(
+      booking,
+      'booking',
+      'must be a new admin booking (no id, no createdAt, with createdBy)',
+    );
+  }
+  return {
+    ...booking.toMap(),
+    'pickupDateTime': Timestamp.fromDate(booking.pickup),
+    'dropoffDateTime': Timestamp.fromDate(booking.dropoff),
+    'createdAt': FieldValue.serverTimestamp(),
+  };
+}
+
 /// The fields an admin's edit sends, ready for Firestore: every UTC
 /// [DateTime] becomes a Firestore timestamp, everything else is passed on
 /// as it is.

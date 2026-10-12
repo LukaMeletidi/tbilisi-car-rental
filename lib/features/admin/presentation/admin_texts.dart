@@ -7,6 +7,7 @@ import 'package:tbilisi_car_rental/core/models/booking_status.dart';
 import 'package:tbilisi_car_rental/core/models/extra.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_detail.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_edit.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_new.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings_filter.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_sign_in_failure.dart';
@@ -343,6 +344,61 @@ String adminChangedElsewhereBanner(List<String> fields) {
   final names = fields.map(adminFieldName).join(', ');
   return 'This booking was changed elsewhere ($names). '
       'Saving will be refused.';
+}
+
+/// Shown instead of the address for a customer who has no e-mail (the
+/// stored value is then a placeholder; see noEmailPlaceholder).
+const adminNoEmail = 'No e-mail';
+
+const adminTotalUsesTodaysPrices = "The total uses today's prices.";
+const adminNewTotalIncomplete = 'Choose a car and the dates to see the total.';
+const adminNewTotalNoPricesLoaded =
+    'The total cannot be calculated: the prices could not be loaded.';
+const adminCheckAgain = 'Check again';
+
+/// The total line of the "new booking" form. For a total it is
+/// "Total: 5 days × ($45 car + $5 extras) = $250", with " · estimate" for
+/// more than 7 days; otherwise the reason why there is none yet.
+String adminNewBookingTotalText(AdminNewTotal total) {
+  final price = total.price;
+  switch (total.state) {
+    case AdminNewTotalState.incomplete:
+      return adminNewTotalIncomplete;
+    case AdminNewTotalState.pricesNotLoaded:
+      return adminNewTotalNoPricesLoaded;
+    case AdminNewTotalState.ready:
+    case AdminNewTotalState.tooHigh:
+      return 'Total: ${adminDays(price!.days)} × '
+          '(${adminAmount(total.carPricePerDay!)} car + '
+          '${adminAmount(total.extrasPerDay!)} extras) = '
+          '${adminAmount(price.total)}'
+          '${price.isIndividualPrice ? ' · $adminEstimate' : ''}';
+  }
+}
+
+/// What is said after an attempt to create a booking. Only "Saved" means
+/// the server confirmed it. "No answer" does not say "not saved": the
+/// booking may exist, and "Check again" finds out without creating a
+/// second one.
+String adminCreateNoticeText(AdminBookingCreateNotice notice) {
+  switch (notice) {
+    case AdminBookingCreateNotice.saved:
+      return 'Saved';
+    case AdminBookingCreateNotice.noAnswer:
+      return 'No answer from the server. Press "$adminCheckAgain": '
+          'the booking will not be created twice.';
+    case AdminBookingCreateNotice.stillUnknown:
+      return 'Still no answer from the server. Check the connection and '
+          'press "$adminCheckAgain": the booking will not be created twice.';
+    case AdminBookingCreateNotice.noConnection:
+      return 'Not saved. No connection.';
+    case AdminBookingCreateNotice.refused:
+      return 'Not saved. The booking was refused.';
+    case AdminBookingCreateNotice.carMissing:
+      return 'Not saved. This car no longer exists. Choose another car.';
+    case AdminBookingCreateNotice.unknown:
+      return 'Not saved. Please try again.';
+  }
 }
 
 /// The text for a problem of the edit form.

@@ -6,6 +6,7 @@ import 'package:tbilisi_car_rental/core/models/car.dart';
 import 'package:tbilisi_car_rental/features/admin/data/admin_bookings_repository.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_detail.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_edit.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_new.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
 
 /// Stands in for Firestore in tests of the admin bookings list. Nothing
@@ -155,6 +156,50 @@ class FakeAdminBookingsRepository implements AdminBookingsRepository {
     updates.add((id: id, base: base, changes: changes));
     if (updatePending != null) await updatePending!.future;
     if (updateError != null) throw updateError!;
+  }
+
+  /// How many IDs were handed out. They are "new-1", "new-2", ...
+  var newIds = 0;
+
+  /// Every booking that was asked to be created, in order.
+  final creates = <({String id, Booking booking})>[];
+
+  /// The IDs that "exist on the server": a create for one of them answers
+  /// "already created". A create that succeeds adds its ID.
+  final existingIds = <String>{};
+
+  /// When set, createBooking waits for it.
+  Completer<void>? createPending;
+
+  /// When set, createBooking fails with it. With [createLandsAnyway] the
+  /// booking is "created on the server" all the same, as when only the
+  /// answer got lost.
+  Object? createError;
+  var createLandsAnyway = false;
+
+  @override
+  String newBookingId() {
+    newIds += 1;
+    return 'new-$newIds';
+  }
+
+  @override
+  Future<AdminBookingCreateResult> createBooking(
+    String id,
+    Booking booking, {
+    Duration timeout = adminStatusChangeTimeout,
+  }) async {
+    creates.add((id: id, booking: booking));
+    if (createPending != null) await createPending!.future;
+    if (createError != null) {
+      if (createLandsAnyway) existingIds.add(id);
+      throw createError!;
+    }
+    if (existingIds.contains(id)) {
+      return AdminBookingCreateResult.alreadyCreated;
+    }
+    existingIds.add(id);
+    return AdminBookingCreateResult.created;
   }
 }
 
