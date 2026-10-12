@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import 'package:tbilisi_car_rental/features/admin/domain/admin_redirect.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_booking_detail_screen.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_new.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_booking_edit_screen.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/admin_booking_new_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_bookings_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_gate_screens.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_login_screen.dart';
@@ -51,6 +53,14 @@ abstract final class AppRoutes {
   static String adminBooking(String bookingId) =>
       '$admin/bookings/${Uri.encodeComponent(bookingId)}';
 
+  /// Path pattern of the "new booking" form, below [admin]. Its last part
+  /// would also pass as a booking ID, so its route must come BEFORE
+  /// [adminBookingPattern]: routes are tried in order.
+  static const adminBookingNewPattern = 'bookings/$adminNewBookingPathSegment';
+
+  /// The address of the "new booking" form: "/admin/bookings/new".
+  static const adminBookingNew = '$admin/$adminBookingNewPattern';
+
   /// Path pattern of the edit form of one booking, below its detail.
   static const adminBookingEditPattern = 'edit';
 
@@ -66,6 +76,11 @@ abstract final class AppRoutes {
 class _RouterRefresh extends ChangeNotifier {
   void sessionChanged() => notifyListeners();
 }
+
+/// Whether the booking ID of the address is the reserved word "new". No
+/// booking has that ID: it is the address of the "new booking" form.
+bool _isReservedId(GoRouterState state) =>
+    state.pathParameters['bookingId'] == adminNewBookingPathSegment;
 
 /// "/admin/login" becomes "admin/login": the pattern of a route below [home].
 String _below(String path) => path.substring(1);
@@ -124,20 +139,32 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               // the list. The redirect runs first, so only an admin ever
               // gets here. Opening this address directly also builds the
               // list underneath, which starts the list's listener.
+              // The "new booking" form. It MUST stay before the detail:
+              // "new" would match ":bookingId" too.
+              GoRoute(
+                path: AppRoutes.adminBookingNewPattern,
+                builder: (context, state) => const AdminBookingNewScreen(),
+              ),
               GoRoute(
                 path: AppRoutes.adminBookingPattern,
-                builder: (context, state) => AdminBookingDetailScreen(
-                  bookingId: state.pathParameters['bookingId']!,
-                ),
+                builder: (context, state) => _isReservedId(state)
+                    ? const AdminNotFoundScreen()
+                    : AdminBookingDetailScreen(
+                        bookingId: state.pathParameters['bookingId']!,
+                      ),
                 routes: [
                   // Below the detail, so Back returns to the detail.
                   // Opening this address directly builds the list and
                   // the detail underneath, with their listeners.
                   GoRoute(
                     path: AppRoutes.adminBookingEditPattern,
-                    builder: (context, state) => AdminBookingEditScreen(
-                      bookingId: state.pathParameters['bookingId']!,
-                    ),
+                    // "/admin/bookings/new/edit" would be the edit form
+                    // of a booking called "new"; there is none.
+                    builder: (context, state) => _isReservedId(state)
+                        ? const AdminNotFoundScreen()
+                        : AdminBookingEditScreen(
+                            bookingId: state.pathParameters['bookingId']!,
+                          ),
                   ),
                 ],
               ),

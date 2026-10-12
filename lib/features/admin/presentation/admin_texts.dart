@@ -355,6 +355,20 @@ const adminNewTotalIncomplete = 'Choose a car and the dates to see the total.';
 const adminNewTotalNoPricesLoaded =
     'The total cannot be calculated: the prices could not be loaded.';
 const adminCheckAgain = 'Check again';
+const adminChecking = 'Checking…';
+
+const adminNewBookingTitle = 'New booking';
+const adminNoEmailSwitch = 'The customer has no e-mail';
+const adminCarsLoading = 'Loading the cars…';
+const adminCarsLoadFailed = 'The cars could not be loaded.';
+
+/// Asked before the "new booking" form is left while the booking may
+/// already exist (the server did not answer the save).
+const adminLeaveTitle = 'Leave this form?';
+const adminMayExistText =
+    'The booking may already exist. Check the bookings list.';
+const adminStay = 'Stay';
+const adminLeave = 'Leave';
 
 /// The total line of the "new booking" form. For a total it is
 /// "Total: 5 days × ($45 car + $5 extras) = $250", with " · estimate" for

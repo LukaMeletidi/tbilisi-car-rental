@@ -12,6 +12,7 @@ import 'package:tbilisi_car_rental/core/router/app_router.dart';
 import 'package:tbilisi_car_rental/core/widgets/app_bar_logo.dart';
 import 'package:tbilisi_car_rental/core/widgets/app_card.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_detail.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_new.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_date_format.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_booking_detail_provider.dart';
@@ -377,7 +378,14 @@ class _CustomerContent extends StatelessWidget {
         ),
         _Field(
           label: adminLabelEmail,
-          children: [SelectableText(customer.email, style: style)],
+          children: [
+            // A customer without e-mail has a placeholder stored, which
+            // is never shown as an address.
+            if (isNoEmailPlaceholder(customer.email))
+              Text(adminNoEmail, style: style)
+            else
+              SelectableText(customer.email, style: style),
+          ],
         ),
         _Field(
           label: adminLabelLanguage,

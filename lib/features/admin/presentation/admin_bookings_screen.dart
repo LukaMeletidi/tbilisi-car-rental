@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:tbilisi_car_rental/core/router/app_router.dart';
+import 'package:tbilisi_car_rental/core/theme/app_theme.dart';
 import 'package:tbilisi_car_rental/core/widgets/app_bar_logo.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_bookings_filter_provider.dart';
@@ -75,9 +76,24 @@ class AdminBookingsScreen extends ConsumerWidget {
         ],
       ),
       body: SafeArea(child: body),
+      // Always there on this page, also for an empty list. White with
+      // purple text, like the filled buttons of the app.
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.go(AppRoutes.adminBookingNew),
+        backgroundColor: Colors.white,
+        foregroundColor: appBackgroundColor,
+        icon: const Icon(Icons.add),
+        label: const Text(adminNewBookingTitle),
+      ),
     );
   }
 }
+
+/// The room left free under the last row of the list, so that the
+/// floating "New booking" button never covers the last booking or "Load
+/// more": the height of the button (56), its distance from the edge (16)
+/// and some air.
+const adminListBottomSpace = 96.0;
 
 class _BookingsList extends ConsumerWidget {
   const _BookingsList({required this.state, required this.onLoadMore});
@@ -186,7 +202,7 @@ class _BookingsList extends ConsumerWidget {
                       ),
               ),
             ],
-            const SizedBox(height: 12),
+            const SizedBox(height: adminListBottomSpace),
           ],
         ),
       ),

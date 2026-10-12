@@ -584,6 +584,86 @@ Phase 3 decisions (the steps are in Section 18):
     store such a value.
   - Nothing is logged except the type of an unexpected error. Rules, ARB files,
     packages and indexes are unchanged.
+- Decisions of step 3.10b (the "new booking" screen):
+  - The form is at /admin/bookings/new, below the list; Back returns to the list.
+    A floating button "New booking" (white, purple text) is always on the list
+    page, also for an empty list. The list leaves room below its last row, so the
+    button never covers the last booking or "Load more".
+  - "new" would also pass as a booking ID. The route of the form therefore comes
+    BEFORE the route of the detail (routes are tried in order), and the detail and
+    the edit route show the admin "not found" page for the ID "new"
+    (/admin/bookings/new/edit).
+  - The five field cards (customer, car, dates and places, extras, notes) of the
+    edit form moved, unchanged, into one shared widget that both forms use; the
+    text controllers live there. The edit form kept its banner, its price card and
+    its Save. All tests of step 3.9b passed without a change after the move.
+  - The form: a status card (a list with the four statuses, Confirmed chosen), the
+    field cards (empty, the language English), the total, Save.
+  - "The customer has no e-mail" is a switch under the e-mail field. On: the field
+    is greyed out, keeps what was typed and shows no error; the placeholder is
+    stored. Off: the field is back with its text.
+  - The total card shows the total line of step 3.10a and "The total uses today's
+    prices."; or "Choose a car and the dates to see the total."; or "The total
+    cannot be calculated: the prices could not be loaded." (Save is then disabled).
+    It never shows the text the edit form has for a missing new total.
+  - Cars not loaded: "The cars could not be loaded." with "Try again".
+  - After "no answer from the server" every field is disabled, the message cannot
+    be hidden, and Save is replaced by "Check again" ("Checking…" while it runs).
+  - After the server confirmed the booking, the detail of the new booking opens
+    and says "Saved". For this the form leaves a one-time marker (the ID, kept in
+    memory only). The detail takes it only when it has really found the booking;
+    "not known yet" and "missing" leave it. It is forgotten when the detail of
+    that booking is left and whenever the session is not admin. The edit screen
+    keeps its own, verified way to show "Saved".
+  - A second "New booking" gives an empty form with a new document ID: the form's
+    state lives only while its page is open.
+  - Back (the arrow and the system Back): with something filled in, "Discard your
+    changes?" with "Keep editing" and "Discard". While the booking may already
+    exist, "Leave this form?" with "The booking may already exist. Check the
+    bookings list." and "Stay" / "Leave". While a save or a check runs, Back does
+    nothing. Browser Back is not intercepted (the verified limit of step 3.9b).
+  - "No e-mail" is shown instead of the placeholder in the detail. The list never
+    showed an e-mail, so it needed no change (a test checks that the placeholder
+    does not appear there). The edit form shows the placeholder as it is: it has
+    no "no e-mail" switch yet. To give such a customer an e-mail, replace the
+    placeholder in the edit form.
+  - Name, phone, e-mail, address and notes: autocorrect off, suggestions off, no
+    autofill hints, as in the edit form (it is the same widget).
+  - Extra cost of a direct link: opening #/admin/bookings/new on web builds the
+    list underneath (up to 50 bookings and all cars); the form reads all cars and
+    the two settings documents.
+  - Known limits of 3.10b:
+    - The "no answer" path (the locked form, "Check again", the stronger words on
+      Back) cannot be forced by hand; it is covered by tests only.
+    - A session that ends while the form is open closes it; the typed values are
+      lost.
+    - Deleting a booking in the app comes in step 3.11; until then a test booking
+      is deleted in the Firebase console.
+  - Checked by hand by the owner on the Android emulator and in Chrome; the
+    checklist passed:
+    - The first real createBooking ran against the deployed rules. A booking with
+      every field: 13 fields, createdBy "admin", createdAt from the server, status
+      Confirmed, the stored total equal to the total shown, the dates equal to the
+      Tbilisi time shown.
+    - A booking with "no e-mail": the placeholder is stored, the detail shows "No
+      e-mail". A pickup in the past and a hidden car save.
+    - Airplane mode: "Not saved. No connection.", and no document appeared later.
+    - Back asks; a fast double tap on Save made one document; a second "New
+      booking" gives an empty form.
+    - Chrome: /#/admin/bookings/new opens the form directly and after F5;
+      /new/edit shows the admin "not found" page; a booking created in Chrome
+      appeared on the emulator by itself.
+    - The edit screen passed its short re-check after the refactor.
+    - The "changed elsewhere" banner of the edit form shows only when a part that
+      is being written was changed elsewhere. A date edit on one device and a
+      notes change on the other is no conflict, and the other device's notes are
+      kept. This is by design and was verified. (Step 35 of the checklist was
+      worded wrongly: it needs the SAME field on both devices.)
+    - The "no answer" path stays covered by tests only.
+    - The Firebase console shows timestamps in the time zone of the browser
+      (UTC+4 here), not in UTC.
+    - The "Create Test" bookings were deleted in the console; the original three
+      test bookings stay.
 - Decisions of step 3.10a (creating a booking by hand: logic, mapping, repository
   and notifier; the screen, the route and the button come in 3.10b):
   - Fields: the customer (name, phone, WhatsApp, Telegram, e-mail), the language
@@ -1074,7 +1154,12 @@ Implementation decisions (step 2.2):
   admin_booking_new_provider_test.dart (the notifier: the ID made once, the two
   stages, "no answer" and "Check again"; no widgets), and more tests in
   booking_firestore_mapping_test.dart, booking_rules_limits_test.dart and
-  admin_booking_write_errors_test.dart.
+  admin_booking_write_errors_test.dart. Step 3.10b adds
+  admin_booking_new_screen_test.dart (the form with the real router: fields,
+  status, "no e-mail", the total, saving, "no answer", leaving, a second form,
+  the route) and admin_created_booking_provider_test.dart (the one-time "Saved"
+  marker and the detail), and more tests for the list (the button and the room
+  below) and the detail ("No e-mail").
 - Packages installed: firebase_core 4.15.0, flutter_riverpod 3.4.3, go_router 18.0.2,
   flutter_localizations (Flutter SDK), intl 0.20.2, cloud_firestore 6.10.0,
   firebase_app_check 0.4.8 (added in step 2.9a), firebase_auth 6.7.0 (added in step

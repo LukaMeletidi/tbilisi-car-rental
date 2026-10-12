@@ -233,6 +233,22 @@ void main() {
       expect(adminLoadCurrent, 'Load the current booking');
     });
 
+    test('the texts of the "new booking" form', () {
+      expect(adminNewBookingTitle, 'New booking');
+      expect(adminNoEmailSwitch, 'The customer has no e-mail');
+      expect(adminNoEmail, 'No e-mail');
+      expect(adminChecking, 'Checking…');
+      expect(adminCheckAgain, 'Check again');
+      expect(adminLeaveTitle, 'Leave this form?');
+      expect(
+        adminMayExistText,
+        'The booking may already exist. Check the bookings list.',
+      );
+      expect(adminStay, 'Stay');
+      expect(adminLeave, 'Leave');
+      expect(adminCarsLoadFailed, 'The cars could not be loaded.');
+    });
+
     test('a conflict names the parts in words', () {
       expect(
         adminSaveNoticeText(

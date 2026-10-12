@@ -11,6 +11,7 @@ import 'package:tbilisi_car_rental/features/admin/data/admin_bookings_repository
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_detail.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_session.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/admin_created_booking_provider.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_session_provider.dart';
 
 /// Where the detail of one booking stands.
@@ -129,6 +130,12 @@ class AdminBookingDetailNotifier extends Notifier<AdminBookingDetailState> {
   @override
   AdminBookingDetailState build() {
     ref.onDispose(_stopListening);
+    // When this detail is left, a marker "just created" for its booking
+    // that was never used (the booking was not found) is forgotten.
+    final created = ref.read(adminCreatedBookingProvider.notifier);
+    // Riverpod does not allow another provider to be changed inside a
+    // clean-up, so it is done right after it.
+    ref.onDispose(() => scheduleMicrotask(() => created.clearIf(bookingId)));
 
     final session = ref.watch(adminSessionProvider);
     if (session != AdminSession.admin) return const AdminBookingDetailState();
@@ -297,6 +304,12 @@ class AdminBookingDetailNotifier extends Notifier<AdminBookingDetailState> {
         );
       case AdminBookingReadState.found:
         final booking = read.booking!;
+        // The "new booking" form has just created this booking: say
+        // "Saved", once. The marker is taken only here, where the booking
+        // was really found; "not known yet" and "missing" leave it alone.
+        final justCreated = ref
+            .read(adminCreatedBookingProvider.notifier)
+            .take(bookingId);
         state = AdminBookingDetailState(
           status: AdminBookingDetailStatus.found,
           booking: booking,
@@ -305,8 +318,8 @@ class AdminBookingDetailNotifier extends Notifier<AdminBookingDetailState> {
               : const AdminCarLabel(AdminCarState.notLoaded),
           showOfflineNote: showOfflineNote,
           saving: state.saving,
-          notice: state.notice,
-          noticeFields: state.noticeFields,
+          notice: justCreated ? AdminStatusChangeNotice.saved : state.notice,
+          noticeFields: justCreated ? const [] : state.noticeFields,
         );
         if (booking.carId != _carIdAskedFor) _loadCar(booking.carId);
     }

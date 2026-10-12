@@ -13,6 +13,7 @@ import 'package:tbilisi_car_rental/core/time/clock_provider.dart';
 import 'package:tbilisi_car_rental/features/admin/data/admin_auth_repository.dart';
 import 'package:tbilisi_car_rental/features/admin/data/admin_bookings_repository.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_detail.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_new.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_session.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_booking_detail_screen.dart';
@@ -281,6 +282,37 @@ void main() {
           reason: text,
         );
       }
+    });
+
+    testWidgets('a customer without e-mail: "No e-mail" instead of the '
+        'stored placeholder, which is never shown', (tester) async {
+      await pumpScreen(tester);
+      await emit(
+        tester,
+        rawBooking(
+          'b1',
+          changes: {
+            'customer': {
+              'fullName': 'Test Person',
+              'phone': '+995555000000',
+              'whatsapp': false,
+              'telegram': false,
+              'email': noEmailPlaceholder,
+            },
+          },
+        ),
+      );
+
+      expect(find.text(adminNoEmail), findsOneWidget);
+      expect(find.text('No e-mail'), findsOneWidget);
+      expect(find.textContaining('no-email.invalid'), findsNothing);
+      // It is words, not an address to select and copy.
+      expect(find.widgetWithText(SelectableText, adminNoEmail), findsNothing);
+      // The phone stays as it is.
+      expect(
+        find.widgetWithText(SelectableText, '+995555000000'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('no messenger line when neither is chosen', (tester) async {

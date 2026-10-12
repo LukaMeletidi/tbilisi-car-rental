@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:tbilisi_car_rental/core/models/booking_status.dart';
 import 'package:tbilisi_car_rental/core/theme/app_theme.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_new.dart';
 import 'package:tbilisi_car_rental/core/time/clock_provider.dart';
 import 'package:tbilisi_car_rental/features/admin/data/admin_auth_repository.dart';
 import 'package:tbilisi_car_rental/features/admin/data/admin_bookings_repository.dart';
@@ -649,5 +650,95 @@ void main() {
       expect(namesInOrder(tester), ['Person Four']);
       expect(tester.takeException(), isNull);
     });
+  });
+
+  group('the "New booking" button', () {
+    testWidgets('is there while loading, for an empty list and for a list '
+        'with bookings', (tester) async {
+      await pumpScreen(tester);
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+      expect(find.text(adminNewBookingTitle), findsOneWidget);
+
+      await emit(tester, const []);
+      expect(find.text(adminNoBookings), findsOneWidget);
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+
+      await emit(tester, [rawBooking('a')]);
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+    });
+
+    testWidgets('is white with purple text, like the filled buttons', (
+      tester,
+    ) async {
+      await pumpScreen(tester);
+
+      final button = tester.widget<FloatingActionButton>(
+        find.byType(FloatingActionButton),
+      );
+      expect(button.backgroundColor, Colors.white);
+      expect(button.foregroundColor, appBackgroundColor);
+    });
+
+    for (final width in [800.0, 320.0]) {
+      testWidgets('at ${width.toInt()} px: scrolled to the end, "Load more" '
+          'and the last booking lie above the button', (tester) async {
+        await pumpScreen(tester, size: Size(width, 700));
+        await emit(tester, [
+          for (var i = 0; i < 50; i++)
+            rawBooking('booking-$i', fullName: 'Person $i'),
+        ]);
+
+        // Scroll the list of bookings to its very end.
+        final list = find.byType(Scrollable).first;
+        await tester.scrollUntilVisible(
+          find.text(adminLoadMore),
+          600,
+          scrollable: list,
+          maxScrolls: 200,
+        );
+        tester
+            .state<ScrollableState>(list)
+            .position
+            .jumpTo(
+              tester.state<ScrollableState>(list).position.maxScrollExtent,
+            );
+        await settle(tester);
+
+        final buttonTop = tester.getRect(find.byType(FloatingActionButton)).top;
+        final loadMore = tester.getRect(
+          find.widgetWithText(FilledButton, adminLoadMore),
+        );
+        expect(loadMore.bottom, lessThanOrEqualTo(buttonTop));
+        expect(
+          tester.getRect(find.byType(AdminBookingCard).last).bottom,
+          lessThanOrEqualTo(buttonTop),
+        );
+        expect(adminListBottomSpace, greaterThanOrEqualTo(56 + 16 + 12));
+        expect(tester.takeException(), isNull);
+      });
+    }
+  });
+
+  testWidgets('a customer without e-mail: the placeholder never appears in '
+      'the list (a row shows no e-mail at all)', (tester) async {
+    await pumpScreen(tester);
+    await emit(tester, [
+      rawBooking(
+        'a',
+        changes: {
+          'customer': {
+            'fullName': 'Test Person',
+            'phone': '+995555000000',
+            'whatsapp': false,
+            'telegram': false,
+            'email': noEmailPlaceholder,
+          },
+        },
+      ),
+    ]);
+
+    expect(find.text('Test Person'), findsOneWidget);
+    expect(find.textContaining('no-email'), findsNothing);
+    expect(find.textContaining('@'), findsNothing);
   });
 }
