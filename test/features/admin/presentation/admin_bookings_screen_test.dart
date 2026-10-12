@@ -357,7 +357,7 @@ void main() {
       rawBooking(
         'c',
         fullName: 'Someone Else',
-        phone: '+995577123456',
+        phone: '+995555770123',
         status: 'confirmed',
         pickup: DateTime.utc(2026, 9, 1, 14),
         dropoff: DateTime.utc(2026, 9, 3, 14),
@@ -474,7 +474,7 @@ void main() {
       expect(chip('Confirmed 1'), findsOneWidget);
 
       // A phone number with a space in it.
-      await search(tester, '577 12');
+      await search(tester, '577 01');
       expect(namesInOrder(tester), ['Someone Else']);
       expect(chip('All 1'), findsOneWidget);
 

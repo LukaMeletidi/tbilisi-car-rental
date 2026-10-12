@@ -49,19 +49,19 @@ void main() {
     booking(
       'giorgi',
       fullName: 'Giorgi Maisuradze',
-      phone: '+995599000111',
+      phone: '+995555000111',
       status: 'confirmed',
     ),
     booking(
       'anna',
       fullName: 'Anna NINOSHVILI',
-      phone: '+4915112345678',
+      phone: '+9955554440022',
       status: 'pending',
     ),
     booking(
       'pavle',
       fullName: 'Pavle Beridze',
-      phone: '+995577222333',
+      phone: '+995555222333',
       status: 'cancelled',
     ),
     booking(
@@ -152,7 +152,7 @@ void main() {
         'phone', () {
       expect(matchesSearch(people[0], 'nino 3456'), true);
       expect(matchesSearch(people[0], 'nino 0111'), false);
-      expect(matchesSearch(people[1], 'giorgi 599'), true);
+      expect(matchesSearch(people[1], 'giorgi 0111'), true);
     });
 
     test('Georgian and Russian names are found as typed', () {
