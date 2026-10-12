@@ -181,4 +181,69 @@ void main() {
       expect(() => Booking.fromMap('id', map), throwsFormatException);
     });
   });
+
+  group('bookingUpdateToFirestore', () {
+    test('dates become timestamps; everything else is passed on', () {
+      final map = bookingUpdateToFirestore({
+        'pickupDateTime': DateTime.utc(2026, 1, 10, 14),
+        'dropoffDateTime': DateTime.utc(2026, 1, 15, 16, 30),
+        'customer': {'fullName': 'Nino Beridze'},
+        'pickupLocation': {'id': 'other', 'text': 'Hotel in Batumi'},
+        'extras': ['childSeat'],
+        'carId': 'car-2',
+        'notes': '',
+        'totalPrice': 272.5,
+        'language': 'ka',
+      });
+
+      expect(
+        map['pickupDateTime'],
+        Timestamp.fromDate(DateTime.utc(2026, 1, 10, 14)),
+      );
+      expect(
+        map['dropoffDateTime'],
+        Timestamp.fromDate(DateTime.utc(2026, 1, 15, 16, 30)),
+      );
+      expect(map['customer'], {'fullName': 'Nino Beridze'});
+      expect(map['pickupLocation'], {'id': 'other', 'text': 'Hotel in Batumi'});
+      expect(map['extras'], ['childSeat']);
+      expect(map['carId'], 'car-2');
+      expect(map['notes'], '');
+      expect(map['totalPrice'], 272.5);
+      expect(map['language'], 'ka');
+      expect(map, hasLength(9));
+    });
+
+    test('only the given keys are in the result', () {
+      expect(bookingUpdateToFirestore({'notes': 'Late arrival'}), {
+        'notes': 'Late arrival',
+      });
+      expect(bookingUpdateToFirestore(const {}), isEmpty);
+    });
+
+    test('status, createdAt and createdBy are refused', () {
+      for (final key in ['status', 'createdAt', 'createdBy']) {
+        expect(
+          () => bookingUpdateToFirestore({'notes': '', key: 'x'}),
+          throwsArgumentError,
+          reason: key,
+        );
+      }
+    });
+
+    test('a date that is not UTC is refused', () {
+      expect(
+        () => bookingUpdateToFirestore({'pickupDateTime': DateTime(2026)}),
+        throwsArgumentError,
+      );
+    });
+
+    test('a timestamp read back is the same moment', () {
+      final moment = DateTime.utc(2026, 1, 10, 14, 0, 30);
+      final sent = bookingUpdateToFirestore({'pickupDateTime': moment});
+      final back = bookingMapFromFirestore(sent);
+
+      expect(back['pickupDateTime'], moment);
+    });
+  });
 }

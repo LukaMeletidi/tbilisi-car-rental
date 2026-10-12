@@ -7,6 +7,8 @@ import 'package:tbilisi_car_rental/core/models/booking.dart';
 import 'package:tbilisi_car_rental/core/models/booking_location.dart';
 import 'package:tbilisi_car_rental/core/models/booking_status.dart';
 import 'package:tbilisi_car_rental/core/models/extra.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_document.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_edit.dart';
 import 'package:tbilisi_car_rental/features/booking/data/booking_firestore_mapping.dart';
 import 'package:tbilisi_car_rental/features/booking/domain/booking_limits.dart';
 
@@ -129,6 +131,39 @@ void main() {
       // createdBy is optional, so it is not in the required list.
       expect(required.toSet(), sent);
       expect(required.length, sent.length);
+    });
+
+    test('the key lists of isValidAdminBooking equal the lists the app '
+        'checks a stored document against', () {
+      final allowed = ruleList('a.keys().hasOnly([');
+      final required = ruleList('a.keys().hasAll([');
+
+      expect(allowed.toSet(), adminBookingKeys.toSet());
+      expect(allowed.length, adminBookingKeys.length);
+      expect(required.toSet(), adminBookingRequiredKeys.toSet());
+      expect(required.length, adminBookingRequiredKeys.length);
+    });
+
+    test('every field an edit can send is a key the rules allow, and an '
+        'edit can send every key except status, createdAt and createdBy', () {
+      final allowed = ruleList('a.keys().hasOnly([').toSet();
+      final sent = {
+        for (final field in AdminBookingField.values) field.storedKey,
+      };
+
+      expect(allowed.containsAll(sent), true);
+      expect(allowed.difference(sent), {'status', 'createdAt', 'createdBy'});
+    });
+
+    test('the update rule keeps createdAt, which an edit never sends', () {
+      expect(
+        rules,
+        contains('request.resource.data.createdAt == resource.data.createdAt'),
+      );
+      expect(
+        AdminBookingField.values.map((field) => field.storedKey),
+        isNot(contains('createdAt')),
+      );
     });
 
     test('the admin status list equals the four Dart statuses', () {

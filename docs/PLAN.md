@@ -492,6 +492,99 @@ Phase 3 decisions (the steps are in Section 18):
   - Not stored: who changed the status and when. The rules refuse any field outside
     the fixed list (see Open reminders).
   - No customer data is logged. Rules, ARB files, packages and indexes are unchanged.
+- Decisions of step 3.9a (editing a booking: logic, repository and notifier; the
+  screen and the route come in 3.9b):
+  - Editable: the customer (name, phone, WhatsApp and Telegram, e-mail), the
+    language, the notes, the car, pickup and drop-off time and place, the extras.
+    Never written by an edit: the ID, createdAt, createdBy and the status (the
+    status keeps its own control on the detail). A booking can be edited in every
+    status, also Cancelled.
+  - Validation uses the helpers and limits of the public form. The admin may do two
+    things the public may not, as the rules allow: a pickup in the past (the form
+    will show a note) and a hidden car (marked "(hidden)"). A fixed place must be in
+    settings, except the place the booking already has: a place that was removed
+    from settings stays possible in its own field.
+  - The total. The form shows the stored total beside a new total: days x (the
+    car's price per day + the extras per day), at the CURRENT prices; the price card
+    will say so. Old prices are not stored anywhere.
+    - Car, dates and extras unchanged: no choice; the total is not sent.
+    - One of them changed and the new total differs (or cannot be calculated): the
+      admin must choose "keep the stored total" or "use the new total". Nothing is
+      chosen for them, and without a choice nothing is saved. Changing car, dates or
+      extras again removes the choice.
+    - One of them changed but the new total equals the stored one: no choice.
+    - The prices or the car cannot be loaded: only "keep the stored total".
+    - The stored total is never changed silently, also not when a price went up.
+    - Not built: a free, typed total. The rules would accept one (they only check 0
+      to 1,000,000). Possible later addition, as its own step.
+  - What is sent: only the top-level fields that changed, in one update. A nested
+    map (the customer, a place) and the list of extras are sent whole. createdAt is
+    never sent, so the rule "createdAt unchanged" holds by construction.
+  - A part the admin did not touch keeps its stored value exactly and is not sent:
+    the customer (its five inputs together), the notes, each place and each date.
+    Nothing is trimmed and the phone is not put into its plain form unless that
+    part was touched. Only a touched part is cleaned. The validation still runs on
+    the whole form.
+  - Saving uses the transaction pattern of the status change: one attempt, 20
+    seconds, nothing queued, "Saved" only after the server's answer, "No answer
+    from the server" for a timeout, and the same "Not saved" texts.
+  - Before it writes, the transaction reads the booking and the car, and stops with
+    a clear message instead of a bare "refused" when:
+    - the booking is gone;
+    - the stored document has a field the rules do not know (the field is named);
+    - the stored document has no createdAt;
+    - the car does not exist (any more);
+    - an edited part was changed elsewhere since the edit started (a conflict).
+    The rules check the WHOLE document on every update, which is why the first
+    three matter also for an edit that is itself fine.
+  - The conflict check compares, for each edited part, the value the edit started
+    from with the stored value, both normalised the same way: a date as milliseconds
+    since the epoch in UTC (Firestore keeps microseconds, a browser milliseconds),
+    a number as a double, maps and lists deeply, the extras as a set. A part the
+    admin did not edit is not compared, so a status change elsewhere is no conflict.
+    One exception: when the total is written ("use the new total"), the car, both
+    dates and the extras are compared as well, edited or not, because the new total
+    was calculated from them. With "keep the stored total" nothing extra is
+    compared. The repository and the form use the same function for this.
+    After a conflict the form offers "Keep editing" (the typed values stay readable)
+    and "Load the current booking" (the edits are dropped).
+  - While the form has no unsaved changes it follows the live read; with unsaved
+    changes it keeps its starting point, and knows which edited parts were changed
+    elsewhere.
+  - The status change of step 3.8 got the same check of the stored document: a
+    field the rules do not know, or a missing createdAt, is now said by name there
+    too. The bare "The change was refused." stays for a real refusal (for example a
+    removed admin claim) and is covered by tests only.
+  - The key list of the app (admin_booking_document.dart) is tied to the rules by a
+    test that reads firestore.rules. The rules emulator script got the updates the
+    edit sends (accepted and refused) and the five hand-made documents: 209 admin
+    and signed-in checks now.
+  - Known limits of 3.9a:
+    - A customer map or a place map with an extra key written by hand is reported
+      as a conflict of that part, not as an unknown field. The rules refuse such a
+      document anyway.
+    - A booking that is deleted while it is being edited replaces the form with
+      "does not exist"; the values the admin typed are lost.
+    - The status change of step 3.8 does not have the check for a stored value in
+      another format (next point): on such a hand-made document it still ends with
+      the bare "Not saved. The change was refused." The edit form names the part.
+  - A stored value the rules refuse, in a part that was not touched. A value
+    written by hand in the console can be readable for the app and still refused by
+    the rules, which check the whole document on every update. Checked on the
+    emulator, with an edit of another part (the language):
+    - a phone with spaces: refused;
+    - a name with a space at the end: refused;
+    - an e-mail with a space at the end: refused;
+    - the text of a place with a space at the end: refused;
+    - notes with a space at the end: accepted (the rules only limit their length).
+    For the four refused ones the validation of the edit form reports the part by
+    name while it is untouched: "The phone number is stored in a format the app
+    does not accept. Edit it to correct it." (also: The name, The e-mail address,
+    The pickup place, The drop-off place). Touching the part removes the error; a
+    touched part is cleaned and sent. Notes stay silent. The app itself cannot
+    store such a value.
+  - Nothing is logged except the type of an unexpected error. Rules, ARB files,
+    packages and indexes are unchanged.
 
 ### 3.1 Bookings list
 
@@ -830,7 +923,14 @@ Implementation decisions (step 2.2):
   statuses, when to ask, the error codes), admin_booking_detail_provider_test.dart
   (the live read, the session tie, the offline note and the status change; no
   widgets, testWidgets for the clock), admin_booking_detail_screen_test.dart, and
-  navigation tests for the detail in admin_navigation_test.dart.
+  navigation tests for the detail in admin_navigation_test.dart. Step 3.9a adds
+  admin_booking_document_test.dart (the allowed keys, unknown fields, missing
+  createdAt), admin_booking_edit_test.dart (pure: the draft, validation, the total
+  and its choice, what changed, the update map, the conflict check with
+  microseconds), admin_booking_edit_texts_test.dart (the English messages),
+  admin_booking_edit_provider_test.dart (the notifier; no widgets), and more tests
+  in booking_rules_limits_test.dart (the app's key list equals the rules' list)
+  and booking_firestore_mapping_test.dart (the update of an edit).
 - Packages installed: firebase_core 4.15.0, flutter_riverpod 3.4.3, go_router 18.0.2,
   flutter_localizations (Flutter SDK), intl 0.20.2, cloud_firestore 6.10.0,
   firebase_app_check 0.4.8 (added in step 2.9a), firebase_auth 6.7.0 (added in step
@@ -1242,7 +1342,16 @@ Phase 3: admin sign-in and the bookings list with editing (Section 11).
   - This was the first real transaction against the deployed rules, and it worked.
   - Not seen on a device: the text "No answer from the server. The status shown is
     the current one." It is covered by the tests only.
-- 3.9 Edit all fields; the recomputed total next to the stored one — not started.
+- 3.9 Edit all fields; the recomputed total next to the stored one — 3.9a done,
+  3.9b not started.
+  - 3.9a (logic, repository and notifier; no screen, no route): 1031 tests pass and
+    analyze is clean. The rules emulator script passes (104 public, 209 admin and
+    signed-in); the rules were not changed. The status change of step 3.8 now names
+    an unknown field and a missing createdAt.
+  - Not yet run against the real database: updateBooking. It is first used by the
+    screen of 3.9b and verified by eye there.
+  - 3.9b (the edit screen, its route, the Edit button, the manual checks) — not
+    started.
 - 3.10 Create a booking by hand (status confirmed, createdBy) — not started.
 - 3.11 Delete a booking, with a confirmation — not started.
 - 3.12 Verify Phase 3 and close it — not started.

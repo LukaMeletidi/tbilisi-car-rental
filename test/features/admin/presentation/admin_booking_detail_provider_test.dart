@@ -730,6 +730,70 @@ void main() {
       expect(h.bookings.statusChanges, isEmpty);
     });
 
+    testWidgets('a booking with a field the rules do not know: not saved, '
+        'and the field is named', (tester) async {
+      final h = await start(tester);
+      await h.emit(rawBooking('b1', status: 'new'));
+      h.bookings.statusChangeError = const AdminStatusChangeException(
+        AdminStatusChangeFailure.unknownFields,
+        fields: ['zzTest'],
+      );
+
+      await h.notifier.changeStatus(BookingStatus.confirmed);
+      await h.flush();
+
+      expect(h.state.saving, false);
+      expect(h.state.notice, AdminStatusChangeNotice.unknownFields);
+      expect(h.state.noticeFields, ['zzTest']);
+      expect(h.state.booking!.status, BookingStatus.newBooking);
+
+      // The names stay with the notice through a live answer...
+      await h.emit(rawBooking('b1', status: 'new'));
+      expect(h.state.noticeFields, ['zzTest']);
+
+      // ...and go with it.
+      h.notifier.dismissNotice();
+      await h.flush();
+      expect(h.state.notice, isNull);
+      expect(h.state.noticeFields, isEmpty);
+    });
+
+    testWidgets('a new attempt forgets the names of the last one', (
+      tester,
+    ) async {
+      final h = await start(tester);
+      await h.emit(rawBooking('b1', status: 'new'));
+      h.bookings.statusChangeError = const AdminStatusChangeException(
+        AdminStatusChangeFailure.unknownFields,
+        fields: ['zzTest'],
+      );
+      await h.notifier.changeStatus(BookingStatus.confirmed);
+      await h.flush();
+
+      h.bookings.statusChangeError = null;
+      await h.notifier.changeStatus(BookingStatus.confirmed);
+      await h.flush();
+
+      expect(h.state.notice, AdminStatusChangeNotice.saved);
+      expect(h.state.noticeFields, isEmpty);
+    });
+
+    testWidgets('a booking without a creation date: not saved, said so', (
+      tester,
+    ) async {
+      final h = await start(tester);
+      await h.emit(rawBooking('b1', status: 'new'));
+      h.bookings.statusChangeError = const AdminStatusChangeException(
+        AdminStatusChangeFailure.noCreatedAt,
+      );
+
+      await h.notifier.changeStatus(BookingStatus.confirmed);
+      await h.flush();
+
+      expect(h.state.notice, AdminStatusChangeNotice.noCreatedAt);
+      expect(h.state.noticeFields, isEmpty);
+    });
+
     testWidgets('the notice can be hidden', (tester) async {
       final h = await start(tester);
       await h.emit(rawBooking('b1', status: 'new'));

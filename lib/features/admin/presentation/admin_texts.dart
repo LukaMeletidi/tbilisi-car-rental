@@ -6,6 +6,7 @@ import 'package:tbilisi_car_rental/core/localization/app_language.dart';
 import 'package:tbilisi_car_rental/core/models/booking_status.dart';
 import 'package:tbilisi_car_rental/core/models/extra.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_detail.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_edit.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings_filter.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_sign_in_failure.dart';
@@ -112,7 +113,13 @@ String adminConfirmText(BookingStatus from, BookingStatus to) =>
 /// What is said after an attempt to change the status. Only "Saved" means
 /// the server confirmed it. "No answer" does not say "not saved": the change
 /// may still have arrived, and the status on screen is the stored one.
-String adminStatusNoticeText(AdminStatusChangeNotice notice) {
+///
+/// [fields] are the names of the unknown fields, for
+/// [AdminStatusChangeNotice.unknownFields].
+String adminStatusNoticeText(
+  AdminStatusChangeNotice notice, {
+  List<String> fields = const [],
+}) {
   switch (notice) {
     case AdminStatusChangeNotice.saved:
       return 'Saved';
@@ -125,8 +132,177 @@ String adminStatusNoticeText(AdminStatusChangeNotice notice) {
       return 'Not saved. The change was refused.';
     case AdminStatusChangeNotice.bookingMissing:
       return 'Not saved. This booking no longer exists.';
+    case AdminStatusChangeNotice.unknownFields:
+      return 'Not saved. ${adminUnknownFieldsText(fields)}';
+    case AdminStatusChangeNotice.noCreatedAt:
+      return 'Not saved. $adminNoCreatedAtText';
     case AdminStatusChangeNotice.unknown:
       return 'Not saved. Please try again.';
+  }
+}
+
+/// Said when the stored document has fields the Firestore rules do not
+/// know: they refuse every change of such a document. The names are
+/// shown, never the values.
+String adminUnknownFieldsText(List<String> fields) {
+  final names = fields.join(', ');
+  if (fields.isEmpty) {
+    return 'This booking has a field the app does not know. '
+        'Remove it in the Firebase console.';
+  }
+  return fields.length == 1
+      ? 'This booking has a field the app does not know: $names. '
+            'Remove it in the Firebase console.'
+      : 'This booking has fields the app does not know: $names. '
+            'Remove them in the Firebase console.';
+}
+
+/// Said when the stored document has no createdAt: the rules refuse every
+/// change of such a document.
+const adminNoCreatedAtText =
+    'This booking has no creation date and cannot be changed from the app.';
+
+/// The name of an edited part of a booking, by its stored field name, for
+/// the conflict message. An unknown name is shown as it is.
+String adminFieldName(String storedKey) {
+  for (final field in AdminBookingField.values) {
+    if (field.storedKey != storedKey) continue;
+    switch (field) {
+      case AdminBookingField.customer:
+        return 'customer';
+      case AdminBookingField.car:
+        return 'car';
+      case AdminBookingField.pickup:
+        return 'pickup time';
+      case AdminBookingField.dropoff:
+        return 'drop-off time';
+      case AdminBookingField.pickupLocation:
+        return 'pickup place';
+      case AdminBookingField.dropoffLocation:
+        return 'drop-off place';
+      case AdminBookingField.extras:
+        return 'extras';
+      case AdminBookingField.notes:
+        return 'notes';
+      case AdminBookingField.total:
+        return 'total';
+      case AdminBookingField.language:
+        return 'language';
+    }
+  }
+  return storedKey;
+}
+
+/// What is said after an attempt to save an edit. Only "Saved" means the
+/// server confirmed it. "No answer" does not say "not saved".
+///
+/// [fields] are the unknown field names for
+/// [AdminBookingSaveNotice.unknownFields], and the stored names of the
+/// parts that were changed elsewhere for [AdminBookingSaveNotice.conflict].
+String adminSaveNoticeText(
+  AdminBookingSaveNotice notice, {
+  List<String> fields = const [],
+}) {
+  switch (notice) {
+    case AdminBookingSaveNotice.saved:
+      return 'Saved';
+    case AdminBookingSaveNotice.noAnswer:
+      return 'No answer from the server. '
+          'Open the booking to see what is stored.';
+    case AdminBookingSaveNotice.noConnection:
+      return 'Not saved. No connection.';
+    case AdminBookingSaveNotice.refused:
+      return 'Not saved. The change was refused.';
+    case AdminBookingSaveNotice.bookingMissing:
+      return 'Not saved. This booking no longer exists.';
+    case AdminBookingSaveNotice.carMissing:
+      return 'Not saved. This car no longer exists. Choose another car.';
+    case AdminBookingSaveNotice.unknownFields:
+      return 'Not saved. ${adminUnknownFieldsText(fields)}';
+    case AdminBookingSaveNotice.noCreatedAt:
+      return 'Not saved. $adminNoCreatedAtText';
+    case AdminBookingSaveNotice.conflict:
+      final names = fields.map(adminFieldName).join(', ');
+      return names.isEmpty
+          ? 'This booking was changed elsewhere. '
+                'Your changes were not saved.'
+          : 'This booking was changed elsewhere ($names). '
+                'Your changes were not saved.';
+    case AdminBookingSaveNotice.unknown:
+      return 'Not saved. Please try again.';
+  }
+}
+
+/// Said for a part the admin did not touch whose stored value the
+/// Firestore rules refuse (for example a phone written by hand with
+/// spaces). [part] starts the sentence: "The phone number".
+String adminStoredFormatText(String part) =>
+    '$part is stored in a format the app does not accept. '
+    'Edit it to correct it.';
+
+/// The text for a problem of the edit form.
+String adminBookingErrorText(AdminBookingError error) {
+  switch (error) {
+    case AdminBookingError.nameRequired:
+      return 'Enter the name.';
+    case AdminBookingError.nameTooShort:
+      return 'The name is too short.';
+    case AdminBookingError.nameTooLong:
+      return 'The name is too long (100 characters at most).';
+    case AdminBookingError.phoneRequired:
+      return 'Enter the phone number.';
+    case AdminBookingError.phoneInvalid:
+      return 'Enter the phone number in international format, '
+          'for example +995 555 12 34 56.';
+    case AdminBookingError.emailRequired:
+      return 'Enter the e-mail address.';
+    case AdminBookingError.emailInvalid:
+      return 'This e-mail address is not valid.';
+    case AdminBookingError.emailTooLong:
+      return 'The e-mail address is too long.';
+    case AdminBookingError.carRequired:
+      return 'Choose a car.';
+    case AdminBookingError.carMissing:
+      return 'This car no longer exists. Choose another car.';
+    case AdminBookingError.pickupRequired:
+      return 'Choose the pickup date and time.';
+    case AdminBookingError.dropoffRequired:
+      return 'Choose the drop-off date and time.';
+    case AdminBookingError.dropoffNotAfterPickup:
+      return 'The drop-off must be after the pickup.';
+    case AdminBookingError.rentalTooLong:
+      return 'A rental can be 365 days at most.';
+    case AdminBookingError.pickupLocationRequired:
+      return 'Choose the pickup place.';
+    case AdminBookingError.dropoffLocationRequired:
+      return 'Choose the drop-off place.';
+    case AdminBookingError.pickupLocationUnknown:
+    case AdminBookingError.dropoffLocationUnknown:
+      return 'This place is not in the list. Choose another place.';
+    case AdminBookingError.pickupLocationTextRequired:
+    case AdminBookingError.dropoffLocationTextRequired:
+      return 'Enter the address.';
+    case AdminBookingError.pickupLocationTextTooLong:
+    case AdminBookingError.dropoffLocationTextTooLong:
+      return 'The address is too long (200 characters at most).';
+    case AdminBookingError.notesTooLong:
+      return 'The notes are too long (500 characters at most).';
+    case AdminBookingError.nameStoredFormat:
+      return adminStoredFormatText('The name');
+    case AdminBookingError.phoneStoredFormat:
+      return adminStoredFormatText('The phone number');
+    case AdminBookingError.emailStoredFormat:
+      return adminStoredFormatText('The e-mail address');
+    case AdminBookingError.pickupLocationStoredFormat:
+      return adminStoredFormatText('The pickup place');
+    case AdminBookingError.dropoffLocationStoredFormat:
+      return adminStoredFormatText('The drop-off place');
+    case AdminBookingError.totalChoiceRequired:
+      return 'Choose which total to save.';
+    case AdminBookingError.newTotalUnavailable:
+      return 'The new total cannot be calculated. Keep the stored total.';
+    case AdminBookingError.totalTooHigh:
+      return 'The new total is too high to be saved.';
   }
 }
 

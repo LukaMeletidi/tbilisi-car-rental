@@ -229,6 +229,43 @@ void main() {
     });
   });
 
+  test('a stored document the rules refuse on every update has its own '
+      'failures and notices', () {
+    expect(
+      noticeForFailure(AdminStatusChangeFailure.unknownFields),
+      AdminStatusChangeNotice.unknownFields,
+    );
+    expect(
+      noticeForFailure(AdminStatusChangeFailure.noCreatedAt),
+      AdminStatusChangeNotice.noCreatedAt,
+    );
+    // No Firestore code means them: they are found before the write.
+    for (final code in ['permission-denied', 'not-found', 'unknown']) {
+      expect(
+        statusChangeFailureFromCode(code),
+        isNot(AdminStatusChangeFailure.unknownFields),
+      );
+      expect(
+        statusChangeFailureFromCode(code),
+        isNot(AdminStatusChangeFailure.noCreatedAt),
+      );
+    }
+  });
+
+  test('the exception names the unknown fields, never a value', () {
+    const exception = AdminStatusChangeException(
+      AdminStatusChangeFailure.unknownFields,
+      fields: ['zzTest'],
+    );
+
+    expect(exception.fields, ['zzTest']);
+    expect(exception.toString(), 'AdminStatusChangeException(unknownFields)');
+    expect(
+      const AdminStatusChangeException(AdminStatusChangeFailure.refused).fields,
+      isEmpty,
+    );
+  });
+
   test('the wait for the server is 20 seconds', () {
     expect(adminStatusChangeTimeout, const Duration(seconds: 20));
   });

@@ -76,7 +76,9 @@ class AdminBookingDetailScreen extends ConsumerWidget {
           icon: Icons.search_off,
           text: adminBookingMissing,
           // After a change that found the booking gone.
-          detail: notice == null ? null : adminStatusNoticeText(notice),
+          detail: notice == null
+              ? null
+              : adminStatusNoticeText(notice, fields: state.noticeFields),
           action: backButton,
         );
       case AdminBookingDetailStatus.unreadable:
@@ -180,6 +182,7 @@ class _Detail extends StatelessWidget {
                 status: booking.status,
                 saving: state.saving,
                 notice: state.notice,
+                noticeFields: state.noticeFields,
                 onChange: onChange,
                 onDismissNotice: onDismissNotice,
               ),
@@ -218,6 +221,7 @@ class _StatusContent extends StatelessWidget {
     required this.status,
     required this.saving,
     required this.notice,
+    required this.noticeFields,
     required this.onChange,
     required this.onDismissNotice,
   });
@@ -225,6 +229,7 @@ class _StatusContent extends StatelessWidget {
   final BookingStatus status;
   final bool saving;
   final AdminStatusChangeNotice? notice;
+  final List<String> noticeFields;
   final ValueChanged<BookingStatus> onChange;
   final VoidCallback onDismissNotice;
 
@@ -267,7 +272,11 @@ class _StatusContent extends StatelessWidget {
         ],
         if (notice != null && !saving) ...[
           const SizedBox(height: 8),
-          _NoticeLine(notice: notice, onDismiss: onDismissNotice),
+          _NoticeLine(
+            notice: notice,
+            fields: noticeFields,
+            onDismiss: onDismissNotice,
+          ),
         ],
       ],
     );
@@ -277,9 +286,14 @@ class _StatusContent extends StatelessWidget {
 /// What happened to the last attempt, as words; the icon only supports
 /// them.
 class _NoticeLine extends StatelessWidget {
-  const _NoticeLine({required this.notice, required this.onDismiss});
+  const _NoticeLine({
+    required this.notice,
+    required this.fields,
+    required this.onDismiss,
+  });
 
   final AdminStatusChangeNotice notice;
+  final List<String> fields;
   final VoidCallback onDismiss;
 
   @override
@@ -297,6 +311,8 @@ class _NoticeLine extends StatelessWidget {
       case AdminStatusChangeNotice.noConnection:
       case AdminStatusChangeNotice.refused:
       case AdminStatusChangeNotice.bookingMissing:
+      case AdminStatusChangeNotice.unknownFields:
+      case AdminStatusChangeNotice.noCreatedAt:
       case AdminStatusChangeNotice.unknown:
         icon = Icons.error_outline;
         color = scheme.error;
@@ -306,7 +322,7 @@ class _NoticeLine extends StatelessWidget {
       children: [
         Icon(icon, size: 20, color: color),
         const SizedBox(width: 12),
-        Expanded(child: Text(adminStatusNoticeText(notice))),
+        Expanded(child: Text(adminStatusNoticeText(notice, fields: fields))),
         IconButton(
           icon: const Icon(Icons.close, size: 20),
           tooltip: adminDismissNotice,

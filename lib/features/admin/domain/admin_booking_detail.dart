@@ -116,6 +116,14 @@ enum AdminStatusChangeFailure {
   /// The booking does not exist any more.
   bookingMissing,
 
+  /// The stored document has fields the rules do not know, so the rules
+  /// refuse every change of it.
+  unknownFields,
+
+  /// The stored document has no createdAt, so the rules refuse every
+  /// change of it.
+  noCreatedAt,
+
   /// Anything else.
   unknown,
 }
@@ -135,12 +143,16 @@ AdminStatusChangeFailure statusChangeFailureFromCode(String code) {
   }
 }
 
-/// Reported when a status change was certainly not saved. It carries only
-/// the reason, never a Firestore error type.
+/// Reported when a status change was certainly not saved. It carries the
+/// reason and, for unknown fields, their names; never a value and never a
+/// Firestore error type.
 class AdminStatusChangeException implements Exception {
-  const AdminStatusChangeException(this.failure);
+  const AdminStatusChangeException(this.failure, {this.fields = const []});
 
   final AdminStatusChangeFailure failure;
+
+  /// The names of the unknown fields; empty for every other failure.
+  final List<String> fields;
 
   @override
   String toString() => 'AdminStatusChangeException(${failure.name})';
@@ -168,6 +180,8 @@ enum AdminStatusChangeNotice {
   noConnection,
   refused,
   bookingMissing,
+  unknownFields,
+  noCreatedAt,
   unknown,
 }
 
@@ -180,6 +194,10 @@ AdminStatusChangeNotice noticeForFailure(AdminStatusChangeFailure failure) {
       return AdminStatusChangeNotice.refused;
     case AdminStatusChangeFailure.bookingMissing:
       return AdminStatusChangeNotice.bookingMissing;
+    case AdminStatusChangeFailure.unknownFields:
+      return AdminStatusChangeNotice.unknownFields;
+    case AdminStatusChangeFailure.noCreatedAt:
+      return AdminStatusChangeNotice.noCreatedAt;
     case AdminStatusChangeFailure.unknown:
       return AdminStatusChangeNotice.unknown;
   }

@@ -727,6 +727,257 @@ refusedFull('createdBy empty', (b) => (b.createdBy = ''));
 refusedFull('createdBy of 101 characters', (b) => (b.createdBy = letters(101)));
 refusedFull('createdBy a number', (b) => (b.createdBy = 7));
 
+// C2. The updates the app's edit form sends (step 3.9). They mirror
+// AdminBookingChanges in lib/features/admin/domain/admin_booking_edit.dart:
+// a PARTIAL update with only the changed top-level fields; a nested map
+// (customer, a place) and the list of extras are always sent whole; status,
+// createdAt and createdBy are never sent.
+
+// Puts a document into the emulator exactly as given (admin bypass).
+async function seedRaw(data) {
+  nextSeed += 1;
+  const id = `seeded${nextSeed}`;
+  await seed(`bookings/${id}`, data);
+  return id;
+}
+
+const sameCreatedAt = (fields) =>
+  new Date(fields.createdAt.timestampValue).getTime() === SEEDED_AT.getTime();
+
+// Accepted, and afterwards the stored document still has its 12 fields,
+// its createdAt and its status, and [isRight] holds.
+function acceptedEdit(name, values, isRight = () => true, options = {}) {
+  const status = options.status ?? 'new';
+  signedIn(`admin edit: ${name}`, 200, async () => {
+    const id = await seedBooking((b) => {
+      b.status = status;
+      options.change?.(b);
+    });
+    const result = await updatePartial(id, values, ADMIN);
+    return andStored(
+      result,
+      id,
+      (fields) =>
+        Object.keys(fields).length === 12 &&
+        sameCreatedAt(fields) &&
+        fields.status.stringValue === status &&
+        isRight(fields),
+    );
+  });
+}
+
+function refusedEdit(name, values, change = () => {}, headers = ADMIN) {
+  signedIn(`admin edit refused: ${name}`, 403, async () => {
+    const id = await seedBooking(change);
+    return updatePartial(id, values, headers);
+  });
+}
+
+const editedCustomer = {
+  fullName: 'Giorgi Maisuradze',
+  phone: '+995555654321',
+  whatsapp: false,
+  telegram: true,
+  email: 'giorgi@example.com',
+};
+const mapOf = (field) => field.mapValue.fields;
+
+acceptedEdit(
+  'the customer, sent whole',
+  { customer: editedCustomer },
+  (f) =>
+    mapOf(f.customer).fullName.stringValue === 'Giorgi Maisuradze' &&
+    mapOf(f.customer).telegram.booleanValue === true &&
+    Object.keys(mapOf(f.customer)).length === 5,
+);
+acceptedEdit(
+  'the pickup place, a fixed place replaced by a free text',
+  { pickupLocation: { id: 'other', text: 'Hotel in Batumi' } },
+  (f) => mapOf(f.pickupLocation).text.stringValue === 'Hotel in Batumi',
+);
+acceptedEdit(
+  'the drop-off place, a free text replaced by a fixed place',
+  { dropoffLocation: { id: 'tbilisiAirport' } },
+  (f) =>
+    mapOf(f.dropoffLocation).id.stringValue === 'tbilisiAirport' &&
+    Object.keys(mapOf(f.dropoffLocation)).length === 1,
+  { change: (b) => (b.dropoffLocation = { id: 'other', text: 'A hotel' }) },
+);
+acceptedEdit(
+  'the extras, sent as the whole list',
+  { extras: ['snowChains', 'boosterSeat'] },
+  (f) => f.extras.arrayValue.values.length === 2,
+);
+acceptedEdit(
+  'the extras, emptied',
+  { extras: [] },
+  (f) => (f.extras.arrayValue.values ?? []).length === 0,
+);
+acceptedEdit(
+  'the notes, emptied',
+  { notes: '' },
+  (f) => f.notes.stringValue === '',
+);
+acceptedEdit(
+  'the language',
+  { language: 'ka' },
+  (f) => f.language.stringValue === 'ka',
+);
+acceptedEdit(
+  'the car, changed to a hidden car',
+  { carId: INACTIVE_CAR },
+  (f) => f.carId.stringValue === INACTIVE_CAR,
+);
+acceptedEdit(
+  'the car and the new total together',
+  { carId: INACTIVE_CAR, totalPrice: 600 },
+  (f) =>
+    f.carId.stringValue === INACTIVE_CAR && f.totalPrice.integerValue === '600',
+);
+acceptedEdit(
+  'the total alone, with cents',
+  { totalPrice: 360.5 },
+  (f) => f.totalPrice.doubleValue === 360.5,
+);
+acceptedEdit(
+  'both dates, a pickup in the past',
+  {
+    pickupDateTime: new Date(now - 10 * DAY),
+    dropoffDateTime: new Date(now - 5 * DAY),
+  },
+  (f) => new Date(f.pickupDateTime.timestampValue).getTime() < now,
+);
+acceptedEdit(
+  'the drop-off alone, moved later',
+  { dropoffDateTime: after(pickup, 9 * DAY) },
+  (f) =>
+    new Date(f.dropoffDateTime.timestampValue).getTime() ===
+    after(pickup, 9 * DAY).getTime(),
+);
+acceptedEdit(
+  'every field an edit can send, at once',
+  {
+    customer: editedCustomer,
+    carId: INACTIVE_CAR,
+    pickupDateTime: new Date(now - 3 * DAY),
+    dropoffDateTime: new Date(now + 4 * DAY),
+    pickupLocation: { id: 'other', text: 'Hotel in Batumi' },
+    dropoffLocation: { id: 'tbilisiAirport' },
+    extras: ['infantSeat'],
+    notes: 'Changed by the admin',
+    totalPrice: 840,
+    language: 'en',
+  },
+  (f) =>
+    f.notes.stringValue === 'Changed by the admin' &&
+    f.language.stringValue === 'en',
+);
+acceptedEdit(
+  'a confirmed booking: the status is not sent and stays',
+  { notes: 'Changed by the admin' },
+  (f) => f.notes.stringValue === 'Changed by the admin',
+  { status: 'confirmed' },
+);
+acceptedEdit(
+  'a cancelled booking can be edited too',
+  { language: 'en' },
+  () => true,
+  { status: 'cancelled' },
+);
+
+// Refused. The first two are why the app checks the stored document before
+// it writes: the rules look at the WHOLE document, so these refuse an edit
+// that is itself fine.
+refusedEdit(
+  'the stored document has an unknown field, only the notes are sent',
+  { notes: 'Changed by the admin' },
+  (b) => (b.zzTest = true),
+);
+signedIn(
+  'admin edit refused: the stored document has no createdAt',
+  403,
+  async () => {
+    const id = await seedRaw(validBooking());
+    return updatePartial(id, { notes: 'Changed by the admin' }, ADMIN);
+  },
+);
+signedIn(
+  'admin status change refused: the stored document has an unknown field',
+  403,
+  async () => {
+    const id = await seedBooking((b) => (b.zzTest = true));
+    return updatePartial(id, { status: 'confirmed' }, ADMIN);
+  },
+);
+// A hand-made document (written in the console, not by the app) with a
+// value that is not in the app's clean form, and an edit of ANOTHER part.
+// The rules look at the whole document, so four of these refuse the edit;
+// the app says so by name before it writes (storedFormatErrors in
+// admin_booking_edit.dart). Notes are not checked for spaces by the rules.
+refusedEdit(
+  'hand-made: the stored phone has spaces, only the language is sent',
+  { language: 'en' },
+  (b) => (b.customer.phone = '+995 555 12-34-56'),
+);
+refusedEdit(
+  'hand-made: the stored name ends with a space, only the language is sent',
+  { language: 'en' },
+  (b) => (b.customer.fullName = 'Nino Beridze '),
+);
+refusedEdit(
+  'hand-made: the stored e-mail ends with a space, only the language is sent',
+  { language: 'en' },
+  (b) => (b.customer.email = 'nino@example.com '),
+);
+refusedEdit(
+  'hand-made: a stored place text ends with a space, only the language is sent',
+  { language: 'en' },
+  (b) => (b.pickupLocation = { id: 'other', text: 'Hotel in Batumi ' }),
+);
+acceptedEdit(
+  'hand-made: the stored notes end with a space, only the language is sent',
+  { language: 'en' },
+  (f) => f.notes.stringValue === 'Late arrival ',
+  { change: (b) => (b.notes = 'Late arrival ') },
+);
+refusedEdit('a car that does not exist', { carId: 'noSuchCar' });
+refusedEdit('createdAt sent along and changed', {
+  notes: 'Changed by the admin',
+  createdAt: new Date(now - HOUR),
+});
+refusedEdit('an unknown field sent along', {
+  notes: 'Changed by the admin',
+  updatedAt: new Date(now),
+});
+refusedEdit('the customer sent without the e-mail', {
+  customer: {
+    fullName: 'Giorgi Maisuradze',
+    phone: '+995555654321',
+    whatsapp: false,
+    telegram: true,
+  },
+});
+refusedEdit('a fixed place sent with a text', {
+  pickupLocation: { id: 'tbilisiAirport', text: 'Arrivals' },
+});
+refusedEdit('the drop-off alone, moved before the stored pickup', {
+  dropoffDateTime: after(pickup, -HOUR),
+});
+refusedEdit('the drop-off alone, 365 days and one minute', {
+  dropoffDateTime: after(pickup, 365 * DAY + MINUTE),
+});
+refusedEdit('the same extra twice', { extras: ['childSeat', 'childSeat'] });
+refusedEdit('a total above the maximum', { totalPrice: 1000000.01 });
+refusedEdit('a negative total', { totalPrice: -0.01 });
+refusedEdit('notes of 501 characters', { notes: letters(501) });
+refusedEdit(
+  'signed in without the claim',
+  { notes: 'Changed' },
+  () => {},
+  NO_CLAIM,
+);
+refusedEdit('no sign-in', { notes: 'Changed' }, () => {}, {});
+
 // D. Admin creates.
 for (const status of ['new', 'pending', 'confirmed', 'cancelled']) {
   signedIn(`admin create: status "${status}" with createdBy`, 200, () =>

@@ -45,6 +45,7 @@ class AdminBookingDetailState {
     this.failure,
     this.saving = false,
     this.notice,
+    this.noticeFields = const [],
   });
 
   final AdminBookingDetailStatus status;
@@ -72,13 +73,18 @@ class AdminBookingDetailState {
   /// What to tell the admin about the last attempt to change the status.
   final AdminStatusChangeNotice? notice;
 
-  /// A copy with other values. [notice] is always set anew: leaving it out
-  /// removes the notice.
+  /// For [AdminStatusChangeNotice.unknownFields]: the names of the fields
+  /// the app does not know. Names only, never values.
+  final List<String> noticeFields;
+
+  /// A copy with other values. [notice] and [noticeFields] are always set
+  /// anew: leaving them out removes the notice.
   AdminBookingDetailState copyWith({
     AdminCarLabel? car,
     bool? showOfflineNote,
     bool? saving,
     AdminStatusChangeNotice? notice,
+    List<String> noticeFields = const [],
   }) {
     return AdminBookingDetailState(
       status: status,
@@ -89,6 +95,7 @@ class AdminBookingDetailState {
       failure: failure,
       saving: saving ?? this.saving,
       notice: notice,
+      noticeFields: noticeFields,
     );
   }
 }
@@ -184,6 +191,7 @@ class AdminBookingDetailNotifier extends Notifier<AdminBookingDetailState> {
 
     // Stage 2: write, and wait for the server's answer.
     AdminStatusChangeNotice notice;
+    var noticeFields = const <String>[];
     try {
       await ref
           .read(adminBookingsRepositoryProvider)
@@ -193,6 +201,7 @@ class AdminBookingDetailNotifier extends Notifier<AdminBookingDetailState> {
       notice = AdminStatusChangeNotice.noAnswer;
     } on AdminStatusChangeException catch (error) {
       notice = noticeForFailure(error.failure);
+      noticeFields = error.fields;
     } catch (error) {
       developer.log(
         'A status change failed with an error of type ${error.runtimeType}',
@@ -202,7 +211,11 @@ class AdminBookingDetailNotifier extends Notifier<AdminBookingDetailState> {
       notice = AdminStatusChangeNotice.unknown;
     }
     if (!ref.mounted || !_isAdmin) return;
-    state = state.copyWith(saving: false, notice: notice);
+    state = state.copyWith(
+      saving: false,
+      notice: notice,
+      noticeFields: noticeFields,
+    );
   }
 
   /// Stage 1 of a status change. Returns true when the change may go ahead.
@@ -263,6 +276,7 @@ class AdminBookingDetailNotifier extends Notifier<AdminBookingDetailState> {
         state = AdminBookingDetailState(
           status: AdminBookingDetailStatus.missing,
           notice: state.notice,
+          noticeFields: state.noticeFields,
         );
       case AdminBookingReadState.unreadable:
         _logUnreadable(read.reason);
@@ -281,6 +295,7 @@ class AdminBookingDetailNotifier extends Notifier<AdminBookingDetailState> {
           showOfflineNote: showOfflineNote,
           saving: state.saving,
           notice: state.notice,
+          noticeFields: state.noticeFields,
         );
         if (booking.carId != _carIdAskedFor) _loadCar(booking.carId);
     }
@@ -297,6 +312,7 @@ class AdminBookingDetailNotifier extends Notifier<AdminBookingDetailState> {
         showOfflineNote: stillFromCache,
         saving: state.saving,
         notice: state.notice,
+        noticeFields: state.noticeFields,
       );
     } else if (state.status == AdminBookingDetailStatus.loading &&
         stillFromCache) {
@@ -344,6 +360,7 @@ class AdminBookingDetailNotifier extends Notifier<AdminBookingDetailState> {
       car: adminCarLabel(carId, {carId: ?car}),
       saving: state.saving,
       notice: state.notice,
+      noticeFields: state.noticeFields,
     );
   }
 

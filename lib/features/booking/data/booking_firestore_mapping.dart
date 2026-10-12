@@ -32,6 +32,32 @@ Map<String, dynamic> newBookingDocument(Booking booking) {
   };
 }
 
+/// The fields an admin's edit sends, ready for Firestore: every UTC
+/// [DateTime] becomes a Firestore timestamp, everything else is passed on
+/// as it is.
+///
+/// Throws an [ArgumentError] when [values] holds status, createdAt or
+/// createdBy (an edit never writes them; createdAt must stay as stored,
+/// or the rules refuse), or a date that is not UTC.
+Map<String, dynamic> bookingUpdateToFirestore(Map<String, dynamic> values) {
+  for (final key in const ['status', 'createdAt', 'createdBy']) {
+    if (values.containsKey(key)) {
+      throw ArgumentError.value(key, 'values', 'an edit must not write');
+    }
+  }
+  return {
+    for (final entry in values.entries) entry.key: _toFirestore(entry.value),
+  };
+}
+
+Object? _toFirestore(Object? value) {
+  if (value is! DateTime) return value;
+  if (!value.isUtc) {
+    throw ArgumentError.value(value, 'values', 'a date must be UTC');
+  }
+  return Timestamp.fromDate(value);
+}
+
 /// The fields of a stored booking with their Firestore timestamps turned
 /// into UTC [DateTime] values, ready for Booking.fromMap.
 ///

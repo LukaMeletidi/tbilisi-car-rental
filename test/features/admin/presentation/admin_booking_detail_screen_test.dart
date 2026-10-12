@@ -634,6 +634,46 @@ void main() {
       expect(chipWord(tester), 'Confirmed');
     });
 
+    testWidgets('a field the rules do not know: the message names it and '
+        'says what to do, instead of a bare "refused"', (tester) async {
+      await pumpScreen(tester);
+      await emit(tester, rawBooking('b1', status: 'new'));
+      bookings.statusChangeError = const AdminStatusChangeException(
+        AdminStatusChangeFailure.unknownFields,
+        fields: ['zzTest'],
+      );
+
+      await tapChange(tester, BookingStatus.confirmed);
+
+      expect(
+        find.text(
+          'Not saved. This booking has a field the app does not know: '
+          'zzTest. Remove it in the Firebase console.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('refused'), findsNothing);
+      expect(chipWord(tester), 'New');
+    });
+
+    testWidgets('no creation date: the message says so', (tester) async {
+      await pumpScreen(tester);
+      await emit(tester, rawBooking('b1', status: 'new'));
+      bookings.statusChangeError = const AdminStatusChangeException(
+        AdminStatusChangeFailure.noCreatedAt,
+      );
+
+      await tapChange(tester, BookingStatus.confirmed);
+
+      expect(
+        find.text(
+          'Not saved. This booking has no creation date and cannot be '
+          'changed from the app.',
+        ),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('the message can be hidden', (tester) async {
       await pumpScreen(tester);
       await emit(tester, rawBooking('b1', status: 'new'));
@@ -666,7 +706,7 @@ void main() {
     });
   });
 
-  test('the texts after a change: one "Saved", four "Not saved", and "no '
+  test('the texts after a change: one "Saved", six "Not saved", and "no '
       'answer" is neither', () {
     final all = {
       for (final notice in AdminStatusChangeNotice.values)
@@ -680,7 +720,7 @@ void main() {
     expect(all[AdminStatusChangeNotice.saved], 'Saved');
     expect(
       all.values.where((text) => text.startsWith('Not saved.')),
-      hasLength(4),
+      hasLength(6),
     );
     expect(all[AdminStatusChangeNotice.noAnswer], isNot(contains('Not saved')));
   });

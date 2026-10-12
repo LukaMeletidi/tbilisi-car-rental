@@ -4,9 +4,12 @@ import 'dart:developer' as developer;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:tbilisi_car_rental/core/models/booking.dart';
 import 'package:tbilisi_car_rental/core/models/booking_status.dart';
 import 'package:tbilisi_car_rental/core/models/car.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_detail.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_document.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_edit.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
 import 'package:tbilisi_car_rental/features/booking/data/booking_firestore_mapping.dart';
 import 'package:tbilisi_car_rental/features/catalog/data/car_parsing.dart';
@@ -135,6 +138,11 @@ class AdminBookingsRepository {
   /// from an admin; any other field (for example an "updatedAt") would be
   /// refused by them.
   ///
+  /// The rules check the whole document on every update. A stored document
+  /// with a field they do not know, or without createdAt, would be refused
+  /// with a bare "permission denied"; the transaction finds that first and
+  /// reports it by name.
+  ///
   /// It runs in a transaction, tried once. A transaction is never kept in
   /// the offline queue and never changes the saved copy first: without a
   /// connection it fails instead of being sent later. The transaction
@@ -150,15 +158,16 @@ class AdminBookingsRepository {
     Duration timeout = adminStatusChangeTimeout,
   }) async {
     final document = _firestore.collection('bookings').doc(id);
-    final bool found;
+    final _Refusal? refusal;
     try {
-      found = await _firestore
-          .runTransaction<bool>(
+      refusal = await _firestore
+          .runTransaction<_Refusal?>(
             (transaction) async {
               final snapshot = await transaction.get(document);
-              if (!snapshot.exists) return false;
+              final stored = _readStored(snapshot.data());
+              if (stored.refusal != null) return stored.refusal;
               transaction.update(document, {'status': status.storedName});
-              return true;
+              return null;
             },
             timeout: timeout,
             maxAttempts: 1,
@@ -171,12 +180,166 @@ class AdminBookingsRepository {
     } catch (error, stackTrace) {
       Error.throwWithStackTrace(mapStatusChangeError(error), stackTrace);
     }
-    if (!found) {
-      throw const AdminStatusChangeException(
-        AdminStatusChangeFailure.bookingMissing,
+    if (refusal != null) {
+      throw AdminStatusChangeException(
+        _statusFailure(refusal.failure),
+        fields: refusal.fields,
       );
     }
   }
+
+  /// Saves an edit of the booking [id] and returns once the server has
+  /// confirmed it.
+  ///
+  /// Only the changed top-level fields are written ([changes]); status,
+  /// createdAt and createdBy are never among them, so createdAt stays as
+  /// stored, which the rules require.
+  ///
+  /// It runs in a transaction, tried once, like [changeStatus]: nothing is
+  /// kept in the offline queue. Before it writes, the transaction
+  /// - reads the booking: a deleted one is noticed;
+  /// - checks the stored document for what the rules refuse on every
+  ///   update (unknown fields, no createdAt);
+  /// - compares every edited part with the value the edit started from
+  ///   ([base]): when it was changed elsewhere meanwhile, nothing is
+  ///   written;
+  /// - reads the car the booking will have: it must exist (it may be
+  ///   hidden), as the rules require.
+  ///
+  /// Throws an [AdminBookingSaveException] when the edit was certainly not
+  /// saved, and an [AdminBookingSaveNoAnswer] when the server did not
+  /// answer within [timeout]; then the change may still have arrived.
+  Future<void> updateBooking(
+    String id, {
+    required Booking base,
+    required AdminBookingChanges changes,
+    Duration timeout = adminStatusChangeTimeout,
+  }) async {
+    if (changes.isEmpty) {
+      throw ArgumentError.value(changes, 'changes', 'nothing changed');
+    }
+    final document = _firestore.collection('bookings').doc(id);
+    final update = bookingUpdateToFirestore(changes.values);
+    final _Refusal? refusal;
+    try {
+      refusal = await _firestore
+          .runTransaction<_Refusal?>(
+            (transaction) async {
+              final snapshot = await transaction.get(document);
+              final stored = _readStored(snapshot.data());
+              if (stored.refusal != null) return stored.refusal;
+              final current = stored.data!;
+
+              final conflicts = conflictingFields(
+                base: base,
+                current: current,
+                edited: changes.fields,
+              );
+              if (conflicts.isNotEmpty) {
+                return _Refusal(AdminBookingSaveFailure.conflict, [
+                  for (final field in conflicts) field.storedKey,
+                ]);
+              }
+
+              // The car the booking has after the write. The rules allow
+              // the same characters in its ID as in a booking ID.
+              final carId = changes.values['carId'] ?? current['carId'];
+              if (carId is! String || !isPlausibleBookingId(carId)) {
+                return const _Refusal(AdminBookingSaveFailure.carMissing);
+              }
+              final car = await transaction.get(
+                _firestore.collection('cars').doc(carId),
+              );
+              if (!car.exists) {
+                return const _Refusal(AdminBookingSaveFailure.carMissing);
+              }
+
+              transaction.update(document, update);
+              return null;
+            },
+            timeout: timeout,
+            maxAttempts: 1,
+          )
+          .timeout(timeout);
+    } on TimeoutException {
+      throw const AdminBookingSaveNoAnswer();
+    } catch (error, stackTrace) {
+      Error.throwWithStackTrace(mapBookingSaveError(error), stackTrace);
+    }
+    if (refusal != null) {
+      throw AdminBookingSaveException(refusal.failure, fields: refusal.fields);
+    }
+  }
+}
+
+/// Why a transaction did not write, decided before the write.
+class _Refusal {
+  const _Refusal(this.failure, [this.fields = const []]);
+
+  final AdminBookingSaveFailure failure;
+  final List<String> fields;
+}
+
+/// The stored document with its dates as UTC DateTime values, or why it
+/// cannot be written to: it is gone, or the rules would refuse any update
+/// of it.
+({Map<String, dynamic>? data, _Refusal? refusal}) _readStored(
+  Map<String, dynamic>? raw,
+) {
+  if (raw == null) {
+    return (
+      data: null,
+      refusal: const _Refusal(AdminBookingSaveFailure.bookingMissing),
+    );
+  }
+  final data = bookingMapFromFirestore(raw);
+  final problem = bookingDocumentProblem(data);
+  if (problem == null) return (data: data, refusal: null);
+  switch (problem.kind) {
+    case AdminDocumentProblemKind.unknownFields:
+      return (
+        data: null,
+        refusal: _Refusal(
+          AdminBookingSaveFailure.unknownFields,
+          problem.fields,
+        ),
+      );
+    case AdminDocumentProblemKind.noCreatedAt:
+      return (
+        data: null,
+        refusal: const _Refusal(AdminBookingSaveFailure.noCreatedAt),
+      );
+  }
+}
+
+AdminStatusChangeFailure _statusFailure(AdminBookingSaveFailure failure) {
+  switch (failure) {
+    case AdminBookingSaveFailure.bookingMissing:
+      return AdminStatusChangeFailure.bookingMissing;
+    case AdminBookingSaveFailure.unknownFields:
+      return AdminStatusChangeFailure.unknownFields;
+    case AdminBookingSaveFailure.noCreatedAt:
+      return AdminStatusChangeFailure.noCreatedAt;
+    case AdminBookingSaveFailure.noConnection:
+      return AdminStatusChangeFailure.noConnection;
+    case AdminBookingSaveFailure.refused:
+      return AdminStatusChangeFailure.refused;
+    case AdminBookingSaveFailure.carMissing:
+    case AdminBookingSaveFailure.conflict:
+    case AdminBookingSaveFailure.unknown:
+      return AdminStatusChangeFailure.unknown;
+  }
+}
+
+/// Turns an error of saving an edit into an [AdminBookingSaveException]
+/// with its reason; the same mapping of Firestore codes as for a status
+/// change. Screens never see a Firestore error type.
+AdminBookingSaveException mapBookingSaveError(Object error) {
+  if (error is AdminBookingSaveException) return error;
+  if (error is FirebaseException) {
+    return AdminBookingSaveException(saveFailureFromCode(error.code));
+  }
+  return const AdminBookingSaveException(AdminBookingSaveFailure.unknown);
 }
 
 /// Turns an error of the status change into an [AdminStatusChangeException]

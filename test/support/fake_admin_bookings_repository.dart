@@ -1,9 +1,11 @@
 import 'dart:async';
 
+import 'package:tbilisi_car_rental/core/models/booking.dart';
 import 'package:tbilisi_car_rental/core/models/booking_status.dart';
 import 'package:tbilisi_car_rental/core/models/car.dart';
 import 'package:tbilisi_car_rental/features/admin/data/admin_bookings_repository.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_detail.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_edit.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
 
 /// Stands in for Firestore in tests of the admin bookings list. Nothing
@@ -122,6 +124,27 @@ class FakeAdminBookingsRepository implements AdminBookingsRepository {
     statusChanges.add((id: id, status: status));
     if (statusChangePending != null) await statusChangePending!.future;
     if (statusChangeError != null) throw statusChangeError!;
+  }
+
+  /// Every edit that was asked to be saved, in order.
+  final updates = <({String id, Booking base, AdminBookingChanges changes})>[];
+
+  /// When set, updateBooking waits for it.
+  Completer<void>? updatePending;
+
+  /// When set, updateBooking fails with it.
+  Object? updateError;
+
+  @override
+  Future<void> updateBooking(
+    String id, {
+    required Booking base,
+    required AdminBookingChanges changes,
+    Duration timeout = adminStatusChangeTimeout,
+  }) async {
+    updates.add((id: id, base: base, changes: changes));
+    if (updatePending != null) await updatePending!.future;
+    if (updateError != null) throw updateError!;
   }
 }
 
