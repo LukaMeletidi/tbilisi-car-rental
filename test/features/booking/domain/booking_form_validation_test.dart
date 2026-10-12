@@ -196,7 +196,7 @@ void main() {
 
     test('accepts usual addresses, also with spaces around them', () {
       expect(validate(input(email: 'nino@example.com')), isEmpty);
-      expect(validate(input(email: '  n.b+cars@mail.example.ge ')), isEmpty);
+      expect(validate(input(email: '  n.b+cars@mail.example.com ')), isEmpty);
     });
 
     test('254 characters are fine; 255 are too long', () {

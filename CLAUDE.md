@@ -64,6 +64,12 @@ intl + flutter_localizations (ka, ru, en). No Drift.
 - Run web (admin panel): `flutter run -d chrome`
 - Analyze: `flutter analyze`
 - Test: `flutter test`
+- Secrets scan, before every commit: `node tool/check_secrets.mjs`
+  (everything git would commit) and `node tool/check_secrets.mjs --staged`
+  (only what is staged). It must end with "Errors: 0".
+- Tests of the secrets scan: `node --test tool/check_secrets.test.mjs`
+- Optional and local only: `tool/private_denylist.txt` (git ignores it) lists
+  texts the scan must never find, one per line. Never print, paste or commit it.
 
 ## Platforms
 The public app is mobile-first: Android is the primary target and the main test platform

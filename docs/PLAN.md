@@ -584,6 +584,66 @@ Phase 3 decisions (the steps are in Section 18):
     store such a value.
   - Nothing is logged except the type of an unexpected error. Rules, ARB files,
     packages and indexes are unchanged.
+- Decisions of step 3.12a (the secrets scan, tool/check_secrets.mjs):
+  - A plain Node script without packages. It only reads: it never changes a file
+    and never contacts a network. It is run before every commit:
+    "node tool/check_secrets.mjs" checks every tracked file and every new file
+    that is not ignored; with "--staged" it checks only what is staged, read as it
+    is staged (not the working copy).
+  - Errors (the script ends with exit code 1): a private key block; the marks of a
+    service account key file; a Google API key outside the two allowed Firebase
+    configuration files; a password, token or secret written as a value; a file
+    that must not be in the repository at all (.env, key.properties, a keystore, a
+    service account key file); an e-mail address that is not on the allow list;
+    something shaped like an App Check debug token; a text of the local deny list.
+  - Allowed e-mail addresses: only addresses that can never be real. These are the
+    domains reserved for examples, example.com, example.net and example.org with
+    their sub-domains, and every domain whose last label is "example", "invalid",
+    "test" or "localhost" (RFC 2606 and RFC 6761); plus two exact addresses, the
+    "no e-mail" placeholder and the address of the commit trailer. The whole
+    domain is checked from its end, so "example.com.evil.org" or "notexample.org"
+    is not allowed. Test data therefore uses these domains only.
+  - The API key exemption is narrow: in lib/firebase_options.dart and
+    android/app/google-services.json only a value that is the API key itself is
+    let through. Any other password-like value in these two files is an error.
+  - The local deny list, tool/private_denylist.txt, is optional. It is for the
+    texts that must never appear in the repository: the admin's UID and e-mail
+    address and any real name, phone number or address. The owner fills it by hand
+    on this machine; nobody pastes its content anywhere, and the script never
+    prints it. Each line is an exact text (empty lines and lines starting with #
+    are skipped), compared without regard to the case of letters; a hit is the
+    error "denylist-match". A line of fewer than 4 characters is not used and is
+    reported as a warning with its line number only. The file is listed in
+    .gitignore; if git does not ignore it, or tracks it, that is the error
+    "denylist-not-ignored" and the list is not used. The list itself is never
+    scanned.
+  - Warnings (exit code 0): a phone number that is not a made-up 555 number, and a
+    quoted text shaped like a Firestore document ID or an account UID. They are
+    warnings only because they have too many false alarms: validation tests need
+    other made-up numbers, and many harmless texts have 20 or 28 characters. They
+    are still printed and must be looked at.
+  - The first run found four sample phone numbers of the search tests of step 3.7
+    that had the shape of real mobile numbers. They were replaced by made-up 555
+    numbers. The six phone warnings that remain are the intentionally invalid
+    values of validation tests (a leading zero, too many digits, the upper limit).
+  - A found value is never printed, not even in part: the output has the file, the
+    line, the name of the rule and the length of the value.
+  - Not looked into: build folders, node_modules, lock files, the generated
+    localisation files and binary files. A forbidden file NAME is reported also
+    there.
+  - Its tests (tool/check_secrets.test.mjs, run with "node --test") build every
+    sample at run time, so neither file holds anything the scan reports.
+  - Known limits:
+    - It reads files, not the git history: a secret that was committed once and
+      removed later is not found.
+    - A password that is not in quotes (password=abc in an ordinary file) is not
+      caught. A .env file is caught by its name.
+    - A value that starts with "made-up", "fake", "example", "test", "dummy" or
+      "placeholder" is not reported as a password.
+    - Every UUID counts as a possible App Check debug token, so a legitimate UUID
+      would stop the scan until it is looked at.
+    - It knows a fixed list of shapes and cannot find every secret; it does not
+      replace reading a change before it is committed.
 - Decisions of step 3.11 (deleting a booking):
   - The action is only on the detail, at the very end of the page under the
     booking ID: a red text button "Delete this booking" in a white card. It is not

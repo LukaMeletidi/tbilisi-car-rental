@@ -63,3 +63,7 @@ serviceAccount*.json
 key.properties
 .env
 .env.*
+
+# The optional local deny list of tool/check_secrets.mjs: texts that must
+# never appear in the repository. It stays on this machine only.
+tool/private_denylist.txt
