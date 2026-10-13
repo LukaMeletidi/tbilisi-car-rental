@@ -1,3 +1,4 @@
+import 'package:tbilisi_car_rental/core/data/server_answer.dart';
 import 'package:tbilisi_car_rental/core/models/booking.dart';
 import 'package:tbilisi_car_rental/core/models/car.dart';
 import 'package:tbilisi_car_rental/features/catalog/domain/car_display.dart';
@@ -132,7 +133,11 @@ enum AdminBookingsFailure {
   /// admin.
   permissionDenied,
 
-  /// Anything else, for example no connection and nothing saved.
+  /// The server gave no answer in time and the app has nothing of its own
+  /// to show. The data may well exist.
+  noConnection,
+
+  /// Anything else.
   other,
 }
 
@@ -156,8 +161,9 @@ class AdminBookingsException implements Exception {
 }
 
 /// How long the list must have been showing saved data, without a break,
-/// before the screen says "offline".
-const offlineNoteDelay = Duration(seconds: 3);
+/// before the screen says "offline". The same wait as for a first answer
+/// of the server.
+const offlineNoteDelay = serverAnswerWait;
 
 /// Since when the answers have come from the saved copy without a break.
 ///

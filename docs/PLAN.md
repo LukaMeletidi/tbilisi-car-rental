@@ -584,6 +584,64 @@ Phase 3 decisions (the steps are in Section 18):
     store such a value.
   - Nothing is logged except the type of an unexpected error. Rules, ARB files,
     packages and indexes are unchanged.
+- Decisions of step 3.12b (no data left on the device; honest screens without a
+  connection):
+  - Android and iOS: Firestore keeps no copy of the data on disk any more
+    (lib/core/data/firestore_start_up.dart, called once in main before the app
+    starts). Reason: the admin reads names, phone numbers and e-mail addresses, and
+    they stayed in a file on the device after the app was closed and after Sign out.
+    Web is not touched: a browser kept nothing.
+  - The copy an earlier version left behind is removed at the start. Order: first the
+    setting, then the removal; the other way round the removal would create Firestore
+    with a disk copy. If the removal fails or takes longer than 5 seconds, the app
+    starts anyway and only the type of the error is logged. Checked on the emulator
+    (names and sizes of the files only): the file was gone after the first start
+    after the update, and no new one appeared while the app was used and closed.
+  - One rule for every read (lib/core/data/server_answer.dart, pure Dart): an answer
+    that holds nothing AND did not come from the server says nothing. It is not "no
+    cars", not "no bookings" and not "the document does not exist". Only the server
+    can say that. Reason: without a disk copy, every first answer without a
+    connection looks exactly like that.
+  - Such an answer is waited out for 3 seconds (one constant, also used for the
+    admin "Offline" note). Then the screen shows its connection or load error with
+    "Try again". The listener stays open, so the data appears by itself when the
+    server answers.
+  - Where it applies: the catalog, one car, settings/extras and settings/locations
+    (so also the booking form and the admin forms), the admin bookings list, and the
+    two one-time reads of cars in the admin area. The admin detail and edit pages
+    had the rule since step 3.8 and now use the same function. Writes were never
+    affected: they are transactions that ask the server.
+  - A document the SERVER says does not exist keeps its old meaning: "This car is
+    not available", a FormatException for a missing settings document, "This booking
+    does not exist."
+  - New admin text: "No connection. The bookings could not be loaded." No public
+    text was added: the existing error texts are used. ARB files are unchanged.
+  - Public error screens (catalog, car, booking form) show only the translated text
+    and "Try again". The technical line under it is gone; it was shown in debug
+    builds only, never in a release build. The type of the error is logged for the
+    developer, never its text.
+  - Data that is in memory is shown also without a connection, with the "Offline"
+    note in the admin area.
+  - Checked by hand: on the Android emulator a start without a connection (catalog,
+    booking form, admin list), the recovery by itself, "Try again", and the
+    "Offline" note in a running session. In Chrome only a running session (the open
+    admin list with the network set to Offline). A start without a connection on
+    the web was not checked by hand; tests cover it.
+  - Known limits:
+    - The admin detail and edit pages give up after the same 3 seconds, but they stop
+      listening then: they need "Try again" and do not recover by themselves.
+    - "Load more" without a connection: the loaded list stays and the button comes
+      back after 3 seconds; there is no message. Tested with a fake repository only.
+    - Memory holds only what a screen is showing. Leaving a screen and coming back
+      without a connection shows the load error, not the earlier data.
+    - Car photos without a connection were not checked again in this step.
+    - iOS cannot be tested on Windows.
+    - The admin area is web-first; Android admin is secondary.
+    - The first start after the update clears the old copy: the file is dropped,
+      not shredded.
+    - The 3 seconds are a guess for a slow connection: on a very slow one the error
+      can show for a moment before the data arrives by itself.
+  - Rules, ARB files, packages and indexes are unchanged.
 - Decisions of step 3.12a (the secrets scan, tool/check_secrets.mjs):
   - A plain Node script without packages. It only reads: it never changes a file
     and never contacts a network. It is run before every commit:
@@ -1451,11 +1509,43 @@ Phase 0 is complete.
   when we set up Hosting.
 - Georgian font: not bundled. Checked in Phase 2 on the emulator with the full
   booking flow in Georgian: it looks fine.
-- Offline behaviour (I checked it in step 2.10, after fully closing and reopening the
-  app in airplane mode): the catalog shows the same cars as online, taken from the
-  Firestore cache; the car photos are replaced by a grey placeholder with a car icon;
-  sending a booking shows the "check your internet connection" error and nothing is
-  sent.
+- Offline behaviour (since step 3.12b; it replaces what was noted in step 2.10).
+  Checked by hand on the Android emulator, including a start without a connection.
+  In Chrome only a running session was checked by hand (the open admin list with
+  the network set to Offline keeps its rows and says "Offline: showing saved
+  data"); a start without a connection on the web was NOT checked by hand, it is
+  covered by tests only:
+  - Nothing the app reads is kept on the device after the app is closed (Android and
+    iOS; a browser never kept it). So a start without a connection has nothing to
+    show.
+  - Start without a connection, public app: the catalog shows the spinner and after 3
+    seconds "Could not load the cars. Please try again later." with "Try again". It
+    never says "No cars available yet": that text needs the answer of the server. The
+    booking form does the same with its own text. No technical text is shown.
+  - Start without a connection, admin (Android): the session is kept, the list shows
+    the spinner and after 3 seconds "No connection. The bookings could not be
+    loaded." with "Try again". It never says "No bookings yet." without the answer of
+    the server. "New booking" stays.
+  - Recovery: when the connection is back, the cars, the form and the bookings appear
+    by themselves within a few seconds; "Try again" asks at once.
+  - A running session that loses the connection keeps what is on the screen. The
+    admin list then says "Offline: showing saved data" after 3 seconds; "saved" means
+    held in memory until the app is closed.
+  - Sending a booking without a connection fails with the "check your internet
+    connection" error and sends nothing; nothing is queued. The same goes for every
+    change in the admin area.
+  - Car photos without a connection: a grey placeholder with a car icon (noted in
+    step 2.10; not looked at again in 3.12b).
+  - The copy an earlier version left on the device is removed at the first start
+    after the update. The file is dropped, not shredded (not overwritten securely).
+  - Leaving a screen and coming back without a connection shows the load error, not
+    the earlier data: memory holds only what a screen is showing.
+  - The admin detail and edit pages give up after 3 seconds and then need "Try
+    again"; they do not recover by themselves.
+  - "Load more" without a connection brings its button back after 3 seconds, without
+    a message.
+  - iOS has the same code but cannot be tested on Windows.
+  - The admin area is web-first; Android admin is secondary and was checked less.
 - Russian and Georgian texts: I have not yet read the ru and ka texts of the booking
   form and the thank-you summary (65 keys). Check them before Phase 7.
 - Language choice is not remembered yet (shared_preferences comes later).

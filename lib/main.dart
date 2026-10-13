@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:tbilisi_car_rental/core/data/firestore_start_up.dart';
 import 'package:tbilisi_car_rental/core/localization/app_language_provider.dart';
 import 'package:tbilisi_car_rental/core/router/app_router.dart';
 import 'package:tbilisi_car_rental/core/theme/app_theme.dart';
@@ -17,6 +18,10 @@ Future<void> main() async {
   // Needed because we call Firebase before runApp().
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // Android and iOS only: Firestore keeps no copy of the data on disk, and
+  // an old copy is removed. Must run before anything uses Firestore. Never
+  // stops the start of the app.
+  await setUpFirestore();
   await _activateAppCheck();
   // Web only: the admin sign-in ends when the browser is closed. Does
   // nothing on Android. Never stops the start of the app.

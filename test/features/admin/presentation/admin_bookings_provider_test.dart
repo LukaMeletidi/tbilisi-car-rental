@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:tbilisi_car_rental/core/data/server_answer.dart';
 import 'package:tbilisi_car_rental/core/models/car.dart';
 import 'package:tbilisi_car_rental/core/time/clock_provider.dart';
 import 'package:tbilisi_car_rental/features/admin/data/admin_auth_repository.dart';
@@ -461,6 +462,178 @@ void main() {
       expect(h.state.showOfflineNote, false);
       // A timer that was still running here would fail this test at its
       // end: testWidgets does not allow one to be left behind.
+    });
+  });
+
+  group('an empty answer that is not from the server', () {
+    testWidgets('is not "no bookings": the list stays loading', (tester) async {
+      final h = await start(tester);
+      await h.emit(const [], fromCache: true);
+
+      expect(h.state.status, AdminBookingsStatus.loading);
+      expect(h.state.bookings, isEmpty);
+
+      await h.elapse(const Duration(milliseconds: 2900));
+      expect(h.state.status, AdminBookingsStatus.loading);
+
+      // Let the wait run out before the test ends.
+      await h.elapse(const Duration(milliseconds: 100));
+    });
+
+    testWidgets('after 3 seconds: failed with "no connection", and the '
+        'listener stays open', (tester) async {
+      final h = await start(tester);
+      await h.emit(const [], fromCache: true);
+      await h.elapse(serverAnswerWait);
+
+      expect(h.state.status, AdminBookingsStatus.failed);
+      expect(h.state.failure, AdminBookingsFailure.noConnection);
+      expect(h.state.bookings, isEmpty);
+      expect(h.bookings.activeListeners, 1);
+    });
+
+    testWidgets('the server answers later: the list appears by itself, '
+        'without a new query', (tester) async {
+      final h = await start(tester);
+      await h.emit(const [], fromCache: true);
+      await h.elapse(serverAnswerWait);
+      await h.emit([rawBooking('a'), rawBooking('b')]);
+
+      expect(h.state.status, AdminBookingsStatus.ready);
+      expect(h.state.failure, isNull);
+      expect(h.state.bookings, hasLength(2));
+      expect(h.bookings.limits, [50]);
+    });
+
+    testWidgets('the server answers within 3 seconds: no failure at all', (
+      tester,
+    ) async {
+      final h = await start(tester);
+      await h.emit(const [], fromCache: true);
+      await h.elapse(const Duration(seconds: 2));
+      await h.emit([rawBooking('a')]);
+      await h.elapse(const Duration(seconds: 10));
+
+      expect(h.state.status, AdminBookingsStatus.ready);
+      expect(h.state.bookings, hasLength(1));
+    });
+
+    testWidgets('the server says there are no bookings: a ready, empty list', (
+      tester,
+    ) async {
+      final h = await start(tester);
+      await h.emit(const [], fromCache: true);
+      await h.emit(const []);
+      await h.elapse(const Duration(seconds: 10));
+
+      expect(h.state.status, AdminBookingsStatus.ready);
+      expect(h.state.bookings, isEmpty);
+      expect(h.state.failure, isNull);
+    });
+
+    testWidgets('a confirmed empty list stays when the connection goes', (
+      tester,
+    ) async {
+      final h = await start(tester);
+      await h.emit(const []);
+      await h.emit(const [], fromCache: true);
+      await h.elapse(const Duration(seconds: 10));
+
+      expect(h.state.status, AdminBookingsStatus.ready);
+      expect(h.state.failure, isNull);
+    });
+
+    testWidgets('a shown list is never replaced by it', (tester) async {
+      final h = await start(tester);
+      await h.emit([rawBooking('a')]);
+      await h.emit(const [], fromCache: true);
+      await h.elapse(const Duration(seconds: 10));
+
+      expect(h.state.status, AdminBookingsStatus.ready);
+      expect(h.state.bookings, hasLength(1));
+    });
+
+    testWidgets('retry: loading again, a new query, and the same 3 seconds', (
+      tester,
+    ) async {
+      final h = await start(tester);
+      await h.emit(const [], fromCache: true);
+      await h.elapse(serverAnswerWait);
+
+      h.notifier.retry();
+      await h.flush();
+      expect(h.state.status, AdminBookingsStatus.loading);
+      expect(h.bookings.limits, [50, 50]);
+      expect(h.bookings.activeListeners, 1);
+
+      await h.emit(const [], fromCache: true);
+      await h.elapse(serverAnswerWait);
+      expect(h.state.failure, AdminBookingsFailure.noConnection);
+
+      await h.emit([rawBooking('a')]);
+      expect(h.state.status, AdminBookingsStatus.ready);
+    });
+
+    testWidgets('"load more" without an answer: the loaded list stays and '
+        'the button comes back', (tester) async {
+      final h = await start(tester);
+      await h.emit(documents(50));
+      h.notifier.loadMore();
+      await h.flush();
+      expect(h.state.loadingMore, true);
+
+      await h.emit(const [], fromCache: true);
+      expect(h.state.bookings, hasLength(50));
+      expect(h.state.loadingMore, true);
+
+      await h.elapse(serverAnswerWait);
+      expect(h.state.status, AdminBookingsStatus.ready);
+      expect(h.state.bookings, hasLength(50));
+      expect(h.state.loadingMore, false);
+      expect(h.state.hasMore, true);
+    });
+
+    testWidgets('the wait is cancelled when the listener is closed', (
+      tester,
+    ) async {
+      final h = await start(tester);
+      await h.emit(const [], fromCache: true);
+
+      h.notifier.stop();
+      await h.elapse(const Duration(seconds: 10));
+
+      expect(h.state.status, AdminBookingsStatus.inactive);
+      // A timer that was still running here would fail this test.
+    });
+
+    testWidgets('cars that had no connection are asked for again when the '
+        'server answers; other failures are not', (tester) async {
+      final h = await start(
+        tester,
+        carsError: const AdminBookingsException(
+          AdminBookingsFailure.noConnection,
+        ),
+      );
+      await h.emit(const [], fromCache: true);
+      await h.elapse(serverAnswerWait);
+      expect(h.bookings.carReads, 1);
+
+      h.bookings
+        ..carsError = null
+        ..cars = [testCar()];
+      await h.emit([rawBooking('a')]);
+      await h.flush();
+
+      expect(h.bookings.carReads, 2);
+      expect(h.state.carsById, isNotNull);
+
+      final other = await start(
+        tester,
+        carsError: const AdminBookingsException(AdminBookingsFailure.other),
+      );
+      await other.emit([rawBooking('a')]);
+      await other.emit([rawBooking('a'), rawBooking('b')]);
+      expect(other.bookings.carReads, 1);
     });
   });
 }

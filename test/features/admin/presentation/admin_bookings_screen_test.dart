@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:tbilisi_car_rental/core/data/server_answer.dart';
 import 'package:tbilisi_car_rental/core/models/booking_status.dart';
 import 'package:tbilisi_car_rental/core/theme/app_theme.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_new.dart';
@@ -740,5 +741,92 @@ void main() {
     expect(find.text('Test Person'), findsOneWidget);
     expect(find.textContaining('no-email'), findsNothing);
     expect(find.textContaining('@'), findsNothing);
+  });
+
+  group('without a connection', () {
+    testWidgets('an empty answer that is not from the server: the spinner, '
+        'never "No bookings yet."', (tester) async {
+      await pumpScreen(tester);
+      await emit(tester, const [], fromCache: true);
+
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.text(adminNoBookings), findsNothing);
+      expect(find.text(adminBookingsNoConnection), findsNothing);
+
+      // Let the wait run out before the test ends.
+      await tester.pump(serverAnswerWait);
+    });
+
+    testWidgets('after 3 seconds: the connection text with "Try again"; '
+        '"New booking" stays', (tester) async {
+      await pumpScreen(tester);
+      await emit(tester, const [], fromCache: true);
+      await tester.pump(serverAnswerWait);
+      await settle(tester);
+
+      expect(
+        find.text('No connection. The bookings could not be loaded.'),
+        findsOneWidget,
+      );
+      expect(find.text(adminTryAgain), findsOneWidget);
+      expect(find.text(adminNoBookings), findsNothing);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(find.text(adminNewBookingTitle), findsOneWidget);
+    });
+
+    testWidgets('the server answers later: the bookings appear by '
+        'themselves', (tester) async {
+      await pumpScreen(tester);
+      await emit(tester, const [], fromCache: true);
+      await tester.pump(serverAnswerWait);
+      await settle(tester);
+
+      await emit(tester, [rawBooking('a'), rawBooking('b')]);
+
+      expect(find.text(adminBookingsNoConnection), findsNothing);
+      expect(find.byType(AdminBookingCard), findsNWidgets(2));
+      expect(bookings.limits, [50]);
+    });
+
+    testWidgets('the server says there are no bookings: "No bookings yet."', (
+      tester,
+    ) async {
+      await pumpScreen(tester);
+      await emit(tester, const [], fromCache: true);
+      await emit(tester, const []);
+
+      expect(find.text(adminNoBookings), findsOneWidget);
+      expect(find.text(adminBookingsNoConnection), findsNothing);
+    });
+
+    testWidgets('"Try again": the spinner and a new query, then the list', (
+      tester,
+    ) async {
+      await pumpScreen(tester);
+      await emit(tester, const [], fromCache: true);
+      await tester.pump(serverAnswerWait);
+      await settle(tester);
+
+      await tester.tap(find.text(adminTryAgain));
+      await settle(tester);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(bookings.limits, [50, 50]);
+
+      await emit(tester, [rawBooking('a')]);
+      expect(find.byType(AdminBookingCard), findsOneWidget);
+    });
+
+    testWidgets('real data in memory still shows the list with the offline '
+        'note', (tester) async {
+      await pumpScreen(tester);
+      await emit(tester, [rawBooking('a')], fromCache: true);
+      now = now.add(serverAnswerWait);
+      await tester.pump(serverAnswerWait);
+      await settle(tester);
+
+      expect(find.byType(AdminBookingCard), findsOneWidget);
+      expect(find.text(adminOfflineNote), findsOneWidget);
+      expect(find.text(adminBookingsNoConnection), findsNothing);
+    });
   });
 }

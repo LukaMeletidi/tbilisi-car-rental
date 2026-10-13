@@ -2,6 +2,7 @@
 /// Pure Dart; nothing here talks to Firestore and nothing is logged.
 library;
 
+import 'package:tbilisi_car_rental/core/data/server_answer.dart';
 import 'package:tbilisi_car_rental/core/models/booking.dart';
 import 'package:tbilisi_car_rental/core/models/booking_status.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
@@ -67,8 +68,10 @@ class AdminBookingRead {
 AdminBookingRead readBookingAnswer(RawBookingAnswer answer) {
   final document = answer.document;
   if (document == null) {
+    // The same rule as everywhere else in the app.
+    final meaning = answerMeaning(isEmpty: true, fromCache: answer.fromCache);
     return AdminBookingRead(
-      answer.fromCache
+      meaning == AnswerMeaning.notKnownYet
           ? AdminBookingReadState.notKnownYet
           : AdminBookingReadState.missing,
     );

@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:tbilisi_car_rental/core/data/load_error_log.dart';
 import 'package:tbilisi_car_rental/core/router/app_router.dart';
 import 'package:tbilisi_car_rental/core/widgets/app_bar_logo.dart';
 import 'package:tbilisi_car_rental/core/widgets/language_menu_button.dart';
@@ -34,6 +34,22 @@ class BookingFormScreen extends ConsumerWidget {
       bookingFormProvider(carId).select((state) => state.isSending),
     );
 
+    // For the developer: the type of each error, once per failure. The
+    // screen shows only the translated text.
+    void logFailure(String what, AsyncValue<Object> value) {
+      if (value.hasError && !value.isLoading) logLoadError(what, value.error!);
+    }
+
+    ref.listen(carProvider(carId), (_, next) => logFailure('The car', next));
+    ref.listen(
+      extrasPricesProvider,
+      (_, next) => logFailure('The prices of the extras', next),
+    );
+    ref.listen(
+      pickupLocationsProvider,
+      (_, next) => logFailure('The places', next),
+    );
+
     final all = <AsyncValue<Object>>[car, prices, locations];
     // Asked for again after "Try again", or not answered yet.
     final waiting = all.any(
@@ -60,8 +76,6 @@ class BookingFormScreen extends ConsumerWidget {
       body = CatalogMessage(
         icon: Icons.cloud_off,
         text: l10n.bookingFormLoadError,
-        // The technical reason, for the developer only.
-        detail: kDebugMode ? '${failed.first.error}' : null,
         action: FilledButton(
           onPressed: () {
             if (car.hasError) ref.invalidate(carProvider(carId));

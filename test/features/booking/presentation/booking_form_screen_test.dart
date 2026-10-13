@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:tbilisi_car_rental/core/data/server_answer.dart';
 import 'package:tbilisi_car_rental/core/localization/app_language.dart';
 import 'package:tbilisi_car_rental/core/localization/app_language_provider.dart';
 import 'package:tbilisi_car_rental/core/models/booking.dart';
@@ -28,6 +29,7 @@ import 'package:tbilisi_car_rental/features/catalog/domain/car_not_available_exc
 import 'package:tbilisi_car_rental/features/catalog/presentation/car_detail_screen.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/cars_providers.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_screen.dart';
+import 'package:tbilisi_car_rental/features/settings/data/settings_repository.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/settings_providers.dart';
 import 'package:tbilisi_car_rental/l10n/generated/app_localizations.dart';
 
@@ -259,6 +261,9 @@ void main() {
 
       expect(find.text(loadErrorText), findsOneWidget);
       expect(sendButton(), findsNothing);
+      // Only the translated text: nothing technical, also in a debug build.
+      expect(find.textContaining('FormatException'), findsNothing);
+      expect(find.textContaining('no prices'), findsNothing);
 
       await tester.tap(find.text('Try again'));
       await settle(tester);
@@ -279,6 +284,80 @@ void main() {
       expect(find.text(loadErrorText), findsOneWidget);
       expect(find.text('Try again'), findsOneWidget);
       expect(sendButton(), findsNothing);
+    });
+
+    // The real path of the answers of settings/extras; only Firestore
+    // itself is replaced.
+    testWidgets('no connection: a spinner, then the translated text with '
+        '"Try again" and nothing technical; the form comes by itself when '
+        'the server answers', (tester) async {
+      final answers = StreamController<DocumentAnswer>();
+      addTearDown(answers.close);
+
+      await pumpForm(
+        tester,
+        pricesStream: () => extrasPricesFrom(answers.stream),
+      );
+      // What Firestore says without a connection: no such document, and
+      // not from the server.
+      answers.add((data: null, fromCache: true));
+      await settle(tester);
+
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.text(loadErrorText), findsNothing);
+
+      await tester.pump(serverAnswerWait);
+      await settle(tester);
+
+      expect(find.text(loadErrorText), findsOneWidget);
+      expect(find.text('Try again'), findsOneWidget);
+      expect(sendButton(), findsNothing);
+      expect(find.textContaining('Exception'), findsNothing);
+      expect(find.textContaining('does not exist'), findsNothing);
+      expect(find.textContaining('settings/'), findsNothing);
+
+      answers.add((
+        data: {
+          'pricesPerDay': {
+            'snowChains': 5,
+            'childSeat': 4,
+            'infantSeat': 4.5,
+            'boosterSeat': 3,
+          },
+        },
+        fromCache: false,
+      ));
+      await settle(tester);
+
+      expect(find.text(loadErrorText), findsNothing);
+      expect(sendButton(), findsOneWidget);
+    });
+
+    testWidgets('no connection: "Try again" asks again and shows the spinner', (
+      tester,
+    ) async {
+      final queries = <StreamController<DocumentAnswer>>[];
+      await pumpForm(
+        tester,
+        pricesStream: () {
+          final query = StreamController<DocumentAnswer>();
+          addTearDown(query.close);
+          queries.add(query);
+          return extrasPricesFrom(query.stream);
+        },
+      );
+      queries.last.add((data: null, fromCache: true));
+      await settle(tester);
+      await tester.pump(serverAnswerWait);
+      await settle(tester);
+      expect(find.text(loadErrorText), findsOneWidget);
+
+      await tester.tap(find.text('Try again'));
+      await settle(tester);
+
+      expect(queries, hasLength(2));
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.text(loadErrorText), findsNothing);
     });
   });
 

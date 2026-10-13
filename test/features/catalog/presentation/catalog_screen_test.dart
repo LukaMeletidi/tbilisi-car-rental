@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:tbilisi_car_rental/core/models/car.dart';
+import 'package:tbilisi_car_rental/core/data/server_answer.dart';
 import 'package:tbilisi_car_rental/core/theme/app_theme.dart';
+import 'package:tbilisi_car_rental/features/catalog/data/car_repository.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/car_filter_provider.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/car_search_provider.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/cars_providers.dart';
@@ -106,6 +108,9 @@ void main() {
     expect(find.text(_errorText), findsOneWidget);
     expect(find.text('Try again'), findsOneWidget);
     expect(requests, 1);
+    // Only the translated text: nothing technical, also in a debug build.
+    expect(find.textContaining('Exception'), findsNothing);
+    expect(find.textContaining('no connection'), findsNothing);
 
     await tester.tap(find.text('Try again'));
     await settle(tester);
@@ -297,4 +302,131 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  // The real path of the answers: activeCarsFrom decides what an empty
+  // answer means. Only Firestore itself is replaced.
+  group('without a connection', () {
+    const fiat = <String, dynamic>{
+      'brand': 'Fiat',
+      'model': '500',
+      'year': 2020,
+      'drivetrain': 'fwd',
+      'transmission': 'manual',
+      'fuelType': 'petrol',
+      'seats': 4,
+      'pricePerDay': 40,
+      'active': true,
+    };
+
+    late List<StreamController<CarsAnswer>> queries;
+
+    /// Opens the catalog; every request for the cars is a new query.
+    Future<void> pumpOffline(WidgetTester tester) async {
+      queries = [];
+      await pumpCatalog(tester, () {
+        final query = StreamController<CarsAnswer>();
+        addTearDown(query.close);
+        queries.add(query);
+        return activeCarsFrom(query.stream);
+      });
+    }
+
+    Future<void> answer(
+      WidgetTester tester, {
+      required bool fromCache,
+      bool withCar = false,
+    }) async {
+      queries.last.add((
+        documents: [if (withCar) (id: 'a', data: fiat)],
+        fromCache: fromCache,
+      ));
+      await settle(tester);
+    }
+
+    testWidgets('an empty answer that is not from the server: a spinner, '
+        'never "no cars"', (tester) async {
+      await pumpOffline(tester);
+      await answer(tester, fromCache: true);
+
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.text(_emptyText), findsNothing);
+      expect(find.text(_errorText), findsNothing);
+
+      // Let the wait run out before the test ends.
+      await tester.pump(serverAnswerWait);
+    });
+
+    testWidgets('after 3 seconds: the error text with "Try again", and '
+        'nothing technical', (tester) async {
+      await pumpOffline(tester);
+      await answer(tester, fromCache: true);
+      await tester.pump(const Duration(milliseconds: 2800));
+      expect(find.text(_errorText), findsNothing);
+
+      await tester.pump(const Duration(milliseconds: 200));
+      await settle(tester);
+
+      expect(find.text(_errorText), findsOneWidget);
+      expect(find.text('Try again'), findsOneWidget);
+      expect(find.text(_emptyText), findsNothing);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(find.textContaining('Exception'), findsNothing);
+    });
+
+    testWidgets('the server answers later: the cars appear by themselves', (
+      tester,
+    ) async {
+      await pumpOffline(tester);
+      await answer(tester, fromCache: true);
+      await tester.pump(serverAnswerWait);
+      await settle(tester);
+      expect(find.text(_errorText), findsOneWidget);
+
+      await answer(tester, fromCache: false, withCar: true);
+
+      expect(find.text(_errorText), findsNothing);
+      expect(find.text('Fiat 500, 2020'), findsOneWidget);
+      expect(queries, hasLength(1));
+    });
+
+    testWidgets('the server says there are no cars: the empty text', (
+      tester,
+    ) async {
+      await pumpOffline(tester);
+      await answer(tester, fromCache: true);
+      await answer(tester, fromCache: false);
+
+      expect(find.text(_emptyText), findsOneWidget);
+      expect(find.text(_errorText), findsNothing);
+
+      await tester.pump(serverAnswerWait);
+      await settle(tester);
+      expect(find.text(_emptyText), findsOneWidget);
+    });
+
+    testWidgets('"Try again": a spinner and a new request; still nothing: '
+        'the error text again; then the cars', (tester) async {
+      await pumpOffline(tester);
+      await answer(tester, fromCache: true);
+      await tester.pump(serverAnswerWait);
+      await settle(tester);
+
+      await tester.tap(find.text('Try again'));
+      await settle(tester);
+      expect(queries, hasLength(2));
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.text(_errorText), findsNothing);
+
+      await answer(tester, fromCache: true);
+      await tester.pump(serverAnswerWait);
+      await settle(tester);
+      expect(find.text(_errorText), findsOneWidget);
+
+      await tester.tap(find.text('Try again'));
+      await settle(tester);
+      await answer(tester, fromCache: false, withCar: true);
+      expect(queries, hasLength(3));
+      expect(find.text('Fiat 500, 2020'), findsOneWidget);
+    });
+  });
 }

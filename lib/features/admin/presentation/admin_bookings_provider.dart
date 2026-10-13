@@ -3,6 +3,7 @@ import 'dart:developer' as developer;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:tbilisi_car_rental/core/data/server_answer.dart';
 import 'package:tbilisi_car_rental/core/models/booking.dart';
 import 'package:tbilisi_car_rental/core/models/car.dart';
 import 'package:tbilisi_car_rental/core/time/clock_provider.dart';
@@ -18,10 +19,12 @@ enum AdminBookingsStatus {
   /// kept.
   inactive,
 
-  /// The first answer has not arrived yet.
+  /// No answer that says anything has arrived yet. An empty answer that
+  /// did not come from the server does not count; see [AnswerMeaning].
   loading,
 
-  /// There is a list to show (it may be empty).
+  /// There is a list to show. It is empty only when the SERVER said that
+  /// there are no bookings.
   ready,
 
   /// The bookings could not be loaded; see [AdminBookingsState.failure].
@@ -101,11 +104,26 @@ class AdminBookingsState {
 ///
 /// The provider is auto-dispose: leaving the bookings screen closes the
 /// listener too.
+///
+/// "No bookings yet." needs the word of the server. The app keeps no copy
+/// of the bookings on the device, so without a connection the first answer
+/// is empty and comes from the app's own memory. Such an answer says
+/// nothing: the list stays "loading", and after [serverAnswerWait] it
+/// becomes "failed" with [AdminBookingsFailure.noConnection]. The listener
+/// stays open meanwhile, so the bookings appear by themselves as soon as
+/// the server answers.
 class AdminBookingsNotifier extends Notifier<AdminBookingsState> {
   StreamSubscription<RawBookingsResult>? _subscription;
   Timer? _offlineTimer;
+  Timer? _giveUpTimer;
   DateTime? _fromCacheSince;
   int _limit = adminBookingsPageSize;
+  // The listener (see _generation) for which the cars are being loaded
+  // right now; null when no load is running.
+  int? _carsLoadFor;
+
+  // True when the last try to load the cars ended with "no connection".
+  bool _carsWaitForServer = false;
 
   // Counts the listeners that were started. An answer for an older one
   // (for example cars that arrive after a sign-out) is ignored.
@@ -173,10 +191,28 @@ class AdminBookingsNotifier extends Notifier<AdminBookingsState> {
     _subscription = null;
     _offlineTimer?.cancel();
     _offlineTimer = null;
+    _giveUpTimer?.cancel();
+    _giveUpTimer = null;
     _fromCacheSince = null;
   }
 
   void _onResult(RawBookingsResult result) {
+    final meaning = answerMeaning(
+      isEmpty: result.documents.isEmpty,
+      fromCache: result.fromCache,
+    );
+    if (meaning == AnswerMeaning.notKnownYet) {
+      // Nothing, and not from the server: this says nothing about the
+      // bookings. What is on the screen stays; while something is being
+      // waited for, the wait gets a limit.
+      final waiting =
+          state.status == AdminBookingsStatus.loading || state.loadingMore;
+      if (waiting) _giveUpTimer ??= Timer(serverAnswerWait, _onGiveUp);
+      return;
+    }
+    _giveUpTimer?.cancel();
+    _giveUpTimer = null;
+
     final parsed = parseBookings(result.documents, onSkipped: _logSkipped);
     final now = ref.read(clockProvider)();
 
@@ -206,6 +242,28 @@ class AdminBookingsNotifier extends Notifier<AdminBookingsState> {
         now: now,
       ),
     );
+    // The server is there again and the cars are still missing (they
+    // could not be loaded while there was no connection): ask once more.
+    if (!result.fromCache && state.carsById == null && _carsWaitForServer) {
+      _loadCars();
+    }
+  }
+
+  void _onGiveUp() {
+    _giveUpTimer = null;
+    if (state.status == AdminBookingsStatus.loading) {
+      // No connection. NOT "no bookings". The listener stays open: when
+      // the server answers, _onResult shows the list.
+      state = AdminBookingsState(
+        status: AdminBookingsStatus.failed,
+        carsById: state.carsById,
+        failure: AdminBookingsFailure.noConnection,
+      );
+    } else if (state.status == AdminBookingsStatus.ready && state.loadingMore) {
+      // "Load more" got no answer: the loaded list stays, and the button
+      // comes back.
+      state = state.copyWith(loadingMore: false);
+    }
   }
 
   void _onOfflineTimer() {
@@ -235,7 +293,11 @@ class AdminBookingsNotifier extends Notifier<AdminBookingsState> {
   }
 
   Future<void> _loadCars() async {
+    // One load at a time for the same listener.
+    if (_carsLoadFor == _generation) return;
     final generation = _generation;
+    _carsLoadFor = generation;
+    _carsWaitForServer = false;
     final List<Car> cars;
     try {
       cars = await ref.read(adminBookingsRepositoryProvider).readAllCars();
@@ -246,7 +308,12 @@ class AdminBookingsNotifier extends Notifier<AdminBookingsState> {
         name: 'AdminBookingsNotifier',
         level: 900, // warning
       );
+      _carsWaitForServer =
+          error is AdminBookingsException &&
+          error.failure == AdminBookingsFailure.noConnection;
       return;
+    } finally {
+      if (_carsLoadFor == generation) _carsLoadFor = null;
     }
     if (!ref.mounted || generation != _generation) return;
     if (state.status == AdminBookingsStatus.inactive) return;

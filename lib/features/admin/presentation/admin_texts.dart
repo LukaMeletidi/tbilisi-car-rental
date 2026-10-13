@@ -32,6 +32,8 @@ const adminTbilisiTimeNote = 'Tbilisi time (GMT+4)';
 const adminNoBookings = 'No bookings yet.';
 const adminBookingsNoAccess = 'You do not have access to the bookings.';
 const adminBookingsLoadError = 'Could not load the bookings.';
+const adminBookingsNoConnection =
+    'No connection. The bookings could not be loaded.';
 const adminTryAgain = 'Try again';
 const adminOfflineNote = 'Offline: showing saved data';
 const adminLoadMore = 'Load more';
@@ -571,6 +573,7 @@ String adminBookingFailureText(AdminBookingsFailure failure) {
   switch (failure) {
     case AdminBookingsFailure.permissionDenied:
       return adminBookingNoAccess;
+    case AdminBookingsFailure.noConnection:
     case AdminBookingsFailure.other:
       return adminBookingLoadError;
   }
@@ -624,6 +627,8 @@ String adminBookingsFailureText(AdminBookingsFailure failure) {
   switch (failure) {
     case AdminBookingsFailure.permissionDenied:
       return adminBookingsNoAccess;
+    case AdminBookingsFailure.noConnection:
+      return adminBookingsNoConnection;
     case AdminBookingsFailure.other:
       return adminBookingsLoadError;
   }

@@ -4,6 +4,7 @@ import 'dart:developer' as developer;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:tbilisi_car_rental/core/data/server_answer.dart';
 import 'package:tbilisi_car_rental/core/models/booking.dart';
 import 'package:tbilisi_car_rental/core/models/booking_status.dart';
 import 'package:tbilisi_car_rental/core/models/car.dart';
@@ -72,9 +73,16 @@ class AdminBookingsRepository {
   /// logged, as in the catalog.
   ///
   /// Throws an [AdminBookingsException] when the cars cannot be loaded.
+  /// Without a connection Firestore answers a read like this one from
+  /// what it holds in memory; an empty answer of that kind is "no
+  /// connection" and never "there are no cars".
   Future<List<Car>> readAllCars() async {
     try {
       final snapshot = await _firestore.collection('cars').get();
+      _requireServerAnswer(
+        isEmpty: snapshot.docs.isEmpty,
+        fromCache: snapshot.metadata.isFromCache,
+      );
       return parseCars([
         for (final document in snapshot.docs)
           (id: document.id, data: document.data()),
@@ -118,11 +126,17 @@ class AdminBookingsRepository {
   /// One car by its ID, also a hidden one. Null when no car has that ID or
   /// when its document cannot be read as a car (that is logged).
   ///
-  /// Throws an [AdminBookingsException] when the car cannot be loaded.
+  /// Throws an [AdminBookingsException] when the car cannot be loaded;
+  /// also when the document is missing only in an answer that did not
+  /// come from the server.
   Future<Car?> readCar(String id) async {
     try {
       final snapshot = await _firestore.collection('cars').doc(id).get();
       final data = snapshot.data();
+      _requireServerAnswer(
+        isEmpty: data == null,
+        fromCache: snapshot.metadata.isFromCache,
+      );
       if (data == null) return null;
       final cars = parseCars([
         (id: snapshot.id, data: data),
@@ -536,6 +550,15 @@ AdminStatusChangeException mapStatusChangeError(Object error) {
     return AdminStatusChangeException(statusChangeFailureFromCode(error.code));
   }
   return const AdminStatusChangeException(AdminStatusChangeFailure.unknown);
+}
+
+/// Refuses an answer that holds nothing and did not come from the server:
+/// that is "no connection", not "nothing there".
+void _requireServerAnswer({required bool isEmpty, required bool fromCache}) {
+  final meaning = answerMeaning(isEmpty: isEmpty, fromCache: fromCache);
+  if (meaning == AnswerMeaning.notKnownYet) {
+    throw const AdminBookingsException(AdminBookingsFailure.noConnection);
+  }
 }
 
 /// Turns an error of Firestore into an [AdminBookingsException], so screens

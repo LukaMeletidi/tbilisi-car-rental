@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:tbilisi_car_rental/core/data/load_error_log.dart';
 import 'package:tbilisi_car_rental/core/localization/app_language_provider.dart';
 import 'package:tbilisi_car_rental/core/models/car.dart';
 import 'package:tbilisi_car_rental/core/router/app_router.dart';
@@ -29,6 +29,13 @@ class CarDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final car = ref.watch(carProvider(carId));
+    // For the developer: the type of the error, once per failure. The
+    // screen shows only the translated text.
+    ref.listen(carProvider(carId), (previous, next) {
+      if (next.hasError && !next.isLoading) {
+        logLoadError('The car', next.error!);
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -53,8 +60,6 @@ class CarDetailScreen extends ConsumerWidget {
               : CatalogMessage(
                   icon: Icons.cloud_off,
                   text: l10n.carError,
-                  // The technical reason, for the developer only.
-                  detail: kDebugMode ? '$error' : null,
                   action: FilledButton(
                     onPressed: () => ref.invalidate(carProvider(carId)),
                     child: Text(l10n.tryAgain),
