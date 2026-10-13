@@ -1837,11 +1837,20 @@ Phase 3: admin sign-in and the bookings list with editing (Section 11).
     was open on the emulator, which then showed "This booking does not exist."
   - Covered by tests only: the "no answer from the server" path.
   - The two throw-away bookings are gone; the original three test bookings stay.
-- 3.12 Verify Phase 3 and close it — 3.12a done, 3.12b and 3.12c not started.
+- 3.12 Verify Phase 3 and close it — 3.12a and 3.12b done, 3.12c not started.
   - 3.12a (the secrets scan, tool/check_secrets.mjs): done. Its 47 tests pass; the
     scan of the repository ends with 0 errors and 6 warnings (the intentionally
     invalid phone values of validation tests); 1339 Flutter tests pass. I checked
     it by hand on Windows: the three commands, a made-up password line and the
     local deny list, each found and never printed.
-  - 3.12b (the Firestore cache on Android and iOS) — not started.
+  - 3.12b (no data copy on the device; offline is told from empty): done. 1408
+    Flutter tests pass; the secrets scan ends with 0 errors and 6 warnings. I
+    checked it by hand on the Android emulator: the old copy was gone after the
+    first start and none came back; a start without a connection shows the spinner
+    and then the load or connection text with "Try again" in the catalog, the
+    booking form and the admin list, never "No cars available yet" or "No bookings
+    yet."; all three recover by themselves; no technical text is shown. In Chrome I
+    checked a running session only (the open admin list with the network set to
+    Offline keeps its rows and shows the "Offline" note); a start without a
+    connection on the web is covered by tests only.
   - 3.12c (closing Phase 3 in the documents) — not started.
