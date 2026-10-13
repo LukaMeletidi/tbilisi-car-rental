@@ -2072,8 +2072,19 @@ the tests cannot see. Tier 3 (documents, scripts, tests, refactors without a cha
 of behaviour): tests and one short look, no emulator checklist.
 
 - 4.1 Cars rules in the local file and the cars cases of the emulator script; the
-  limits as Dart constants with a comparing test. No deploy. Tier 1 — written, not
-  committed yet.
+  limits as Dart constants with a comparing test. No deploy. Tier 1 — DONE. Commit
+  4e5fb1d. Results:
+  - The rules are NOT deployed yet: the project still runs the rules of step 3.3
+    (commit 0a7eb27), in which nobody can write a car. The deploy is step 4.2.
+  - The emulator run passed: 104 of 104 public checks (unchanged) and 396 of 396
+    admin and signed-in checks, 152 of them new car cases.
+  - 1417 Flutter tests pass and analyze is clean; the 47 tests of the secrets scan
+    pass; the scan ends with 0 errors and 6 warnings (the old ones).
+  - 6 active cars were read once with the public query (read-only): 1 passes the
+    new rules, 5 fail: missing descriptions, one also missing photos. All six stay
+    readable, and all can be hidden and shown; the five need their descriptions
+    before any other change is saved.
+  - No manual check was possible: nothing is deployed and no screen writes a car.
 - 4.2 Deploy the cars rules with my approval; compare the console text with the
   file; a short live check. Tier 1 — not started.
 - 4.3 The car draft, its validation, the mapping and the repository writes (pure
