@@ -1009,6 +1009,76 @@ Phase 3 decisions (the steps are in Section 18):
 - Every field must have clear helper text or a placeholder example, because the person
   filling it in is non-technical staff.
 
+Phase 4 decisions (made before step 4.1; the steps are in Section 19):
+- Photos in Phase 4: an https address typed or pasted by the admin. `photos` stays a
+  list of addresses. There is NO upload in Phase 4: Cloud Storage for Firebase cannot
+  be used on the Spark plan at all (since 3 February 2026 a Spark project has no
+  access to any bucket; read in the Firebase documentation on 13 Oct 2026). A real
+  upload (Storage on the Blaze plan with a budget alert) is a Phase 7 question,
+  together with Cloud Functions; Blaze is not decided yet.
+- A car with no photo is allowed, also a visible one; the catalog shows its
+  placeholder.
+- Navigation of the admin area: a responsive shell, a bottom bar on phones and a side
+  rail on wide screens, with go_router's shell route. Entries for now: Bookings and
+  Cars; later phases add Calendar and Settings. It is its own step (4.4a), because it
+  touches the admin redirect.
+- Hiding a car that has confirmed bookings in the future is allowed without a
+  warning in Phase 4. The form says: "A hidden car disappears from the public
+  catalog. Existing bookings are not changed." A warning comes in Phase 5, with the
+  conflict warning.
+- Hiding and showing a car must ALWAYS work, also for a car that was entered by hand
+  before these rules and would not pass them. The rules therefore accept an update
+  that changes only "active" (to true or false) without checking the rest.
+- The price of a car may change while bookings exist. Stored totals stay as they
+  are; one line on the form says so.
+- The description is required in all three languages (ka, ru, en) to save a car.
+- A new car is saved hidden by default, with a switch on the form.
+- engineSize is optional for every fuel type; the rules do not forbid it for an
+  electric car (the catalog does not show it there).
+- The price may have decimals in the rules; the form limits it to two places.
+- No new fields: a car has no createdAt or updatedAt, so no field is immutable.
+- Only the one admin account writes cars; nothing changes in Authentication.
+- A car is never deleted, not by an admin either: "remove" is active == false.
+- Field limits (the rules and lib/features/fleet/domain/car_limits.dart hold the same
+  numbers; a unit test compares them):
+  - brand, model: text, 1 to 40 characters, no space at either end.
+  - year: a whole number, 1990 to "this year plus one" (the clock of the server).
+  - drivetrain: fwd | rwd | awd. transmission: automatic | manual. fuelType: petrol |
+    diesel | hybrid | electric.
+  - seats: a whole number, 1 to 9.
+  - engineSize: optional; a number above 0, up to 8 (litres).
+  - pricePerDay: a number above 0, up to 2000 (USD). 2000 a day for the longest
+    rental of 365 days stays under the limit of a booking's total (1,000,000).
+  - description: a map with exactly ka, ru and en; each a text of 1 to 1000
+    characters with no space or line break at either end (line breaks inside are
+    fine).
+  - photos: a list of 0 to 10 addresses, none twice. Each starts with https://, has
+    no space, has a dot, and is at most 500 characters long.
+  - active: true or false.
+  - Any other field is refused. The ID of a new car: letters, digits, "_" and "-",
+    1 to 128 characters.
+- Decisions of step 4.1 (the cars rules; local file and emulator only, NOT deployed):
+  - An admin may create and update a car; the whole document is checked on every
+    write (isValidCar), except for the hide-or-show update above. Reading is
+    unchanged: the public reads active cars, an admin reads every car.
+  - Year and seats must be stored as whole numbers. The price and the engine size
+    may be whole or decimal: the web sends 45.0 as a whole number and Android sends
+    it as a decimal, and both must pass.
+  - The rules have no loops, so the photo list is checked place by place, ten lines.
+    Changing the maximum means changing those lines; the unit test counts them.
+  - Old cars, entered by hand in the console before these rules. Reads are not
+    affected. The six active cars were read once with the public query (read-only,
+    13 Oct 2026): one passes the new rules; five would fail them, all five because
+    they have no "description" field, and one of them also has no "photos" field.
+    Hidden cars cannot be read that way; the owner looks at them in the console.
+  - What that means for an old car: it can always be hidden and shown. Any other
+    change is refused until the car is complete. The edit form of step 4.5 saves
+    the whole car as a replacement, so filling in what is missing repairs it in one
+    save (proved by an emulator case); an unknown field is dropped the same way.
+  - Known limits: the rules cannot check that a photo address really leads to an
+    image, nor that a price has at most two decimals; the form does the second.
+    Nothing ties a description to its language.
+
 ### 3.4 Booking conflict warning
 
 When a booking is saved with status `confirmed` (directly, or when an existing booking
@@ -1016,6 +1086,10 @@ is changed to `confirmed`, or when its car/dates change while confirmed), check 
 conflicts with other `confirmed` bookings on the same car (Section 7). If found, show a
 NON-blocking warning ("This car is already booked from X to Y. Continue anyway?"). The
 save is never silently blocked.
+
+Note for Phase 5 (decided before step 4.1): add a warning, also non-blocking, when an
+admin hides a car that has confirmed bookings in the future. In Phase 4 hiding is
+allowed without any warning.
 
 ### 3.5 Extras & Prices screen
 
@@ -1048,8 +1122,9 @@ stored inside the document)
 - photos: array of strings (URLs)
 - active: boolean (soft delete)
 
-Until the Storage decision (before Phase 4), demo photos are image URLs of freely
-licensed photos, picked by me and stored in `photos`.
+Photos are image addresses (https) stored in `photos`: for the demo cars, freely
+licensed photos picked by me; from Phase 4 on, addresses the admin types or pastes.
+An upload to Cloud Storage is a Phase 7 question (Section 3.3, Phase 4 decisions).
 
 bookings (ONE collection for customer requests and confirmed bookings; field names
 agreed in step 2.5)
@@ -1391,7 +1466,7 @@ Google Cloud budget alert.
 
 Also: verify whether Cloud Storage for Firebase (photo upload, Phase 4) currently
 requires the Blaze plan for new projects, and tell me BEFORE Phase 4 what my options
-are.
+are. DONE on 13 Oct 2026: it does; see the Phase 4 decisions in Section 3.3.
 
 ## 13. Design
 
@@ -1441,8 +1516,14 @@ Phase 0 is complete.
 
 ## 15. Open reminders
 
-- Before Phase 4: re-check live docs on whether Cloud Storage needs the Blaze plan; I
-  decide the option (Blaze early / no upload / build now, enable later).
+- CLOSED before step 4.1: the Cloud Storage question. It needs the Blaze plan, so
+  Phase 4 has no upload; photos are https addresses (Section 3.3, Phase 4 decisions).
+- For Phase 7, not decided: car photos by a real upload to Cloud Storage. It needs
+  the Blaze plan (a billing account), a budget alert (which only warns and does not
+  stop spending), the packages firebase_storage and a picker, a storage.rules file
+  with its own emulator tests and deploy, and a bucket region. Only a bucket in
+  US-CENTRAL1, US-EAST1 or US-WEST1 has a no-cost level; read the pricing page again
+  at that time. `photos` stays a list of addresses, so the catalog does not change.
 - Before Phase 7: switch to Blaze, set a Google Cloud budget alert; Cloud Functions use
   Node 22 (Node 20 is being shut down).
 - firebase_core 4.15.0 still applies the Kotlin Gradle Plugin the old way (build
@@ -1568,9 +1649,9 @@ Phase 0 is complete.
   decide later: the public app uses plain back navigation for the booking flow and a
   small app bar menu for the About Us and Privacy Policy pages (decide in Phase 6); the
   admin panel uses a responsive shell (a bottom navigation bar on phones, a side
-  navigation rail on wide screens) with go_router's ShellRoute. It was not decided
-  in Phase 3: the admin area has one section and a plain app bar. STILL OPEN; decide
-  it in Phase 4, when the fleet screens add a second section.
+  navigation rail on wide screens) with go_router's ShellRoute. The admin part is
+  DECIDED before step 4.1: the responsive shell, built in step 4.4a (Section 3.3,
+  Phase 4 decisions). The public part is still open (Phase 6).
 - App bar on other screens: the car detail screen reuses AppBarLogo next to the back
   arrow, with the same toolbar height (decided in step 2.4); the booking form and the
   thank-you screen do the same (step 2.7). Decide again for each new screen.
@@ -1980,3 +2061,36 @@ Phase 3 totals (written in step 3.12c):
   (Phase 5); the App Check decision, the web sign-in check on a normal Chrome
   profile, the web start without a connection, the ru and ka text review and the
   README (Phase 7); the navigation shell (Phase 4).
+
+## 19. Phase 4 status
+
+Phase 4: fleet management (Section 11). The decisions are in Section 3.3. Every step
+has a tier, which sets how much is tested by hand: Tier 1 (writes, deletes, rules,
+sign-in, offline and network signals, money): full tests and a manual checklist of at
+most 12 steps. Tier 2 (new screens and forms): tests and at most 8 steps, only what
+the tests cannot see. Tier 3 (documents, scripts, tests, refactors without a change
+of behaviour): tests and one short look, no emulator checklist.
+
+- 4.1 Cars rules in the local file and the cars cases of the emulator script; the
+  limits as Dart constants with a comparing test. No deploy. Tier 1 — written, not
+  committed yet.
+- 4.2 Deploy the cars rules with my approval; compare the console text with the
+  file; a short live check. Tier 1 — not started.
+- 4.3 The car draft, its validation, the mapping and the repository writes (pure
+  Dart and data layer, with tests; no screen). Tier 1 — not started.
+  - Requirement from step 4.1: the year and the seats must be SENT as whole numbers
+    (integers), on Android too. The rules refuse a year or a seat count stored as a
+    decimal such as 2019.0. The price and the engine size may be whole or decimal.
+  - Requirement from step 4.1: a save of the edit form replaces the whole car
+    document, so that an old incomplete car is repaired in one save and an unknown
+    field is dropped.
+- 4.4a The admin navigation shell (bottom bar on phones, side rail on wide screens)
+  with the entries Bookings and Cars; the redirect tests proved again. Tier 1, at
+  most 8 manual steps — not started.
+- 4.4b The fleet list: every car, hidden ones marked, read only. Tier 2 — not
+  started.
+- 4.5 Edit a car, and hide or show it. Tier 1 — not started.
+- 4.6 Add a car (saved hidden by default). Tier 1 — not started.
+- 4.7 The photo addresses of a car in the form (add, remove, order). Tier 2; it may
+  be folded into 4.5 and 4.6 — not started.
+- 4.8 Verify Phase 4 and close it. Tier 3 — not started.

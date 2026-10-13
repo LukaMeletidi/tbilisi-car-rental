@@ -11,14 +11,110 @@ service cloud.firestore {
         && request.auth.token.get('admin', false) == true;
     }
 
+    // ---- Car limits. They must stay equal to the constants in
+    // lib/features/fleet/domain/car_limits.dart. A unit test compares them
+    // (test/rules/car_rules_limits_test.dart).
+    function carNameMaxLength() { return 40; }
+    function carMinYear() { return 1990; }
+    function carMaxSeats() { return 9; }
+    function carMaxPricePerDay() { return 2000; }
+    function carMaxEngineSize() { return 8; }
+    function carDescriptionMaxLength() { return 1000; }
+    function carMaxPhotos() { return 10; }
+    function carPhotoMaxLength() { return 500; }
+
+    // { ka, ru, en }: all three, each a text with no space at either end.
+    function isValidCarDescription(d) {
+      return d is map
+        && d.keys().hasOnly(['ka', 'ru', 'en'])
+        && d.keys().hasAll(['ka', 'ru', 'en'])
+        && isTrimmedText(d.ka, 1, carDescriptionMaxLength())
+        && isTrimmedText(d.ru, 1, carDescriptionMaxLength())
+        && isTrimmedText(d.en, 1, carDescriptionMaxLength());
+    }
+
+    // An https address without spaces and with a dot in it.
+    function isCarPhoto(p) {
+      return p is string
+        && p.size() <= carPhotoMaxLength()
+        && p.matches('^https://[^\\s]+\\.[^\\s]+$');
+    }
+
+    // Rules have no loops, so each possible position is checked by hand.
+    // The number of lines must equal carMaxPhotos().
+    function isValidCarPhotos(p) {
+      return p is list
+        && p.size() <= carMaxPhotos()
+        && p.toSet().size() == p.size()
+        && (p.size() < 1 || isCarPhoto(p[0]))
+        && (p.size() < 2 || isCarPhoto(p[1]))
+        && (p.size() < 3 || isCarPhoto(p[2]))
+        && (p.size() < 4 || isCarPhoto(p[3]))
+        && (p.size() < 5 || isCarPhoto(p[4]))
+        && (p.size() < 6 || isCarPhoto(p[5]))
+        && (p.size() < 7 || isCarPhoto(p[6]))
+        && (p.size() < 8 || isCarPhoto(p[7]))
+        && (p.size() < 9 || isCarPhoto(p[8]))
+        && (p.size() < 10 || isCarPhoto(p[9]));
+    }
+
+    // The whole car document. engineSize is the only optional field.
+    function isValidCar(car) {
+      return car.keys().hasOnly([
+               'brand', 'model', 'year', 'drivetrain', 'transmission',
+               'fuelType', 'seats', 'engineSize', 'pricePerDay',
+               'description', 'photos', 'active'])
+        && car.keys().hasAll([
+               'brand', 'model', 'year', 'drivetrain', 'transmission',
+               'fuelType', 'seats', 'pricePerDay', 'description', 'photos',
+               'active'])
+        && isTrimmedText(car.brand, 1, carNameMaxLength())
+        && isTrimmedText(car.model, 1, carNameMaxLength())
+        && car.year is int
+        && car.year >= carMinYear()
+        && car.year <= request.time.year() + 1
+        && car.drivetrain in ['fwd', 'rwd', 'awd']
+        && car.transmission in ['automatic', 'manual']
+        && car.fuelType in ['petrol', 'diesel', 'hybrid', 'electric']
+        && car.seats is int
+        && car.seats >= 1
+        && car.seats <= carMaxSeats()
+        && (!('engineSize' in car)
+             || (car.engineSize is number
+                  && car.engineSize > 0
+                  && car.engineSize <= carMaxEngineSize()))
+        && car.pricePerDay is number
+        && car.pricePerDay > 0
+        && car.pricePerDay <= carMaxPricePerDay()
+        && isValidCarDescription(car.description)
+        && isValidCarPhotos(car.photos)
+        && car.active is bool;
+    }
+
+    // Hiding or showing a car: "active" is the only field that changes, and
+    // it is a bool afterwards. This must work for EVERY stored car, also an
+    // old one that would not pass isValidCar, so it does not check the rest.
+    function isOnlyActiveChange() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['active'])
+        && request.resource.data.active is bool;
+    }
+
     // Public catalog: anyone can read a car that is active.
     // A list query must itself filter on active == true, or it is denied.
     // An admin can read every car, also a hidden one: the bookings list must
-    // show the car of an old booking. Nobody can write yet; admin writes are
-    // added in Phase 4.
+    // show the car of an old booking.
+    // An admin can add and change a car. The whole document is checked on
+    // every write, except when only "active" changes (hide or show).
+    // Nobody can delete a car: "remove" is active == false.
     match /cars/{carId} {
       allow read: if resource.data.active == true || isAdmin();
-      allow write: if false;
+      allow create: if isAdmin()
+        && carId.matches('^[A-Za-z0-9_-]{1,128}$')
+        && isValidCar(request.resource.data);
+      allow update: if isAdmin()
+        && (isValidCar(request.resource.data) || isOnlyActiveChange());
+      allow delete: if false;
     }
 
     // Settings (extras prices, locations, later company info): anyone can

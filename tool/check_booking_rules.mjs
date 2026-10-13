@@ -1,5 +1,6 @@
 // Checks the Firestore rules against the LOCAL emulator: the public cases
-// for "bookings" (no sign-in), and the admin and signed-in cases of Phase 3.
+// for "bookings" (no sign-in), the admin and signed-in cases of Phase 3, and
+// the cars cases of step 4.1 (an admin adds, changes, hides and shows cars).
 //
 // It never talks to the real database: it refuses to start unless
 // FIRESTORE_EMULATOR_HOST points to this computer, and it uses a "demo-"
@@ -80,10 +81,21 @@ async function requireEmulator() {
 
 // ---- Firestore REST helpers ----------------------------------------------
 
+// A number that is sent as a decimal even when it is whole: Android sends
+// the Dart double 45.0 this way, while the web sends it as the integer 45.
+class DoubleNumber {
+  constructor(value) {
+    this.value = value;
+  }
+}
+const AS_DOUBLE = (value) => new DoubleNumber(value);
+
 function encode(value) {
+  if (value === null) return { nullValue: null };
   if (value instanceof Date) return { timestampValue: value.toISOString() };
   if (typeof value === 'string') return { stringValue: value };
   if (typeof value === 'boolean') return { booleanValue: value };
+  if (value instanceof DoubleNumber) return { doubleValue: value.value };
   if (typeof value === 'number') {
     return Number.isInteger(value)
       ? { integerValue: String(value) }
@@ -1265,8 +1277,9 @@ signedIn('admin delete: a booking that does not exist (no error)', 200, () =>
 deleteRefused('signed in without the claim', NO_CLAIM);
 deleteRefused('no sign-in', {});
 
-// F. Admin and the other collections: nothing may be written, and "mail"
-// may not even be read.
+// F. Admin and the other collections: settings and unknown collections may
+// not be written, a car may not be deleted, and "mail" may not even be read.
+// (Since step 4.1 an admin may add and change cars; see section I.)
 const mark = { body: { fields: encodeFields({ ruleCheck: true }) } };
 signedIn('admin refused: write settings', 403, () =>
   send(
@@ -1275,13 +1288,13 @@ signedIn('admin refused: write settings', 403, () =>
     { ...mark, headers: ADMIN },
   ),
 );
-signedIn('admin refused: create a car', 403, () =>
+signedIn('admin refused: create a car with only two fields', 403, () =>
   send('PATCH', `${DOCUMENTS}/cars/newCar`, {
     body: { fields: encodeFields({ brand: 'Kia', active: true }) },
     headers: ADMIN,
   }),
 );
-signedIn('admin refused: change a car', 403, () =>
+signedIn('admin refused: add an unknown field to a car', 403, () =>
   send(
     'PATCH',
     `${DOCUMENTS}/cars/${ACTIVE_CAR}?updateMask.fieldPaths=ruleCheck`,
@@ -1362,6 +1375,551 @@ signedIn('public: write settings', 403, () =>
   ),
 );
 
+// I. Cars (step 4.1): an admin may add and change a car, the whole document
+// is checked on every write, nobody may delete one, and hiding or showing
+// (only "active" changes) works for every stored car.
+
+const THIS_YEAR = new Date(now).getUTCFullYear();
+const photoAddress = (n) => `https://photos.example.com/car-${n}.jpg`;
+
+// A car that the rules must accept. Every case changes ONE thing in a fresh
+// copy. All values are made up.
+function validCar(change = () => {}) {
+  const car = {
+    brand: 'Honda',
+    model: 'Civic',
+    year: 2019,
+    drivetrain: 'fwd',
+    transmission: 'automatic',
+    fuelType: 'hybrid',
+    seats: 5,
+    engineSize: 1.8,
+    pricePerDay: 45,
+    description: {
+      ka: 'ეკონომიური ჰიბრიდი',
+      ru: 'Экономичный гибрид',
+      en: 'An economical hybrid',
+    },
+    photos: [photoAddress(1), photoAddress(2)],
+    active: true,
+  };
+  change(car);
+  return car;
+}
+
+// Cars put into the emulator with the admin bypass, as if they had been made
+// by hand in the console before these rules existed.
+const OLD_CAR = 'oldCar'; // only two fields
+const OLD_CAR_TO_REPAIR = 'oldCarToRepair'; // only two fields
+const OLD_CAR_TO_RENAME = 'oldCarToRename'; // only two fields
+const OLD_CAR_WITH_EXTRA = 'oldCarWithExtra'; // valid, plus an unknown field
+const STORED_CAR = 'storedCar'; // valid
+const STORED_HIDDEN_CAR = 'storedHiddenCar'; // valid, hidden
+const CAR_FOR_OTHERS = 'carForOthers'; // valid; nobody else may touch it
+
+async function seedCars() {
+  for (const id of [OLD_CAR, OLD_CAR_TO_REPAIR, OLD_CAR_TO_RENAME]) {
+    await seed(`cars/${id}`, { brand: 'Lada', active: true });
+  }
+  await seed(`cars/${OLD_CAR_WITH_EXTRA}`, { ...validCar(), note: 'old' });
+  await seed(`cars/${STORED_CAR}`, validCar());
+  await seed(
+    `cars/${STORED_HIDDEN_CAR}`,
+    validCar((c) => (c.active = false)),
+  );
+  await seed(`cars/${CAR_FOR_OTHERS}`, validCar());
+}
+
+let nextCar = 0;
+
+// Creates the car [id] the way the app will: one write that must not find
+// the document. Without [headers] there is no sign-in.
+function createCar(id, data, headers) {
+  return send('POST', `${DOCUMENTS}:commit`, {
+    body: {
+      writes: [
+        {
+          update: {
+            name: `${DATABASE}/documents/cars/${id}`,
+            fields: encodeFields(data),
+          },
+          currentDocument: { exists: false },
+        },
+      ],
+    },
+    headers,
+  });
+}
+
+// A FULL replacement of an existing car (like set() without merge).
+function replaceCar(id, data, headers) {
+  return send('POST', `${DOCUMENTS}:commit`, {
+    body: {
+      writes: [
+        {
+          update: {
+            name: `${DATABASE}/documents/cars/${id}`,
+            fields: encodeFields(data),
+          },
+          currentDocument: { exists: true },
+        },
+      ],
+    },
+    headers,
+  });
+}
+
+// A PARTIAL update of a car: only the named fields are sent, with an update
+// mask. A field in [remove] is in the mask without a value, which deletes it.
+function updateCar(id, values, headers, remove = []) {
+  const mask = [...Object.keys(values), ...remove]
+    .map((key) => `updateMask.fieldPaths=${encodeURIComponent(key)}`)
+    .join('&');
+  return send('PATCH', `${DOCUMENTS}/cars/${id}?${mask}`, {
+    body: { fields: encodeFields(values) },
+    headers,
+  });
+}
+
+// The stored fields of a car, read with the admin bypass.
+async function storedCar(id) {
+  const result = await send('GET', `${DOCUMENTS}/cars/${id}`, {
+    headers: OWNER,
+  });
+  return result.status === 200 ? JSON.parse(result.text).fields : null;
+}
+
+async function andStoredCar(result, id, isRight) {
+  if (result.status !== 200) return result;
+  const fields = await storedCar(id);
+  if (fields !== null && isRight(fields)) return result;
+  return { status: 0, text: 'accepted, but the stored car is wrong' };
+}
+
+function carAccepted(name, change = () => {}) {
+  nextCar += 1;
+  const id = `car${nextCar}`;
+  signedIn(`car, admin create: ${name}`, 200, () =>
+    createCar(id, validCar(change), ADMIN),
+  );
+}
+
+function carRefused(name, change) {
+  nextCar += 1;
+  const id = `car${nextCar}`;
+  signedIn(`car, admin create refused: ${name}`, 403, () =>
+    createCar(id, validCar(change), ADMIN),
+  );
+}
+
+// I.1 Admin allowed: create.
+const ADMIN_MADE_ACTIVE = 'adminMadeActive';
+const ADMIN_MADE_HIDDEN = 'adminMadeHidden';
+signedIn('car, admin create: a full car, stored with its 12 fields', 200, () =>
+  createCar(ADMIN_MADE_ACTIVE, validCar(), ADMIN).then((result) =>
+    andStoredCar(
+      result,
+      ADMIN_MADE_ACTIVE,
+      (f) =>
+        Object.keys(f).length === 12 &&
+        f.active.booleanValue === true &&
+        f.photos.arrayValue.values.length === 2,
+    ),
+  ),
+);
+signedIn('car, admin create: a hidden car', 200, () =>
+  createCar(ADMIN_MADE_HIDDEN, validCar((c) => (c.active = false)), ADMIN),
+);
+carAccepted('without engineSize', (c) => delete c.engineSize);
+carAccepted('no photos', (c) => (c.photos = []));
+carAccepted('10 photos, every field at its longest', (c) => {
+  c.brand = letters(40);
+  c.model = letters(40);
+  c.description = {
+    ka: letters(1000),
+    ru: letters(1000),
+    en: letters(1000),
+  };
+  c.photos = Array.from(
+    { length: 10 },
+    (_, n) => `https://photos.example.com/${n}/${letters(460)}.jpg`,
+  );
+});
+carAccepted('a photo address of exactly 500 characters', (c) => {
+  c.photos = [`https://a.example/${letters(500 - 'https://a.example/'.length)}`];
+});
+carAccepted('a price with decimals', (c) => (c.pricePerDay = 45.5));
+carAccepted('a price sent as a decimal number 45.0', (c) => {
+  // Android sends a whole price as a double; see encodeDouble below.
+  c.pricePerDay = AS_DOUBLE(45);
+});
+carAccepted('the highest price, 2000', (c) => (c.pricePerDay = 2000));
+carAccepted('engineSize as a whole number', (c) => (c.engineSize = 2));
+carAccepted('the largest engineSize, 8', (c) => (c.engineSize = 8));
+carAccepted('year 1990', (c) => (c.year = 1990));
+carAccepted('year: this year plus one', (c) => (c.year = THIS_YEAR + 1));
+carAccepted('1 seat', (c) => (c.seats = 1));
+carAccepted('9 seats', (c) => (c.seats = 9));
+carAccepted('a brand of one character', (c) => (c.brand = 'X'));
+// The length is counted in characters, not in bytes: a Georgian letter
+// takes three bytes.
+carAccepted('a Georgian description of exactly 1000 letters', (c) => {
+  c.description.ka = 'ა'.repeat(1000);
+});
+carRefused('description: a Georgian text of 1001 letters', (c) => {
+  c.description.ka = 'ა'.repeat(1001);
+});
+carAccepted('a description with a line break inside', (c) => {
+  c.description.en = 'First line\nSecond line';
+});
+for (const value of ['fwd', 'rwd', 'awd']) {
+  carAccepted(`drivetrain ${value}`, (c) => (c.drivetrain = value));
+}
+for (const value of ['automatic', 'manual']) {
+  carAccepted(`transmission ${value}`, (c) => (c.transmission = value));
+}
+for (const value of ['petrol', 'diesel', 'hybrid', 'electric']) {
+  carAccepted(`fuelType ${value}`, (c) => (c.fuelType = value));
+}
+carAccepted('an electric car with an engineSize (not forbidden)', (c) => {
+  c.fuelType = 'electric';
+});
+
+// I.2 Admin allowed: update.
+signedIn('car, admin update: change the price (partial)', 200, () =>
+  updateCar(STORED_CAR, { pricePerDay: 60 }, ADMIN).then((result) =>
+    andStoredCar(
+      result,
+      STORED_CAR,
+      (f) => f.pricePerDay.integerValue === '60' && f.brand !== undefined,
+    ),
+  ),
+);
+signedIn('car, admin update: hide a valid car', 200, () =>
+  updateCar(STORED_CAR, { active: false }, ADMIN).then((result) =>
+    andStoredCar(result, STORED_CAR, (f) => f.active.booleanValue === false),
+  ),
+);
+signedIn('car, admin update: show it again', 200, () =>
+  updateCar(STORED_CAR, { active: true }, ADMIN).then((result) =>
+    andStoredCar(result, STORED_CAR, (f) => f.active.booleanValue === true),
+  ),
+);
+signedIn('car, admin update: replace every field', 200, () =>
+  replaceCar(
+    STORED_CAR,
+    validCar((c) => {
+      c.brand = 'Kia';
+      c.model = 'Sportage';
+      c.year = 2021;
+      c.drivetrain = 'awd';
+      c.transmission = 'manual';
+      c.fuelType = 'diesel';
+      c.seats = 7;
+      c.engineSize = 2;
+      c.pricePerDay = 70;
+      c.description = { ka: 'ქართული', ru: 'Русский', en: 'English' };
+      c.photos = [photoAddress(9)];
+      c.active = false;
+    }),
+    ADMIN,
+  ).then((result) =>
+    andStoredCar(
+      result,
+      STORED_CAR,
+      (f) => f.brand.stringValue === 'Kia' && Object.keys(f).length === 12,
+    ),
+  ),
+);
+signedIn('car, admin update: remove engineSize', 200, () =>
+  updateCar(STORED_CAR, {}, ADMIN, ['engineSize']).then((result) =>
+    andStoredCar(
+      result,
+      STORED_CAR,
+      (f) => f.engineSize === undefined && Object.keys(f).length === 11,
+    ),
+  ),
+);
+signedIn('car, admin update: an old incomplete car is repaired by a full '
+  + 'replacement', 200, () =>
+  replaceCar(OLD_CAR_TO_REPAIR, validCar(), ADMIN).then((result) =>
+    andStoredCar(
+      result,
+      OLD_CAR_TO_REPAIR,
+      (f) => Object.keys(f).length === 12,
+    ),
+  ),
+);
+signedIn('car, admin update: a full replacement drops an unknown field of an '
+  + 'old car', 200, () =>
+  replaceCar(OLD_CAR_WITH_EXTRA, validCar(), ADMIN).then((result) =>
+    andStoredCar(
+      result,
+      OLD_CAR_WITH_EXTRA,
+      (f) => f.note === undefined,
+    ),
+  ),
+);
+
+// I.3 Admin refused, field by field (create).
+for (const field of ['brand', 'model']) {
+  carRefused(`${field}: missing`, (c) => delete c[field]);
+  carRefused(`${field}: empty`, (c) => (c[field] = ''));
+  carRefused(`${field}: 41 characters`, (c) => (c[field] = letters(41)));
+  carRefused(`${field}: a space in front`, (c) => (c[field] = ' Kia'));
+  carRefused(`${field}: a space at the end`, (c) => (c[field] = 'Kia '));
+  carRefused(`${field}: a number`, (c) => (c[field] = 5));
+}
+carRefused('year: missing', (c) => delete c.year);
+carRefused('year: 1989', (c) => (c.year = 1989));
+carRefused('year: this year plus two', (c) => (c.year = THIS_YEAR + 2));
+carRefused('year: 2019.5', (c) => (c.year = 2019.5));
+carRefused('year: sent as the decimal number 2019.0', (c) => {
+  c.year = AS_DOUBLE(2019);
+});
+carRefused('year: the text "2019"', (c) => (c.year = '2019'));
+carRefused('drivetrain: missing', (c) => delete c.drivetrain);
+carRefused('drivetrain: "4wd"', (c) => (c.drivetrain = '4wd'));
+carRefused('drivetrain: "FWD"', (c) => (c.drivetrain = 'FWD'));
+carRefused('drivetrain: a number', (c) => (c.drivetrain = 4));
+carRefused('transmission: missing', (c) => delete c.transmission);
+carRefused('transmission: "auto"', (c) => (c.transmission = 'auto'));
+carRefused('transmission: "Automatic"', (c) => (c.transmission = 'Automatic'));
+carRefused('fuelType: missing', (c) => delete c.fuelType);
+carRefused('fuelType: "gas"', (c) => (c.fuelType = 'gas'));
+carRefused('fuelType: "Petrol"', (c) => (c.fuelType = 'Petrol'));
+carRefused('seats: missing', (c) => delete c.seats);
+carRefused('seats: 0', (c) => (c.seats = 0));
+carRefused('seats: 10', (c) => (c.seats = 10));
+carRefused('seats: 4.5', (c) => (c.seats = 4.5));
+carRefused('seats: the text "5"', (c) => (c.seats = '5'));
+carRefused('engineSize: 0', (c) => (c.engineSize = 0));
+carRefused('engineSize: negative', (c) => (c.engineSize = -1.6));
+carRefused('engineSize: 8.1', (c) => (c.engineSize = 8.1));
+carRefused('engineSize: the text "1.8"', (c) => (c.engineSize = '1.8'));
+carRefused('engineSize: null', (c) => (c.engineSize = null));
+carRefused('pricePerDay: missing', (c) => delete c.pricePerDay);
+carRefused('pricePerDay: 0', (c) => (c.pricePerDay = 0));
+carRefused('pricePerDay: negative', (c) => (c.pricePerDay = -45));
+carRefused('pricePerDay: 2000.01', (c) => (c.pricePerDay = 2000.01));
+carRefused('pricePerDay: the text "45"', (c) => (c.pricePerDay = '45'));
+carRefused('description: missing', (c) => delete c.description);
+carRefused('description: a text instead of a map', (c) => {
+  c.description = 'An economical hybrid';
+});
+for (const language of ['ka', 'ru', 'en']) {
+  carRefused(`description: without ${language}`, (c) => {
+    delete c.description[language];
+  });
+}
+carRefused('description: an empty en', (c) => (c.description.en = ''));
+carRefused('description: en of 1001 characters', (c) => {
+  c.description.en = letters(1001);
+});
+carRefused('description: a space at the end of ru', (c) => {
+  c.description.ru = 'Экономичный гибрид ';
+});
+carRefused('description: a line break at the end of ka', (c) => {
+  c.description.ka = 'ეკონომიური ჰიბრიდი\n';
+});
+carRefused('description: an extra language "de"', (c) => {
+  c.description.de = 'Ein sparsamer Hybrid';
+});
+carRefused('description: a number as a text', (c) => (c.description.en = 5));
+carRefused('photos: missing', (c) => delete c.photos);
+carRefused('photos: a text instead of a list', (c) => {
+  c.photos = photoAddress(1);
+});
+carRefused('photos: 11 addresses', (c) => {
+  c.photos = Array.from({ length: 11 }, (_, n) => photoAddress(n));
+});
+carRefused('photos: an http address', (c) => {
+  c.photos = ['http://photos.example.com/car.jpg'];
+});
+carRefused('photos: an address without a dot', (c) => {
+  c.photos = ['https://localhost/car'];
+});
+carRefused('photos: a space inside the address', (c) => {
+  c.photos = ['https://photos.example.com/my car.jpg'];
+});
+carRefused('photos: an address of 501 characters', (c) => {
+  c.photos = [`https://a.example/${letters(501 - 'https://a.example/'.length)}`];
+});
+carRefused('photos: a number in the list', (c) => {
+  c.photos = [photoAddress(1), 5];
+});
+carRefused('photos: the same address twice', (c) => {
+  c.photos = [photoAddress(1), photoAddress(1)];
+});
+carRefused('photos: a bad address in the tenth place', (c) => {
+  c.photos = Array.from({ length: 10 }, (_, n) => photoAddress(n));
+  c.photos[9] = 'http://photos.example.com/last.jpg';
+});
+carRefused('photos: an empty text', (c) => (c.photos = ['']));
+carRefused('photos: "https://" alone', (c) => (c.photos = ['https://']));
+carRefused('active: missing', (c) => delete c.active);
+carRefused('active: the text "true"', (c) => (c.active = 'true'));
+carRefused('active: null', (c) => (c.active = null));
+
+// I.4 Unknown fields. (An update that adds one to an old car is in section F:
+// "admin refused: add an unknown field to a car".)
+carRefused('an unknown field', (c) => (c.createdAt = new Date(now)));
+signedIn('car, admin update refused: add an unknown field to a valid car',
+  403, () => updateCar(CAR_FOR_OTHERS, { note: 'x' }, ADMIN));
+signedIn('car, admin update refused: a full replacement with an unknown '
+  + 'field', 403, () =>
+  replaceCar(CAR_FOR_OTHERS, validCar((c) => (c.note = 'x')), ADMIN));
+
+// I.5 Updates that are judged by the whole document.
+signedIn('car, admin update refused: a valid car gets the price 0', 403, () =>
+  updateCar(CAR_FOR_OTHERS, { pricePerDay: 0 }, ADMIN),
+);
+signedIn('car, admin update refused: an old incomplete car gets only a new '
+  + 'brand', 403, () => updateCar(OLD_CAR_TO_RENAME, { brand: 'Kia' }, ADMIN));
+signedIn('car, admin update refused: a required field is removed', 403, () =>
+  updateCar(CAR_FOR_OTHERS, {}, ADMIN, ['model']),
+);
+
+// I.6 The ID of a new car.
+signedIn('car, admin create refused: an ID with a dot', 403, () =>
+  createCar('bad.id', validCar(), ADMIN),
+);
+signedIn('car, admin create refused: an ID of 129 characters', 403, () =>
+  createCar(letters(129), validCar(), ADMIN),
+);
+signedIn('car, admin create: an ID of 128 characters', 200, () =>
+  createCar(letters(128), validCar(), ADMIN),
+);
+
+// I.7 Hiding and showing always works: only "active" changes.
+signedIn('car, hide: an old incomplete car', 200, () =>
+  updateCar(OLD_CAR, { active: false }, ADMIN).then((result) =>
+    andStoredCar(
+      result,
+      OLD_CAR,
+      (f) => f.active.booleanValue === false && Object.keys(f).length === 2,
+    ),
+  ),
+);
+signedIn('car, show: the old incomplete car again', 200, () =>
+  updateCar(OLD_CAR, { active: true }, ADMIN).then((result) =>
+    andStoredCar(result, OLD_CAR, (f) => f.active.booleanValue === true),
+  ),
+);
+signedIn('car, hide: an old car that has no "active" field yet', 200, () =>
+  updateCar(CAR_WITHOUT_ACTIVE, { active: false }, ADMIN),
+);
+signedIn('car, hide refused: an old incomplete car, "active" and the brand '
+  + 'together', 403, () =>
+  updateCar(OLD_CAR, { active: false, brand: 'Kia' }, ADMIN));
+signedIn('car, hide refused: "active" as the text "false"', 403, () =>
+  updateCar(OLD_CAR, { active: 'false' }, ADMIN),
+);
+signedIn('car, hide refused: "active" as null', 403, () =>
+  updateCar(OLD_CAR, { active: null }, ADMIN),
+);
+signedIn('car, hide refused: "active" removed', 403, () =>
+  updateCar(OLD_CAR, {}, ADMIN, ['active']),
+);
+signedIn('car, hide refused: a valid car, "active" as a text', 403, () =>
+  updateCar(CAR_FOR_OTHERS, { active: 'false' }, ADMIN),
+);
+signedIn('car, hide with another field on a valid car: judged as a whole and '
+  + 'accepted', 200, () =>
+  updateCar(ADMIN_MADE_HIDDEN, { active: false, pricePerDay: 50 }, ADMIN));
+signedIn('car, hide with another field on a valid car: judged as a whole and '
+  + 'refused', 403, () =>
+  updateCar(CAR_FOR_OTHERS, { active: false, pricePerDay: 0 }, ADMIN));
+signedIn('car, hide refused: the public', 403, () =>
+  updateCar(OLD_CAR, { active: false }),
+);
+signedIn('car, hide refused: signed in without the claim', 403, () =>
+  updateCar(OLD_CAR, { active: false }, NO_CLAIM),
+);
+for (const [label, value] of Object.entries(wrongClaims)) {
+  signedIn(`car, hide refused: wrong claim (admin is ${label})`, 403, () =>
+    updateCar(
+      OLD_CAR,
+      { active: false },
+      testToken('wrong-claim-user', { admin: value }),
+    ),
+  );
+}
+signedIn('car, stored: the old car is still shown after the refused requests',
+  200, () =>
+  andStoredCar({ status: 200, text: '' }, OLD_CAR, (f) =>
+    f.active.booleanValue === true && f.brand.stringValue === 'Lada'));
+
+// I.8 Nobody deletes a car. (An active one: section F.)
+signedIn('car, admin refused: delete a hidden car', 403, () =>
+  send('DELETE', `${DOCUMENTS}/cars/${STORED_HIDDEN_CAR}`, { headers: ADMIN }),
+);
+signedIn('car, admin refused: delete a car the admin created', 403, () =>
+  send('DELETE', `${DOCUMENTS}/cars/${ADMIN_MADE_ACTIVE}`, { headers: ADMIN }),
+);
+
+// I.9 Everybody else: no create, no update, no delete.
+const others = {
+  'the public': undefined,
+  'signed in without the claim': NO_CLAIM,
+  'wrong claim (admin is the text "true")': testToken('wrong-claim-user', {
+    admin: 'true',
+  }),
+};
+for (const [who, headers] of Object.entries(others)) {
+  nextCar += 1;
+  const id = `car${nextCar}`;
+  signedIn(`car, refused for ${who}: create a valid car`, 403, () =>
+    createCar(id, validCar(), headers),
+  );
+  signedIn(`car, refused for ${who}: change the price`, 403, () =>
+    updateCar(CAR_FOR_OTHERS, { pricePerDay: 1 }, headers),
+  );
+  signedIn(`car, refused for ${who}: replace a car`, 403, () =>
+    replaceCar(CAR_FOR_OTHERS, validCar(), headers),
+  );
+  signedIn(`car, refused for ${who}: delete a car`, 403, () =>
+    send('DELETE', `${DOCUMENTS}/cars/${CAR_FOR_OTHERS}`, { headers }),
+  );
+}
+signedIn('car, stored: the car is unchanged after the refused requests', 200,
+  () =>
+  andStoredCar({ status: 200, text: '' }, CAR_FOR_OTHERS, (f) =>
+    f.pricePerDay.integerValue === '45' && Object.keys(f).length === 12));
+
+// I.10 Reading is as before, also for cars an admin created.
+signedIn('car, public read: an active car the admin created', 200, () =>
+  send('GET', `${DOCUMENTS}/cars/${ADMIN_MADE_ACTIVE}`),
+);
+signedIn('car, public read refused: a hidden car the admin created', 403, () =>
+  send('GET', `${DOCUMENTS}/cars/${ADMIN_MADE_HIDDEN}`),
+);
+signedIn('car, public query with the active filter: holds the active car and '
+  + 'not the hidden one', 200, async () => {
+  const result = await send('POST', `${DOCUMENTS}:runQuery`, {
+    body: activeCarsQuery,
+  });
+  if (result.status !== 200) return result;
+  const names = JSON.parse(result.text)
+    .map((row) => row.document?.name ?? '')
+    .map((name) => name.split('/').pop());
+  const right =
+    names.includes(ADMIN_MADE_ACTIVE) && !names.includes(ADMIN_MADE_HIDDEN);
+  return right ? result : { status: 0, text: 'the wrong cars came back' };
+});
+signedIn('car, public read refused: list cars without a filter', 403, () =>
+  send('GET', `${DOCUMENTS}/cars`),
+);
+signedIn('car, admin read: a hidden car the admin created', 200, () =>
+  send('GET', `${DOCUMENTS}/cars/${ADMIN_MADE_HIDDEN}`, { headers: ADMIN }),
+);
+
+// I.11 A booking still follows the car.
+signedIn('car, public booking: accepted for an active car the admin created',
+  200, () => create(booking((b) => (b.carId = ADMIN_MADE_ACTIVE))));
+signedIn('car, public booking: refused for a hidden car the admin created',
+  403, () => create(booking((b) => (b.carId = ADMIN_MADE_HIDDEN))));
+
 // ---- Run -----------------------------------------------------------------
 
 async function prepare() {
@@ -1377,6 +1935,7 @@ async function prepare() {
   await seed(`cars/${ACTIVE_CAR}`, { brand: 'Toyota', active: true });
   await seed(`cars/${INACTIVE_CAR}`, { brand: 'Honda', active: false });
   await seed(`cars/${CAR_WITHOUT_ACTIVE}`, { brand: 'Mazda' });
+  await seedCars();
   await seed('settings/extras', {
     pricesPerDay: {
       snowChains: 5,
