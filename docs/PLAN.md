@@ -1357,20 +1357,22 @@ Implementation decisions (step 2.2):
 ## 11. Phased delivery plan
 
 0. Setup: Firebase project, project skeleton, CLAUDE.md, localization scaffolding
+   — DONE (Section 14).
 1. Public catalog (read-only) + filters + localization + empty states + purple theme +
    app name. Basic Firestore rules start here (public read of active cars).
-   Demo cars are entered by hand in the Firebase console.
+   Demo cars are entered by hand in the Firebase console. — DONE (Section 16).
 2. Booking form + price calculation + confirmation screen + Firestore rules +
    App Check. Extras prices and the location list are seeded by hand in the Firebase
-   console, because the admin screens for them come in Phase 6.
-3. Admin auth (custom claim script) + bookings list and editing
-4. Fleet management + photo upload
-5. Calendar + conflict warning
-6. Settings screens (Extras & Prices, Company Info) + About Us page
+   console, because the admin screens for them come in Phase 6. — DONE (Section 17;
+   App Check step 2.9b moved to Phase 7).
+3. Admin auth (custom claim script) + bookings list and editing — DONE (Section 18).
+4. Fleet management + photo upload — open.
+5. Calendar + conflict warning — open.
+6. Settings screens (Extras & Prices, Company Info) + About Us page — open.
 7. Cloud Functions + compliance + polish (App Check step 2.9b, consent banner, Privacy
    Policy, TTL, email, README with screenshots, launcher icon). The launcher icon is
    still open; it needs the package flutter_launcher_icons, which needs the owner's
-   permission then.
+   permission then. This phase is open.
    README: screenshots; an honest "how I worked" paragraph (architecture and business
    rules are the owner's decisions, Claude Code writes the code under supervision, the
    owner reviews and approves every change); a note that iOS could not be tested on
@@ -1566,7 +1568,9 @@ Phase 0 is complete.
   decide later: the public app uses plain back navigation for the booking flow and a
   small app bar menu for the About Us and Privacy Policy pages (decide in Phase 6); the
   admin panel uses a responsive shell (a bottom navigation bar on phones, a side
-  navigation rail on wide screens) with go_router's ShellRoute (decide in Phase 3).
+  navigation rail on wide screens) with go_router's ShellRoute. It was not decided
+  in Phase 3: the admin area has one section and a plain app bar. STILL OPEN; decide
+  it in Phase 4, when the fleet screens add a second section.
 - App bar on other screens: the car detail screen reuses AppBarLogo next to the back
   arrow, with the same toolbar height (decided in step 2.4); the booking form and the
   thank-you screen do the same (step 2.7). Decide again for each new screen.
@@ -1575,9 +1579,9 @@ Phase 0 is complete.
 - The import cycle between app_router and the screens is accepted: the router imports
   the screens, and the screens import the router for the route names. It is the one
   exception to "lib/core does not import lib/features".
-- Admin data on the device (accepted in Phase 3 for now): on Android, Firestore keeps
-  a local copy of the bookings an admin has read, also after sign-out. They contain
-  personal data. Revisit at the end of Phase 3.
+- Admin data on the device: CLOSED in step 3.12b. Firestore keeps no copy on disk on
+  Android and iOS any more, and the old copy is removed at the first start after the
+  update (see "Decisions of step 3.12b" in Section 3 and "Offline behaviour" above).
 - When Phase 7 adds expireAt (TTL), the admin update rule must also allow an
   unchanged expireAt, because an update is checked on the merged document.
 - createdBy is not tied to who created a booking: the rules let an admin add or
@@ -1587,6 +1591,13 @@ Phase 0 is complete.
   on a normal Chrome profile. "flutter run -d chrome" opens a fresh temporary profile
   each time, so being signed out after reopening proves nothing. Check it on the
   hosted web build (Phase 7), or with a normal Chrome and a local web server.
+- Web admin without a connection, not verified by hand (for Phase 7): a START
+  without a connection on the web was not tested by hand in step 3.12b; only the
+  "Offline" note of a running session was seen in Chrome, and "flutter run" cannot
+  reload its page offline. Tests cover the logic. Verify it once on a deployed or
+  release web build: open /admin as admin, go offline, reload, and see the spinner
+  and then "No connection. The bookings could not be loaded.", never "No bookings
+  yet."; go online again and see the bookings appear by themselves.
 - An unknown address under /admin shows go_router's raw "Page Not Found" screen. A
   proper admin "not found" page comes in step 3.6.
 - App Check state after step 3.5: Monitoring only, for Authentication and for
@@ -1594,8 +1605,8 @@ Phase 0 is complete.
   requests carry no token). Enforcement, if ever, is the Phase 7 decision 2.9b, and
   then the admin web build needs a provider too. Never press Enforce before that.
 - Notes after step 3.6:
-  - The cache question stays open for step 3.12: on Android the bookings an admin has
-    read remain in Firestore's local copy.
+  - CLOSED in step 3.12b: the cache question (on Android the bookings an admin had
+    read remained in Firestore's local copy).
   - Sign out closes the bookings listener first (stop()), then signs out. A session
     that ends by itself is handled at the next frame; an error that arrives in
     between is ignored and never shown.
@@ -1639,6 +1650,85 @@ Phase 0 is complete.
   - The chosen language is not remembered between app starts.
   - The Android build prints a Kotlin plugin warning (see the firebase_core reminder
     above).
+
+- Known limits of the admin area after Phase 3 (one list, gathered in step 3.12c;
+  the step in brackets has the details in Section 3 or in this section):
+  - Sign-in and session
+    - One shared admin account with a long random password; there is no password
+      reset in the app and no second role (Phase 3 decisions).
+    - A claim removed with the script takes effect in the app within about an hour;
+      the rules refuse as soon as the old token has expired (3.4).
+    - An admin who loses the connection while the session is being read may see the
+      login page (3.4).
+    - On web the sign-in is meant to last for the browser session only; that closing
+      the browser really signs out is not verified on a normal Chrome profile (3.5).
+      On Android the sign-in stays on the device between app starts.
+    - The public app has no visible way into the admin area: a long press on the
+      logo on Android, a typed address on web (Phase 3 decisions).
+  - The bookings list
+    - The status counts, the search and the order cover only the loaded bookings, at
+      first the newest 50; the screen says so in one line (3.7).
+    - A booking without createdAt (possible only when made by hand in the console)
+      is not listed and not counted as unreadable (3.6).
+    - A booking that cannot be read is skipped; the list shows only how many (3.6).
+    - A direct link to one booking on web also starts the list: up to 50 extra
+      reads (3.8).
+  - One booking: status, edit, create, delete
+    - No conflict warning yet: an admin can confirm two bookings of one car for the
+      same days without any warning. It comes in Phase 5 (Phase 3 decisions).
+    - Who changed a booking and when is not stored; the rules have no field for it
+      (3.8). createdBy is the fixed word "admin" and the rules do not tie it to who
+      created the booking (3.10a).
+    - "No answer from the server" does not mean "not saved": the change may still
+      have arrived, and only the live read tells. These paths cannot be forced by
+      hand and are covered by tests only (3.8, 3.9, 3.10b, 3.11).
+    - A document changed by hand in the console can be readable and still refused by
+      the rules on every update (an unknown field, no createdAt, a value with spaces
+      around it). The app names the reason; it is corrected in the form or in the
+      console (3.8, 3.9a).
+    - A customer or place map with an extra key written by hand is reported as a
+      conflict of that part, not as an unknown field (3.9a).
+    - A booking that is deleted while it is being edited replaces the form with
+      "does not exist"; the typed values are lost (3.9a).
+    - A session that ends while a form is open closes it; the typed values are lost
+      (3.9b, 3.10b).
+    - On web the browser's Back button, a typed address and closing the tab leave a
+      form WITHOUT the discard question; only the arrow of the app bar and the
+      system Back of Android ask (3.9b, 3.10b).
+    - The calendar and clock dialogs are in the language of the app, not always
+      English (3.9b).
+    - A customer without an e-mail is stored with a placeholder address that can
+      never exist; anything that sends mail later must skip it (3.10a).
+    - A delete cannot be undone and there is no archive (3.11).
+    - A booking that cannot be read has no delete button; such a document is removed
+      in the Firebase console (3.11).
+  - Without a connection (3.12b; these hold for the public app too)
+    - Nothing is kept on the device after the app is closed, so a start without a
+      connection shows the load or connection text with "Try again", never data.
+    - The admin detail and edit pages give up after 3 seconds and then need "Try
+      again"; they do not recover by themselves. The list, the catalog and the
+      booking form do.
+    - "Load more" without a connection brings its button back after 3 seconds,
+      without a message.
+    - Leaving a screen and coming back without a connection shows the load error,
+      not the earlier data: memory holds only what a screen is showing.
+    - The 3 seconds are a guess: on a very slow connection the error can show for a
+      moment before the data arrives by itself.
+    - The first start after the update removes the old copy from the device: the
+      file is dropped, not shredded.
+    - Car photos without a connection were not checked again.
+    - A start without a connection on the web was not tested by hand (see the
+      reminder for Phase 7 above).
+  - Platforms and tools
+    - The admin area is web-first; Android is secondary for it and was checked less.
+    - iOS has the same code but cannot be tested on Windows.
+    - App Check is not enforced (monitoring only); enforcement is the Phase 7
+      decision 2.9b.
+    - The secrets scan reads files, not the git history, and knows a fixed list of
+      shapes; it does not replace reading a change before it is committed (3.12a).
+    - The optional local file tool/private_denylist.txt exists on the owner's
+      machine. git ignores it; it is never printed, pasted, read aloud or committed,
+      and the scan never shows its content (3.12a).
 
 ## 16. Phase 1 status
 
@@ -1854,3 +1944,35 @@ Phase 3: admin sign-in and the bookings list with editing (Section 11).
     Offline keeps its rows and shows the "Offline" note); a start without a
     connection on the web is covered by tests only.
   - 3.12c (closing Phase 3 in the documents) — not started.
+
+Phase 3 totals (written in step 3.12c):
+- Steps 3.1 to 3.12 are done. The admin area has: sign-in with the admin claim, the
+  redirect and the "no admin access" page; the live bookings list with filter,
+  search, sort and "Load more"; the booking detail with the status change; editing
+  every field; creating a booking by hand; deleting a booking; honest screens
+  without a connection; no data left on the device.
+- Tests: 1408 Flutter tests pass and "flutter analyze" is clean. The tests of the
+  secrets scan: 47 pass. (After step 3.4 there were 522 Flutter tests.)
+- Rules: the emulator script passes with 104 of 104 public checks and 244 of 244
+  admin and signed-in checks.
+- The rules are unchanged since the deploy of step 3.3:
+  - git: firestore.rules was last changed in commit 0a7eb27 (step 3.1, 9 Oct 2026
+    16:22 Tbilisi time). "git diff 0a7eb27 HEAD" is empty for firestore.rules and
+    for firestore.indexes.json.
+  - Firebase console, Rules tab, read by the owner on 13 Oct 2026: the last publish
+    is 9 Oct 2026, 5:34 PM (Asia/Tbilisi). That is after commit 0a7eb27 (16:22) and
+    before the commit "Mark step 3.3 as done" (18:09 the same day), so it is the
+    deploy of step 3.3 and nothing was published since. No firebase command was run
+    against the real project for this check.
+- Secrets scan of the repository: 0 errors, 6 warnings (the intentionally invalid
+  phone values of validation tests).
+- By the git history: the last package was added in step 3.4 (firebase_auth); the
+  ARB files are unchanged since step 2.8; the rules since step 3.1; the indexes
+  file since Phase 0.
+- Checked by hand by the owner, step by step: 3.5 to 3.12b on the Android emulator
+  and in Chrome. No separate regression pass was made at the end of the phase.
+- The known limits are in one list in Section 15, "Known limits of the admin area
+  after Phase 3". Still open for later phases (Section 15): the conflict warning
+  (Phase 5); the App Check decision, the web sign-in check on a normal Chrome
+  profile, the web start without a connection, the ru and ka text review and the
+  README (Phase 7); the navigation shell (Phase 4).
