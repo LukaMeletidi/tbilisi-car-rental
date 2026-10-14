@@ -1679,6 +1679,10 @@ Phase 0 is complete.
   release web build: open /admin as admin, go offline, reload, and see the spinner
   and then "No connection. The bookings could not be loaded.", never "No bookings
   yet."; go online again and see the bookings appear by themselves.
+- Android system Back of the admin navigation, not verified on a device (for Phase
+  7): in step 4.4a the emulator did not boot, so Back on Cars (to Bookings, then to
+  the catalog) is covered by a widget test only. Check it once on a healthy
+  emulator or a phone: sign in as admin, open Cars, press Back twice.
 - An unknown address under /admin shows go_router's raw "Page Not Found" screen. A
   proper admin "not found" page comes in step 3.6.
 - App Check state after step 3.5: Monitoring only, for Authentication and for
@@ -1802,6 +1806,9 @@ Phase 0 is complete.
       reminder for Phase 7 above).
   - Platforms and tools
     - The admin area is web-first; Android is secondary for it and was checked less.
+    - The Android system Back of the admin navigation (Cars to Bookings to the
+      catalog, step 4.4a) was not checked on a device, only by a widget test: the
+      emulator did not boot. See the reminder for Phase 7.
     - iOS has the same code but cannot be tested on Windows.
     - App Check is not enforced (monitoring only); enforcement is the Phase 7
       decision 2.9b.
@@ -2141,7 +2148,13 @@ of behaviour): tests and one short look, no emulator checklist.
     field is dropped.
 - 4.4a The admin navigation shell (bottom bar on phones, side rail on wide screens)
   with the entries Bookings and Cars; the redirect tests proved again. Tier 1, at
-  most 8 manual steps — written, not committed yet.
+  most 8 manual steps — DONE. Commit b3698e6.
+  - 1532 Flutter tests pass and analyze is clean; the 34 navigation tests pass
+    unchanged; the 47 tests of the secrets scan pass.
+  - Checked by hand in Chrome (wide and narrow). The Android system Back (Cars to
+    Bookings to the catalog) was NOT checked on a device: the emulator did not
+    boot. It is covered by a widget test. Check it once on a healthy emulator or a
+    phone in Phase 7.
   - go_router's StatefulShellRoute.indexedStack with two branches: Bookings stays
     at /admin (with new, detail and edit below it), Cars is /admin/cars and shows
     "Cars: coming soon" until 4.4b. Each branch keeps its pages while the other is
