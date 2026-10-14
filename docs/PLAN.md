@@ -2086,7 +2086,34 @@ of behaviour): tests and one short look, no emulator checklist.
     before any other change is saved.
   - No manual check was possible: nothing is deployed and no screen writes a car.
 - 4.2 Deploy the cars rules with my approval; compare the console text with the
-  file; a short live check. Tier 1 — not started.
+  file; a short live check. Tier 1 — deployed; the results are recorded below.
+  - Deployed with "firebase deploy --only firestore:rules --project
+    tbilisi-car-rental", run once by Claude Code in PowerShell in the project
+    folder after my approval, on 13 Oct 2026 at 19:21:11 Tbilisi time. The file
+    compiled and only the rules were released; no error and no warning. The
+    console's Rules tab shows the publish time 13 Oct 2026, 7:21 PM.
+  - The deployed file is firestore.rules of commit 4e5fb1d (13000 characters,
+    303 lines). Before the deploy: the working tree was clean, git diff against
+    4e5fb1d was empty, and the emulator script passed (104 of 104 public, 396 of
+    396 admin and signed-in).
+  - Anonymous read-only checks one minute later, all as expected: active cars with
+    the filter 200 (6 cars); all cars without the filter 403; settings/extras and
+    settings/locations 200; bookings get and list 403.
+  - One anonymous refused write: an incomplete car for a made-up ID, with the
+    precondition "the document exists", so nothing could be stored either way.
+    Answer 403. No other write was sent to the live database.
+  - I copied the live rules text from the console into a file outside the
+    repository; it equals firestore.rules at HEAD (line endings and spaces at the
+    ends of lines ignored; the file was UTF-8 without a byte order mark).
+  - Checked by me in Chrome: the catalog shows the six active cars; five with a
+    photo, one with the placeholder (it has no photos field).
+  - The cars in the collection, checked against the new rules (counts only): 7
+    cars, 6 active and 1 hidden. 1 passes; 6 fail, all six because they have no
+    description, two of them also no photos field. They stay as they are until
+    step 4.5: they can be read, hidden and shown, and are repaired by one save
+    of the edit form.
+  - The new rules cannot be used from the app yet: there is no screen that writes
+    a car. Their first real use is step 4.5.
 - 4.3 The car draft, its validation, the mapping and the repository writes (pure
   Dart and data layer, with tests; no screen). Tier 1 — not started.
   - Requirement from step 4.1: the year and the seats must be SENT as whole numbers
