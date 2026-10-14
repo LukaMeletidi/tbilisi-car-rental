@@ -38,6 +38,11 @@ const adminBookingsNoConnection =
     'No connection. The bookings could not be loaded.';
 const adminTryAgain = 'Try again';
 const adminOfflineNote = 'Offline: showing saved data';
+
+/// The entries of the admin navigation, and the Cars page until step 4.4b.
+const adminNavBookings = 'Bookings';
+const adminNavCars = 'Cars';
+const adminCarsComingSoon = 'Cars: coming soon';
 const adminLoadMore = 'Load more';
 const adminEstimate = 'estimate';
 

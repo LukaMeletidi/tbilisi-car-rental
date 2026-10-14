@@ -310,4 +310,39 @@ void main() {
       }
     }
   });
+
+  // Step 4.4a: the Cars section is admin content like every other address;
+  // the redirect itself is unchanged.
+  group('the Cars section (/admin/cars)', () {
+    for (final cars in ['/admin/cars', '/admin/cars/']) {
+      test('$cars: session not known yet goes to checking, with "from"', () {
+        expect(
+          redirect(AdminSession.unknown, cars),
+          withFrom(adminCheckingPath, '/admin/cars'),
+        );
+      });
+
+      test('$cars: signed out goes to the login page, with "from"', () {
+        expect(
+          redirect(AdminSession.signedOut, cars),
+          withFrom(adminLoginPath, '/admin/cars'),
+        );
+      });
+
+      test('$cars: without the claim goes to the no-access page', () {
+        expect(redirect(AdminSession.noAccess, cars), adminNoAccessPath);
+      });
+
+      test('$cars: an admin stays', () {
+        expect(redirect(AdminSession.admin, cars), isNull);
+      });
+    }
+
+    test('after the sign-in the admin goes on to Cars', () {
+      expect(
+        redirect(AdminSession.admin, withFrom(adminLoginPath, '/admin/cars')),
+        '/admin/cars',
+      );
+    });
+  });
 }

@@ -2141,7 +2141,23 @@ of behaviour): tests and one short look, no emulator checklist.
     field is dropped.
 - 4.4a The admin navigation shell (bottom bar on phones, side rail on wide screens)
   with the entries Bookings and Cars; the redirect tests proved again. Tier 1, at
-  most 8 manual steps — not started.
+  most 8 manual steps — written, not committed yet.
+  - go_router's StatefulShellRoute.indexedStack with two branches: Bookings stays
+    at /admin (with new, detail and edit below it), Cars is /admin/cars and shows
+    "Cars: coming soon" until 4.4b. Each branch keeps its pages while the other is
+    shown, so the bookings list keeps its filter, search and listener.
+  - The gate pages (login, no access, checking) and the admin "not found" page are
+    outside the shell: no navigation for a visitor who is not an admin. The
+    redirect is unchanged; /admin/cars is admin content like every other address.
+  - The rail from 600 pixels wide (labels always shown), the bottom bar below.
+    FORMS NEVER SHOW THE NAVIGATION, on any width (new booking, edit booking, and
+    later the car forms): a click on it is not a Back, so it would not ask
+    "Discard your changes?". The rail shows on the list, a booking detail and
+    Cars; the bottom bar only on the list and Cars.
+  - Android's system Back on Cars goes to Bookings, then to the catalog. On the
+    web nothing is intercepted: the browser's Back follows its history.
+  - Sign out is one shared button in the app bar of each section. It closes the
+    bookings listener first when the list is alive, and never starts it.
 - 4.4b The fleet list: every car, hidden ones marked, read only. Tier 2 — not
   started.
 - 4.5 Edit a car, and hide or show it. Tier 1 — not started.

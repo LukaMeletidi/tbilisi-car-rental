@@ -10,11 +10,11 @@ import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_bookings_filter_provider.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_bookings_provider.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_deleted_notice_provider.dart';
-import 'package:tbilisi_car_rental/features/admin/presentation/admin_sign_in_provider.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_texts.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/widgets/admin_booking_card.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/widgets/admin_bookings_controls.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/widgets/admin_note.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/widgets/admin_sign_out_button.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_layout.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/widgets/catalog_message.dart';
 
@@ -23,18 +23,6 @@ import 'package:tbilisi_car_rental/features/catalog/presentation/widgets/catalog
 /// and the Firestore rules give the data only to such an account.
 class AdminBookingsScreen extends ConsumerWidget {
   const AdminBookingsScreen({super.key});
-
-  Future<void> _signOut(WidgetRef ref) async {
-    // First close the bookings listener, then sign out: nothing is
-    // listening when the sign-in token goes away.
-    ref.read(adminBookingsProvider.notifier).stop();
-    try {
-      await ref.read(adminSignInProvider.notifier).signOut();
-    } catch (_) {
-      // Still signed in: bring the list back.
-      ref.invalidate(adminBookingsProvider);
-    }
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -70,13 +58,9 @@ class AdminBookingsScreen extends ConsumerWidget {
       appBar: AppBar(
         toolbarHeight: appBarLogoToolbarHeight,
         title: const AppBarLogo(),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: adminSignOutButton,
-            onPressed: () => _signOut(ref),
-          ),
-        ],
+        automaticallyImplyLeading: false,
+        // Closes the bookings listener first, then signs out.
+        actions: const [AdminSignOutButton()],
       ),
       body: SafeArea(
         child: Column(

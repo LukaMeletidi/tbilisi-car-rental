@@ -2,15 +2,18 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:tbilisi_car_rental/features/admin/domain/admin_navigation.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_redirect.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_booking_detail_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_new.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_booking_edit_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_booking_new_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_bookings_screen.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/admin_cars_placeholder_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_gate_screens.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_login_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_session_provider.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/admin_shell.dart';
 import 'package:tbilisi_car_rental/features/booking/presentation/booking_form_screen.dart';
 import 'package:tbilisi_car_rental/features/booking/presentation/booking_sent_screen.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/car_detail_screen.dart';
@@ -68,6 +71,9 @@ abstract final class AppRoutes {
   /// "/admin/bookings/abc123/edit".
   static String adminBookingEdit(String bookingId) =>
       '${adminBooking(bookingId)}/$adminBookingEditPattern';
+
+  /// The Cars section of the admin area.
+  static const adminCars = adminCarsPath;
 }
 
 /// Tells the router to run its redirect again. The router listens to it;
@@ -127,44 +133,72 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: AppRoutes.bookingSentPattern,
             builder: (context, state) => const BookingSentScreen(),
           ),
-          // The admin area. The gate pages (login, no access, checking)
-          // are side by side with the admin page, NOT below it: a page
-          // below "/admin" has the bookings list built underneath it, and
-          // that must never happen for a visitor who is not an admin.
-          GoRoute(
-            path: _below(AppRoutes.admin),
-            builder: (context, state) => const AdminBookingsScreen(),
-            routes: [
-              // Admin content, so it IS below the list: Back returns to
-              // the list. The redirect runs first, so only an admin ever
-              // gets here. Opening this address directly also builds the
-              // list underneath, which starts the list's listener.
-              // The "new booking" form. It MUST stay before the detail:
-              // "new" would match ":bookingId" too.
-              GoRoute(
-                path: AppRoutes.adminBookingNewPattern,
-                builder: (context, state) => const AdminBookingNewScreen(),
-              ),
-              GoRoute(
-                path: AppRoutes.adminBookingPattern,
-                builder: (context, state) => _isReservedId(state)
-                    ? const AdminNotFoundScreen()
-                    : AdminBookingDetailScreen(
-                        bookingId: state.pathParameters['bookingId']!,
-                      ),
+          // The admin area: a frame with the navigation (AdminShell) and
+          // one branch per AdminSection, in its order. Each branch keeps
+          // its own pages while another one is shown (indexedStack), so
+          // the bookings list keeps its filter and search.
+          // The gate pages (login, no access, checking) are side by side
+          // with this frame, NOT inside it: a visitor who is not an admin
+          // must never see the navigation or have the bookings list built.
+          StatefulShellRoute.indexedStack(
+            builder: (context, state, navigationShell) => AdminShell(
+              navigationShell: navigationShell,
+              path: state.uri.path,
+            ),
+            branches: [
+              // AdminSection.bookings
+              StatefulShellBranch(
                 routes: [
-                  // Below the detail, so Back returns to the detail.
-                  // Opening this address directly builds the list and
-                  // the detail underneath, with their listeners.
                   GoRoute(
-                    path: AppRoutes.adminBookingEditPattern,
-                    // "/admin/bookings/new/edit" would be the edit form
-                    // of a booking called "new"; there is none.
-                    builder: (context, state) => _isReservedId(state)
-                        ? const AdminNotFoundScreen()
-                        : AdminBookingEditScreen(
-                            bookingId: state.pathParameters['bookingId']!,
+                    path: _below(AppRoutes.admin),
+                    builder: (context, state) => const AdminBookingsScreen(),
+                    routes: [
+                      // Admin content, so it IS below the list: Back returns to
+                      // the list. The redirect runs first, so only an admin ever
+                      // gets here. Opening this address directly also builds the
+                      // list underneath, which starts the list's listener.
+                      // The "new booking" form. It MUST stay before the detail:
+                      // "new" would match ":bookingId" too.
+                      GoRoute(
+                        path: AppRoutes.adminBookingNewPattern,
+                        builder: (context, state) =>
+                            const AdminBookingNewScreen(),
+                      ),
+                      GoRoute(
+                        path: AppRoutes.adminBookingPattern,
+                        builder: (context, state) => _isReservedId(state)
+                            ? const AdminNotFoundScreen()
+                            : AdminBookingDetailScreen(
+                                bookingId: state.pathParameters['bookingId']!,
+                              ),
+                        routes: [
+                          // Below the detail, so Back returns to the detail.
+                          // Opening this address directly builds the list and
+                          // the detail underneath, with their listeners.
+                          GoRoute(
+                            path: AppRoutes.adminBookingEditPattern,
+                            // "/admin/bookings/new/edit" would be the edit form
+                            // of a booking called "new"; there is none.
+                            builder: (context, state) => _isReservedId(state)
+                                ? const AdminNotFoundScreen()
+                                : AdminBookingEditScreen(
+                                    bookingId:
+                                        state.pathParameters['bookingId']!,
+                                  ),
                           ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              // AdminSection.cars
+              StatefulShellBranch(
+                routes: [
+                  GoRoute(
+                    path: _below(AppRoutes.adminCars),
+                    builder: (context, state) =>
+                        const AdminCarsPlaceholderScreen(),
                   ),
                 ],
               ),
