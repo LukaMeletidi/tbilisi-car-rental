@@ -2086,7 +2086,8 @@ of behaviour): tests and one short look, no emulator checklist.
     before any other change is saved.
   - No manual check was possible: nothing is deployed and no screen writes a car.
 - 4.2 Deploy the cars rules with my approval; compare the console text with the
-  file; a short live check. Tier 1 — deployed; the results are recorded below.
+  file; a short live check. Tier 1 — DONE. The deployed rules are those of commit
+  4e5fb1d.
   - Deployed with "firebase deploy --only firestore:rules --project
     tbilisi-car-rental", run once by Claude Code in PowerShell in the project
     folder after my approval, on 13 Oct 2026 at 19:21:11 Tbilisi time. The file
