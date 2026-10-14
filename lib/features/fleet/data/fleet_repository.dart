@@ -1,0 +1,191 @@
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:tbilisi_car_rental/core/models/car.dart';
+import 'package:tbilisi_car_rental/features/fleet/domain/car_draft.dart';
+import 'package:tbilisi_car_rental/features/fleet/domain/car_write.dart';
+
+/// Admin writes of the "cars" collection. Only an account with the admin
+/// claim may write; the Firestore rules check every write. This is the only
+/// file of the fleet feature that talks to Firestore. It hands on plain Dart
+/// values and never a Firestore type.
+///
+/// Every write runs in a transaction, tried once, with [carWriteTimeout]: a
+/// transaction is never kept in the offline queue, so without a connection
+/// it fails instead of being sent later. The caller says "Saved" only after
+/// a method returned. A [CarWriteNoAnswer] does NOT mean "not saved".
+/// Nothing is logged.
+class FleetRepository {
+  FleetRepository(this._firestore);
+
+  final FirebaseFirestore _firestore;
+
+  /// A new, unused car ID, made on the device; no request is sent. The
+  /// "new car" form asks for one when it opens and uses it for every
+  /// attempt, so a repeated attempt never creates a second car.
+  String newCarId() => _firestore.collection('cars').doc().id;
+
+  /// Creates [car] as the document car.id and returns once the server has
+  /// confirmed it.
+  ///
+  /// The transaction reads the document first. When it exists, nothing is
+  /// written and [CarCreateResult.alreadyCreated] is returned: an earlier
+  /// attempt with this ID, whose answer never arrived, created it. So a car
+  /// is never created twice. Otherwise it writes carDocument(car).
+  ///
+  /// Throws a [CarWriteException] when the car was certainly not created,
+  /// and a [CarWriteNoAnswer] when the server did not answer in time.
+  Future<CarCreateResult> createCar(
+    Car car, {
+    Duration timeout = carWriteTimeout,
+  }) async {
+    final document = _document(car.id);
+    final data = carDocument(car);
+    try {
+      return await _firestore
+          .runTransaction<CarCreateResult>(
+            (transaction) async {
+              final existing = await transaction.get(document);
+              if (existing.exists) return CarCreateResult.alreadyCreated;
+              transaction.set(document, data);
+              return CarCreateResult.created;
+            },
+            timeout: timeout,
+            maxAttempts: 1,
+          )
+          // The plugin's own timeout does not cover every platform and
+          // every stage of the transaction, so the wait is limited here too.
+          .timeout(timeout);
+    } catch (error, stackTrace) {
+      Error.throwWithStackTrace(mapCarWriteError(error), stackTrace);
+    }
+  }
+
+  /// Replaces the WHOLE stored document car.id with carDocument(car), as a
+  /// set without merge: an old incomplete car is repaired in one save, and
+  /// a field the rules do not know is dropped.
+  ///
+  /// [base] is the car the form started from. The transaction reads the
+  /// stored document and decides with decideReplace: no document ->
+  /// carMissing; already exactly [car] -> returns normally without a write
+  /// (a retry after a lost answer, or a save without a change); changed
+  /// since [base] -> changedElsewhere, without a write.
+  ///
+  /// Throws a [CarWriteException] when the car was certainly not saved, and
+  /// a [CarWriteNoAnswer] when the server did not answer in time.
+  Future<void> replaceCar(
+    Car car, {
+    required Car base,
+    Duration timeout = carWriteTimeout,
+  }) async {
+    if (base.id != car.id) {
+      throw ArgumentError('The base and the car have different IDs.');
+    }
+    final document = _document(car.id);
+    final data = carDocument(car);
+    final CarReplaceDecision decision;
+    try {
+      decision = await _firestore
+          .runTransaction<CarReplaceDecision>(
+            (transaction) async {
+              final stored = await transaction.get(document);
+              final decision = decideReplace(
+                storedData: stored.data(),
+                base: base,
+                target: car,
+              );
+              if (decision == CarReplaceDecision.write) {
+                transaction.set(document, data);
+              }
+              return decision;
+            },
+            timeout: timeout,
+            maxAttempts: 1,
+          )
+          .timeout(timeout);
+    } catch (error, stackTrace) {
+      Error.throwWithStackTrace(mapCarWriteError(error), stackTrace);
+    }
+    switch (decision) {
+      case CarReplaceDecision.write:
+      case CarReplaceDecision.alreadySaved:
+        return;
+      case CarReplaceDecision.carMissing:
+        throw const CarWriteException(CarWriteFailure.carMissing);
+      case CarReplaceDecision.changedElsewhere:
+        throw const CarWriteException(CarWriteFailure.changedElsewhere);
+    }
+  }
+
+  /// Hides (false) or shows (true) the car [id].
+  ///
+  /// The write changes "active" and nothing else
+  /// (transaction.update(document, {'active': active})), so the rules accept
+  /// it for every stored car, also an old one that fails their full check.
+  /// When the stored "active" already is that bool, nothing is written and
+  /// it returns normally (decideSetActive).
+  ///
+  /// Throws a [CarWriteException] when it certainly did not happen, and a
+  /// [CarWriteNoAnswer] when the server did not answer in time.
+  Future<void> setCarActive(
+    String id, {
+    required bool active,
+    Duration timeout = carWriteTimeout,
+  }) async {
+    final document = _document(id);
+    final CarActiveDecision decision;
+    try {
+      decision = await _firestore
+          .runTransaction<CarActiveDecision>(
+            (transaction) async {
+              final stored = await transaction.get(document);
+              final decision = decideSetActive(
+                storedData: stored.data(),
+                active: active,
+              );
+              if (decision == CarActiveDecision.write) {
+                transaction.update(document, {'active': active});
+              }
+              return decision;
+            },
+            timeout: timeout,
+            maxAttempts: 1,
+          )
+          .timeout(timeout);
+    } catch (error, stackTrace) {
+      Error.throwWithStackTrace(mapCarWriteError(error), stackTrace);
+    }
+    if (decision == CarActiveDecision.carMissing) {
+      throw const CarWriteException(CarWriteFailure.carMissing);
+    }
+  }
+
+  /// The document of the car [id]. An ID of another shape than the rules
+  /// allow is refused before anything is sent.
+  DocumentReference<Map<String, dynamic>> _document(String id) {
+    if (!isPlausibleCarId(id)) {
+      throw ArgumentError('This cannot be the ID of a car.');
+    }
+    return _firestore.collection('cars').doc(id);
+  }
+}
+
+/// Turns an error of a car write into what the caller handles, so screens
+/// never see a Firestore error type: no answer in time becomes
+/// [CarWriteNoAnswer]; a Firestore error becomes a [CarWriteException] with
+/// the reason of its code; a [CarWriteException] or [CarWriteNoAnswer]
+/// stays; anything else is an unknown failure.
+Object mapCarWriteError(Object error) {
+  if (error is CarWriteException || error is CarWriteNoAnswer) return error;
+  if (error is TimeoutException) return const CarWriteNoAnswer();
+  if (error is FirebaseException) {
+    return CarWriteException(carWriteFailureFromCode(error.code));
+  }
+  return const CarWriteException(CarWriteFailure.unknown);
+}
+
+final fleetRepositoryProvider = Provider<FleetRepository>(
+  (ref) => FleetRepository(FirebaseFirestore.instance),
+);

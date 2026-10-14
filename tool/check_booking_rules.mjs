@@ -1914,6 +1914,16 @@ signedIn('car, admin read: a hidden car the admin created', 200, () =>
   send('GET', `${DOCUMENTS}/cars/${ADMIN_MADE_HIDDEN}`, { headers: ADMIN }),
 );
 
+// I.10b A car that does not exist: the create transaction of the app reads
+// it first, so an admin must be allowed to read it ("not found", 404); the
+// public is refused.
+signedIn('car, admin read: a car that does not exist is "not found"', 404, () =>
+  send('GET', `${DOCUMENTS}/cars/noSuchCar`, { headers: ADMIN }),
+);
+signedIn('car, public read refused: a car that does not exist', 403, () =>
+  send('GET', `${DOCUMENTS}/cars/noSuchCar`),
+);
+
 // I.11 A booking still follows the car.
 signedIn('car, public booking: accepted for an active car the admin created',
   200, () => create(booking((b) => (b.carId = ADMIN_MADE_ACTIVE))));

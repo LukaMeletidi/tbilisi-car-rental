@@ -2116,7 +2116,16 @@ of behaviour): tests and one short look, no emulator checklist.
   - The new rules cannot be used from the app yet: there is no screen that writes
     a car. Their first real use is step 4.5.
 - 4.3 The car draft, its validation, the mapping and the repository writes (pure
-  Dart and data layer, with tests; no screen). Tier 1 — not started.
+  Dart and data layer, with tests; no screen). Tier 1 — written, not committed yet.
+  - The draft (lib/features/fleet/domain/car_draft.dart) keeps numbers as typed
+    text; the validation (car_validation.dart) uses the limits of car_limits.dart
+    and the same photo pattern as the rules; car_input.dart reads and formats the
+    price and the engine size (at most two decimals, a comma allowed); car_write.dart
+    holds the results, the failures and the decisions of the transactions.
+  - FleetRepository (lib/features/fleet/data) writes cars: create with an ID made
+    on the device, replace, and hide or show. Each is a transaction with one
+    attempt and a 20 second limit; nothing is queued offline; "Saved" only after
+    the server's answer; "No answer" is not "not saved".
   - Requirement from step 4.1: the year and the seats must be SENT as whole numbers
     (integers), on Android too. The rules refuse a year or a seat count stored as a
     decimal such as 2019.0. The price and the engine size may be whole or decimal.

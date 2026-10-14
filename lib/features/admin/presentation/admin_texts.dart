@@ -15,6 +15,8 @@ import 'package:tbilisi_car_rental/features/admin/domain/admin_date_format.dart'
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings_filter.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_sign_in_failure.dart';
 import 'package:tbilisi_car_rental/features/catalog/domain/car_display.dart';
+import 'package:tbilisi_car_rental/features/fleet/domain/car_limits.dart';
+import 'package:tbilisi_car_rental/features/fleet/domain/car_validation.dart';
 
 const adminSignInTitle = 'Admin sign-in';
 const adminEmailLabel = 'E-mail';
@@ -652,5 +654,88 @@ String adminSignInFailureText(AdminSignInFailure failure) {
       return 'This account is disabled.';
     case AdminSignInFailure.unknown:
       return 'Sign-in did not work. Please try again.';
+  }
+}
+
+/// The text of a problem of a field of the car form. The numbers come from
+/// car_limits.dart, so the texts follow the limits. The "for example"
+/// values are only examples.
+String adminCarErrorText(CarError error) {
+  switch (error) {
+    case CarError.brandRequired:
+      return 'Enter the brand, for example Toyota.';
+    case CarError.brandTooLong:
+      return 'The brand can have at most $carNameMaxLength characters.';
+    case CarError.modelRequired:
+      return 'Enter the model, for example Prius.';
+    case CarError.modelTooLong:
+      return 'The model can have at most $carNameMaxLength characters.';
+    case CarError.yearRequired:
+      return 'Enter the year the car was made, for example 2019.';
+    case CarError.yearNotWhole:
+      return 'Enter the year as a whole number, for example 2019.';
+    case CarError.yearTooOld:
+      return 'The year cannot be before $carMinYear.';
+    case CarError.yearTooNew:
+      return 'The year cannot be later than next year.';
+    case CarError.drivetrainRequired:
+      return 'Choose the drivetrain.';
+    case CarError.transmissionRequired:
+      return 'Choose the transmission.';
+    case CarError.fuelTypeRequired:
+      return 'Choose the fuel type.';
+    case CarError.seatsRequired:
+      return 'Enter the number of seats, for example 5.';
+    case CarError.seatsNotWhole:
+      return 'Enter the seats as a whole number, for example 5.';
+    case CarError.seatsOutOfRange:
+      return 'A car has $carMinSeats to $carMaxSeats seats.';
+    case CarError.engineSizeInvalid:
+      return 'Enter the engine size in litres, for example 1.6, or leave it '
+          'empty.';
+    case CarError.engineSizeOutOfRange:
+      return 'The engine size must be more than 0 and at most '
+          '$carMaxEngineSize litres.';
+    case CarError.priceRequired:
+      return 'Enter the price per day in USD, for example 45.';
+    case CarError.priceInvalid:
+      return 'Enter the price as a number with at most two decimals, for '
+          'example 45.50.';
+    case CarError.priceOutOfRange:
+      return 'The price per day must be more than 0 and at most '
+          '$carMaxPricePerDay USD.';
+    case CarError.descriptionKaRequired:
+      return 'Enter the description in Georgian.';
+    case CarError.descriptionKaTooLong:
+      return 'The Georgian description can have at most '
+          '$carDescriptionMaxLength characters.';
+    case CarError.descriptionRuRequired:
+      return 'Enter the description in Russian.';
+    case CarError.descriptionRuTooLong:
+      return 'The Russian description can have at most '
+          '$carDescriptionMaxLength characters.';
+    case CarError.descriptionEnRequired:
+      return 'Enter the description in English.';
+    case CarError.descriptionEnTooLong:
+      return 'The English description can have at most '
+          '$carDescriptionMaxLength characters.';
+    case CarError.tooManyPhotos:
+      return 'A car can have at most $carMaxPhotos photos.';
+  }
+}
+
+/// The text of a problem of one photo address.
+String adminCarPhotoErrorText(CarPhotoError error) {
+  switch (error) {
+    case CarPhotoError.notHttps:
+      return 'The address must start with $carPhotoScheme.';
+    case CarPhotoError.hasSpace:
+      return 'The address cannot contain spaces.';
+    case CarPhotoError.notWebAddress:
+      return 'This is not a web address.';
+    case CarPhotoError.tooLong:
+      return 'The address can have at most $carPhotoMaxLength characters.';
+    case CarPhotoError.duplicate:
+      return 'This photo is already in the list.';
   }
 }
