@@ -2116,7 +2116,14 @@ of behaviour): tests and one short look, no emulator checklist.
   - The new rules cannot be used from the app yet: there is no screen that writes
     a car. Their first real use is step 4.5.
 - 4.3 The car draft, its validation, the mapping and the repository writes (pure
-  Dart and data layer, with tests; no screen). Tier 1 — written, not committed yet.
+  Dart and data layer, with tests; no screen). Tier 1 — DONE. Commit e629b1b.
+  - 1493 Flutter tests pass and analyze is clean; the rules emulator script passes
+    with 104 of 104 public and 398 of 398 admin and signed-in checks (two new: an
+    admin may read a car that does not exist, as the create transaction does; the
+    public may not); the 47 tests of the secrets scan pass.
+  - The transactions are NOT tested against a real database: there is no Firestore
+    fake, and none was added. What they decide is in tested pure functions. Their
+    first real run is step 4.5.
   - The draft (lib/features/fleet/domain/car_draft.dart) keeps numbers as typed
     text; the validation (car_validation.dart) uses the limits of car_limits.dart
     and the same photo pattern as the rules; car_input.dart reads and formats the
@@ -2138,6 +2145,10 @@ of behaviour): tests and one short look, no emulator checklist.
 - 4.4b The fleet list: every car, hidden ones marked, read only. Tier 2 — not
   started.
 - 4.5 Edit a car, and hide or show it. Tier 1 — not started.
+  - Question for the 4.5 plan: a save without any change writes nothing (4.3).
+    Should the form disable Save while nothing changed, or say "No changes"?
+  - A car that Car.fromMap cannot read at all cannot be opened in the form. The
+    fleet list of 4.4b shows it as unreadable, with only hide and show.
 - 4.6 Add a car (saved hidden by default). Tier 1 — not started.
 - 4.7 The photo addresses of a car in the form (add, remove, order). Tier 2; it may
   be folded into 4.5 and 4.6 — not started.
