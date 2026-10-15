@@ -2171,8 +2171,12 @@ of behaviour): tests and one short look, no emulator checklist.
     web nothing is intercepted: the browser's Back follows its history.
   - Sign out is one shared button in the app bar of each section. It closes the
     bookings listener first when the list is alive, and never starts it.
-- 4.4b The fleet list: every car, hidden ones marked, read only. Tier 2 — written,
-  not committed yet.
+- 4.4b The fleet list: every car, hidden ones marked, read only. Tier 2 — DONE.
+  Commit d2623a4.
+  - 1586 Flutter tests pass and analyze is clean; the 47 tests of the secrets scan
+    pass.
+  - Checked by hand in Chrome: 7 cars, 6 visible and 1 hidden, 6 need repair, the
+    one complete car without the badge; wide and narrow window.
   - The Cars section reads every car, also the hidden ones, live, the same way as
     the bookings list: an empty answer that did not come from the server is not
     "No cars yet."; after 3 seconds "No connection. The cars could not be loaded."
