@@ -2226,7 +2226,17 @@ of behaviour): tests and one short look, no emulator checklist.
     console if it ever happens.
   - The photo addresses (4.7) are part of this form: add, remove, move up and
     down, at most 10, each checked with the rules' pattern. No previews.
-- 4.6 Add a car (saved hidden by default). Tier 1 — written, not committed yet.
+- 4.6 Add a car (saved hidden by default). Tier 1 — DONE. Commit 00f637a.
+  - 1714 Flutter tests pass and analyze is clean; the 47 tests of the secrets scan
+    pass.
+  - Checked by hand in Chrome by the owner with a real create of a made-up demo
+    car: saved hidden, not in the public catalog; an offline attempt locked the
+    form with "Check again", which saved it once back online; after a reload the
+    list showed one new car, not two. The owner then deleted the demo document in
+    the Firebase console.
+  - FINDING: the Stage A log line (developer.log) does not appear in the browser
+    console on the web, so the error type of the offline case is still unknown.
+    Planned follow-up 4.6b: make the diagnosis visible, then map the error.
   - "Add a car" on the Cars list opens /admin/cars/new: the same fields as the
     edit form (the shared AdminCarFields), empty, the car hidden unless the
     switch is turned on. Save is enabled on the empty form; it shows every error.
