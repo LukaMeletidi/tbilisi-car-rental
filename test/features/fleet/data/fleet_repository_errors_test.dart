@@ -79,6 +79,76 @@ void main() {
     });
   });
 
+  group('carWriteDiagnosis: every route to "unknown" has a line', () {
+    test('no line for an error with a known reason', () {
+      for (final error in <Object>[
+        TimeoutException('late'),
+        const CarWriteNoAnswer(),
+        const CarWriteException(CarWriteFailure.noConnection),
+        const CarWriteException(CarWriteFailure.refused),
+        const CarWriteException(CarWriteFailure.carMissing),
+        const CarWriteException(CarWriteFailure.changedElsewhere),
+        FirebaseException(plugin: 'cloud_firestore', code: 'unavailable'),
+        FirebaseException(
+          plugin: 'cloud_firestore',
+          code: 'firestore/unavailable',
+        ),
+        FirebaseException(plugin: 'cloud_firestore', code: 'permission-denied'),
+        FirebaseException(plugin: 'cloud_firestore', code: 'not-found'),
+      ]) {
+        expect(carWriteDiagnosis(error), isNull, reason: '$error');
+      }
+    });
+
+    test('a car exception that is already unknown: its own line', () {
+      expect(
+        carWriteDiagnosis(const CarWriteException(CarWriteFailure.unknown)),
+        'CarWriteException(unknown)',
+      );
+    });
+
+    test('a Firestore code without a reason: the code only', () {
+      expect(
+        carWriteDiagnosis(
+          FirebaseException(
+            plugin: 'cloud_firestore',
+            code: 'aborted',
+            message: 'Secret message',
+          ),
+        ),
+        'CarWriteException(unknown) from FirebaseException(code: aborted)',
+      );
+    });
+
+    test('any other type: the type only, never the message', () {
+      final text = carWriteDiagnosis(StateError('Secret value'));
+      expect(text, 'CarWriteException(unknown) from StateError');
+      expect(text, isNot(contains('Secret')));
+      expect(
+        carWriteDiagnosis(ArgumentError('Secret id')),
+        'CarWriteException(unknown) from ArgumentError',
+      );
+    });
+
+    test('the line agrees with the mapping: a line exactly when the result '
+        'is unknown', () {
+      for (final error in <Object>[
+        TimeoutException('late'),
+        const CarWriteNoAnswer(),
+        const CarWriteException(CarWriteFailure.unknown),
+        const CarWriteException(CarWriteFailure.refused),
+        FirebaseException(plugin: 'cloud_firestore', code: 'aborted'),
+        FirebaseException(plugin: 'cloud_firestore', code: 'unavailable'),
+        StateError('broken'),
+      ]) {
+        final unknown =
+            mapCarWriteError(error) ==
+            const CarWriteException(CarWriteFailure.unknown);
+        expect(carWriteDiagnosis(error) != null, unknown, reason: '$error');
+      }
+    });
+  });
+
   group('a bad car ID is refused before anything is sent', () {
     // A repository without a usable Firestore instance: the guard must
     // throw before Firestore is touched at all.

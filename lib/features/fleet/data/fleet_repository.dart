@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'dart:developer' as developer;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:tbilisi_car_rental/core/models/car.dart';
@@ -230,20 +230,53 @@ class FleetRepository {
 /// [CarWriteNoAnswer]; a Firestore error becomes a [CarWriteException] with
 /// the reason of its code; a [CarWriteException] or [CarWriteNoAnswer]
 /// stays; anything else is an unknown failure.
+///
+/// Every error that ends as "unknown" is reported once in debug builds
+/// (debugPrintCarWriteDiagnosis), so that it can be mapped later.
 Object mapCarWriteError(Object error) {
+  debugPrintCarWriteDiagnosis(error);
   if (error is CarWriteException || error is CarWriteNoAnswer) return error;
   if (error is TimeoutException) return const CarWriteNoAnswer();
   if (error is FirebaseException) {
     return CarWriteException(carWriteFailureFromCode(error.code));
   }
-  // Only the type, never the message or a value: it tells which error
-  // the web (or another platform) sends, so that it can be mapped later.
-  developer.log(
-    'An unexpected error type in a car write: ${error.runtimeType}',
-    name: 'FleetRepository',
-    level: 900, // warning
-  );
   return const CarWriteException(CarWriteFailure.unknown);
+}
+
+/// What is reported for a car write error that ends as "unknown", or null
+/// for an error with a known reason. Only the runtime type, and for a
+/// FirebaseException only its code: never the message or any value.
+///
+/// - A CarWriteException whose reason is unknown: "CarWriteException
+///   (unknown)"; the original error is not known at this place.
+/// - A FirebaseException with a code without a reason: "CarWriteException
+///   (unknown) from FirebaseException(code: aborted)".
+/// - Any other type: "CarWriteException(unknown) from StateError".
+String? carWriteDiagnosis(Object error) {
+  if (error is CarWriteException) {
+    return error.failure == CarWriteFailure.unknown
+        ? 'CarWriteException(unknown)'
+        : null;
+  }
+  if (error is CarWriteNoAnswer || error is TimeoutException) return null;
+  if (error is FirebaseException) {
+    if (carWriteFailureFromCode(error.code) != CarWriteFailure.unknown) {
+      return null;
+    }
+    return 'CarWriteException(unknown) from '
+        'FirebaseException(code: ${error.code})';
+  }
+  return 'CarWriteException(unknown) from ${error.runtimeType}';
+}
+
+/// Prints carWriteDiagnosis([error]) in debug builds, where the browser
+/// console shows it too; never in a release build. Used by mapCarWriteError
+/// and by the catch-all of each notifier that writes a car.
+void debugPrintCarWriteDiagnosis(Object error) {
+  final diagnosis = carWriteDiagnosis(error);
+  if (kDebugMode && diagnosis != null) {
+    debugPrint('An unexpected error in a car write: $diagnosis');
+  }
 }
 
 /// Turns an error of reading the cars into a [FleetLoadException].

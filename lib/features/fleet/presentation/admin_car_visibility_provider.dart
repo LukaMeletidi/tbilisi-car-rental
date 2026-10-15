@@ -1,5 +1,3 @@
-import 'dart:developer' as developer;
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:tbilisi_car_rental/features/admin/domain/admin_session.dart';
@@ -59,12 +57,9 @@ class AdminCarVisibilityNotifier extends Notifier<AdminCarVisibilityState> {
     } on CarWriteException catch (error) {
       notice = activeNoticeForFailure(error.failure);
     } catch (error) {
-      developer.log(
-        'Hiding or showing a car failed with an error of type '
-        '${error.runtimeType}',
-        name: 'AdminCarVisibilityNotifier',
-        level: 900, // warning
-      );
+      // Not mapped by the repository (for example a refused ID): its
+      // diagnosis line, then "unknown".
+      debugPrintCarWriteDiagnosis(error);
       notice = CarActiveNotice.unknown;
     }
     if (!ref.mounted) return;

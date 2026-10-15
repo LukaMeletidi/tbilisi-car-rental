@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer' as developer;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -278,11 +277,9 @@ class AdminCarEditNotifier extends Notifier<AdminCarEditState> {
     } on CarWriteException catch (error) {
       notice = noticeForCarWriteFailure(error.failure);
     } catch (error) {
-      developer.log(
-        'Saving a car failed with an error of type ${error.runtimeType}',
-        name: 'AdminCarEditNotifier',
-        level: 900, // warning
-      );
+      // Not mapped by the repository (for example a refused ID): its
+      // diagnosis line, then "unknown".
+      debugPrintCarWriteDiagnosis(error);
       notice = CarSaveNotice.unknown;
     }
     if (!ref.mounted || !_isAdmin) return;
