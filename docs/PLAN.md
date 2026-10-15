@@ -2194,7 +2194,16 @@ of behaviour): tests and one short look, no emulator checklist.
     without photos (an empty list) does not need repair.
   - A document that the app cannot read at all shows "Unreadable car" and its
     shortened document ID, nothing else.
-- 4.5 Edit a car, and hide or show it. Tier 1 — written, not committed yet.
+- 4.5 Edit a car, and hide or show it. Tier 1 — DONE. Commit 0219f3d.
+  - 1670 Flutter tests pass and analyze is clean; the 47 tests of the secrets scan
+    pass.
+  - Checked by hand in Chrome by the owner, with real writes on the hidden car:
+    the repair save, a price change and its undo, an offline save and its retry,
+    a change in a second tab ("changed elsewhere"), show and hide from the list,
+    and the hide question of the form's switch (cancelled). All passed.
+  - FOLLOW-UP (polish, later): with the browser offline, saving a car showed the
+    generic "Not saved. Something went wrong. Try again." instead of "No
+    connection" or "No answer". Nothing was saved and no data was lost.
   - The form is at /admin/cars/<id>/edit, below the list; a tap on a readable card
     opens it. No navigation on it (a form). It reads the car live, like the
     booking edit, and saves the WHOLE car with replaceCar after the server's
