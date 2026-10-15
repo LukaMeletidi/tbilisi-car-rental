@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:tbilisi_car_rental/core/data/server_answer.dart';
@@ -14,8 +15,10 @@ import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_document.
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_edit.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_new.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/confirmed_bookings_read.dart';
 import 'package:tbilisi_car_rental/features/booking/data/booking_firestore_mapping.dart';
 import 'package:tbilisi_car_rental/features/catalog/data/car_parsing.dart';
+import 'package:tbilisi_car_rental/features/fleet/domain/car_write.dart';
 
 /// What the admin area reads from Firestore: the bookings and all cars.
 /// Only an account with the admin claim may read them; the Firestore rules
@@ -144,6 +147,49 @@ class AdminBookingsRepository {
       return cars.isEmpty ? null : cars.single;
     } catch (error, stackTrace) {
       Error.throwWithStackTrace(mapAdminBookingsError(error), stackTrace);
+    }
+  }
+
+  /// The confirmed bookings of the car [carId], read once from the SERVER
+  /// (never from memory), for a conflict or hide check. Equality filters
+  /// only, so no composite index is needed.
+  ///
+  /// Never throws: a missing connection, an answer from memory, the
+  /// [timeout], a refusal and any other error, also of the app itself,
+  /// are a [ConfirmedBookingsUnchecked]. Only the kind of failure is
+  /// printed, in debug builds; never a value of a booking.
+  Future<ConfirmedBookingsRead> readConfirmedBookingsOfCar(
+    String carId, {
+    Duration timeout = conflictCheckTimeout,
+  }) async {
+    // The car IDs the cars rules allow; anything else is never asked for.
+    if (!isPlausibleCarId(carId)) {
+      return const ConfirmedBookingsUnchecked(ConflictCheckFailure.other);
+    }
+    try {
+      final snapshot = await _firestore
+          .collection('bookings')
+          .where('carId', isEqualTo: carId)
+          .where('status', isEqualTo: BookingStatus.confirmed.storedName)
+          .get(const GetOptions(source: Source.server))
+          .timeout(timeout);
+      return readConfirmedBookings(
+        [
+          for (final document in snapshot.docs)
+            (id: document.id, data: bookingMapFromFirestore(document.data())),
+        ],
+        fromCache: snapshot.metadata.isFromCache,
+        carId: carId,
+      );
+    } catch (error) {
+      final failure = conflictCheckFailureOf(error);
+      if (kDebugMode) {
+        debugPrint(
+          'A conflict check could not read the bookings: ${failure.name} '
+          '(${conflictCheckErrorKind(error)})',
+        );
+      }
+      return ConfirmedBookingsUnchecked(failure);
     }
   }
 
@@ -551,6 +597,28 @@ AdminStatusChangeException mapStatusChangeError(Object error) {
   }
   return const AdminStatusChangeException(AdminStatusChangeFailure.unknown);
 }
+
+/// The kind of failure of a conflict or hide check.
+ConflictCheckFailure conflictCheckFailureOf(Object error) {
+  if (error is TimeoutException) return ConflictCheckFailure.timeout;
+  if (error is FirebaseException) {
+    switch (error.code.replaceFirst('firestore/', '')) {
+      case 'unavailable':
+        return ConflictCheckFailure.noConnection;
+      case 'deadline-exceeded':
+        return ConflictCheckFailure.timeout;
+      case 'permission-denied':
+        return ConflictCheckFailure.refused;
+    }
+  }
+  return ConflictCheckFailure.other;
+}
+
+/// The type of [error], and for a FirebaseException only its code: what the
+/// debug line may show. Never a message or a value.
+String conflictCheckErrorKind(Object error) => error is FirebaseException
+    ? 'FirebaseException(code: ${error.code})'
+    : '${error.runtimeType}';
 
 /// Refuses an answer that holds nothing and did not come from the server:
 /// that is "no connection", not "nothing there".

@@ -9,6 +9,7 @@ import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_detail.da
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_edit.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_new.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/confirmed_bookings_read.dart';
 
 /// Stands in for Firestore in tests of the admin bookings list. Nothing
 /// here contacts Firebase, and every value in the tests is made up.
@@ -60,6 +61,28 @@ class FakeAdminBookingsRepository implements AdminBookingsRepository {
     if (carsPending != null) await carsPending!.future;
     if (carsError != null) throw carsError!;
     return cars;
+  }
+
+  /// Every car whose confirmed bookings were read, in order.
+  final confirmedReads = <String>[];
+
+  /// What readConfirmedBookingsOfCar answers. By default: none, checked.
+  ConfirmedBookingsRead confirmedAnswer = const ConfirmedBookingsChecked(
+    bookings: [],
+    unreadable: 0,
+  );
+
+  /// When set, readConfirmedBookingsOfCar waits for it.
+  Completer<void>? confirmedPending;
+
+  @override
+  Future<ConfirmedBookingsRead> readConfirmedBookingsOfCar(
+    String carId, {
+    Duration timeout = conflictCheckTimeout,
+  }) async {
+    confirmedReads.add(carId);
+    if (confirmedPending != null) await confirmedPending!.future;
+    return confirmedAnswer;
   }
 
   /// Every single booking that was asked for, by its ID, in order.

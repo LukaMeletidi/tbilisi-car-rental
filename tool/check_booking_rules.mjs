@@ -636,6 +636,46 @@ signedIn('admin read: list all cars without a filter', 200, () =>
   send('GET', `${DOCUMENTS}/cars`, { headers: ADMIN }),
 );
 
+// The confirmed bookings of one car (step 5.2): a query with two equality
+// filters, as the conflict and hide checks send it.
+function confirmedOfCar(headers) {
+  return send('POST', `${DOCUMENTS}:runQuery`, {
+    headers,
+    body: {
+      structuredQuery: {
+        from: [{ collectionId: 'bookings' }],
+        where: {
+          compositeFilter: {
+            op: 'AND',
+            filters: [
+              {
+                fieldFilter: {
+                  field: { fieldPath: 'carId' },
+                  op: 'EQUAL',
+                  value: { stringValue: ACTIVE_CAR },
+                },
+              },
+              {
+                fieldFilter: {
+                  field: { fieldPath: 'status' },
+                  op: 'EQUAL',
+                  value: { stringValue: 'confirmed' },
+                },
+              },
+            ],
+          },
+        },
+      },
+    },
+  });
+}
+signedIn('admin read: the confirmed bookings of one car', 200, () =>
+  confirmedOfCar(ADMIN),
+);
+signedIn('public read refused: the confirmed bookings of one car', 403, () =>
+  confirmedOfCar(undefined),
+);
+
 // B. Admin updates that must be accepted, sent both ways.
 for (const status of ['pending', 'confirmed', 'cancelled', 'new']) {
   const before = status === 'new' ? 'confirmed' : 'new';
