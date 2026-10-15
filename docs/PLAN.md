@@ -2250,6 +2250,26 @@ of behaviour): tests and one short look, no emulator checklist.
     error type the app does not know logs only that type ("An unexpected error
     type in a car write: <type>"); codes with the web prefix "firestore/" are
     read like the plain codes. No other mapping yet.
+- 4.6b Make the offline diagnosis visible. Tier 1 — DONE. Commit 88d3f87.
+  - 1719 Flutter tests pass and analyze is clean; the 47 tests of the secrets scan
+    pass.
+  - FINDING (owner, Chrome debug build, one offline save on the new-car form, no
+    database writes): "An unexpected error in a car write: CarWriteException
+    (unknown) from NativeError". Offline in Chrome the transaction fails with a
+    raw JavaScript error (NativeError), not a FirebaseException. Nothing is mapped
+    by that type: a mapping by NativeError would be too broad. Stage B is NOT
+    done. The form keeps its safe behaviour: fields locked, "may or may not be
+    saved", "Check again", and the retry never creates a second car.
+  - FOR THE PHASE 7 POLISH LIST: decide whether and how to read only the "code"
+    of such a JavaScript error safely on the web, so that offline can show "No
+    connection". Caution: "unavailable" on a transaction commit may also mean that
+    the write arrived, so a create may need to stay "may or may not be saved".
+  - Every car write error that ends as "unknown" prints one line in debug builds
+    with debugPrint (shown in the browser console; never in a release build):
+    "An unexpected error in a car write: CarWriteException(unknown) from <type>",
+    for a FirebaseException only its code. Never a message or a value. Used by
+    mapCarWriteError and by the catch-all of the three notifiers that write cars.
+  - Replaces the Stage A developer.log line, which the web console does not show.
 - 4.7 The photo addresses of a car in the form (add, remove, order). Tier 2 —
   folded into 4.5 (the edit form); 4.6 reuses the same form.
 - 4.8 Verify Phase 4 and close it. Tier 3 — not started.
