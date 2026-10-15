@@ -47,9 +47,10 @@ enum CarWriteFailure {
 
 /// The failure for an error [code] of Firestore. The same mapping as the
 /// admin bookings writes (statusChangeFailureFromCode): every other code,
-/// "aborted" too, is unknown.
+/// "aborted" too, is unknown. A code may arrive with the prefix
+/// "firestore/" on the web; the prefix is ignored.
 CarWriteFailure carWriteFailureFromCode(String code) {
-  switch (code) {
+  switch (code.replaceFirst('firestore/', '')) {
     case 'unavailable':
     case 'deadline-exceeded':
       return CarWriteFailure.noConnection;

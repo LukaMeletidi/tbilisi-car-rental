@@ -49,6 +49,28 @@ void main() {
       expect(mapCarWriteError(late), same(late));
     });
 
+    test('a code with the web prefix "firestore/": the same reason', () {
+      for (final code in [
+        'firestore/unavailable',
+        'firestore/deadline-exceeded',
+      ]) {
+        expect(
+          mapCarWriteError(
+            FirebaseException(plugin: 'cloud_firestore', code: code),
+          ),
+          const CarWriteException(CarWriteFailure.noConnection),
+          reason: code,
+        );
+      }
+    });
+
+    test('an unrecognised type stays unknown; only its type is logged', () {
+      expect(
+        mapCarWriteError(const FormatException('Secret value')),
+        const CarWriteException(CarWriteFailure.unknown),
+      );
+    });
+
     test('anything else: an unknown failure', () {
       expect(
         mapCarWriteError(StateError('broken')),

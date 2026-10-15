@@ -2226,7 +2226,20 @@ of behaviour): tests and one short look, no emulator checklist.
     console if it ever happens.
   - The photo addresses (4.7) are part of this form: add, remove, move up and
     down, at most 10, each checked with the rules' pattern. No previews.
-- 4.6 Add a car (saved hidden by default). Tier 1 — not started.
+- 4.6 Add a car (saved hidden by default). Tier 1 — written, not committed yet.
+  - "Add a car" on the Cars list opens /admin/cars/new: the same fields as the
+    edit form (the shared AdminCarFields), empty, the car hidden unless the
+    switch is turned on. Save is enabled on the empty form; it shows every error.
+  - The ID is made on the device once, when the form opens, and used for every
+    attempt; createCar reads the document first, so a retry never creates a
+    second car. Back to the list with "Saved" after the server's answer.
+  - "No answer" AND an unknown error may have created the car: the fields are
+    locked and only "Check again" sends the same car with the same ID again.
+    Only "no connection" and "refused" are certain; then the form stays editable.
+  - Diagnosis for the offline follow-up of 4.5: a car write that fails with an
+    error type the app does not know logs only that type ("An unexpected error
+    type in a car write: <type>"); codes with the web prefix "firestore/" are
+    read like the plain codes. No other mapping yet.
 - 4.7 The photo addresses of a car in the form (add, remove, order). Tier 2 —
   folded into 4.5 (the edit form); 4.6 reuses the same form.
 - 4.8 Verify Phase 4 and close it. Tier 3 — not started.

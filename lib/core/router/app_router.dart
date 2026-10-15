@@ -18,6 +18,7 @@ import 'package:tbilisi_car_rental/features/booking/presentation/booking_sent_sc
 import 'package:tbilisi_car_rental/features/catalog/presentation/car_detail_screen.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_screen.dart';
 import 'package:tbilisi_car_rental/features/fleet/presentation/admin_car_edit_screen.dart';
+import 'package:tbilisi_car_rental/features/fleet/presentation/admin_car_new_screen.dart';
 import 'package:tbilisi_car_rental/features/fleet/presentation/admin_cars_screen.dart';
 
 /// Route paths in one place, so screens never hard-code URL strings.
@@ -75,6 +76,13 @@ abstract final class AppRoutes {
 
   /// The Cars section of the admin area.
   static const adminCars = adminCarsPath;
+
+  /// Path pattern of the "new car" form, below [adminCars]. It has one
+  /// part and the edit form two, so the two never match the same address.
+  static const adminCarNewPattern = 'new';
+
+  /// The address of the "new car" form: "/admin/cars/new".
+  static const adminCarNew = '$adminCars/$adminCarNewPattern';
 
   /// Path pattern of the edit form of one car, below [adminCars].
   static const adminCarEditPattern = ':carId/edit';
@@ -207,8 +215,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     path: _below(AppRoutes.adminCars),
                     builder: (context, state) => const AdminCarsScreen(),
                     routes: [
-                      // Below the list, so Back returns to the list. A form:
+                      // Below the list, so Back returns to the list. Forms:
                       // adminShowsNavigation hides the navigation here.
+                      GoRoute(
+                        path: AppRoutes.adminCarNewPattern,
+                        builder: (context, state) => const AdminCarNewScreen(),
+                      ),
                       GoRoute(
                         path: AppRoutes.adminCarEditPattern,
                         builder: (context, state) => AdminCarEditScreen(

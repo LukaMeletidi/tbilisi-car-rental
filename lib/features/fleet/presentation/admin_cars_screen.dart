@@ -60,6 +60,7 @@ class AdminCarsScreen extends ConsumerWidget {
             ? const CatalogMessage(
                 icon: Icons.directions_car,
                 text: adminNoCars,
+                action: _AddCarButton(),
               )
             : _CarsList(state: state);
     }
@@ -72,6 +73,20 @@ class AdminCarsScreen extends ConsumerWidget {
         actions: const [AdminSignOutButton()],
       ),
       body: SafeArea(child: body),
+    );
+  }
+}
+
+/// Opens the "new car" form.
+class _AddCarButton extends StatelessWidget {
+  const _AddCarButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton.icon(
+      onPressed: () => context.go(AppRoutes.adminCarNew),
+      icon: const Icon(Icons.add),
+      label: const Text(adminAddCar),
     );
   }
 }
@@ -119,6 +134,8 @@ class _CarsList extends ConsumerWidget {
                       text: adminOfflineNote,
                     ),
                   ],
+                  const SizedBox(height: 12),
+                  const _AddCarButton(),
                 ],
               ),
             ),

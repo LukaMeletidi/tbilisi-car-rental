@@ -68,6 +68,21 @@ void main() {
         );
       }
     });
+
+    test('the web prefix "firestore/" is ignored', () {
+      expect(
+        carWriteFailureFromCode('firestore/unavailable'),
+        CarWriteFailure.noConnection,
+      );
+      expect(
+        carWriteFailureFromCode('firestore/deadline-exceeded'),
+        CarWriteFailure.noConnection,
+      );
+      expect(
+        carWriteFailureFromCode('firestore/aborted'),
+        CarWriteFailure.unknown,
+      );
+    });
   });
 
   test('the exception texts name no value of a car', () {

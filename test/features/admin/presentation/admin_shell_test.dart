@@ -20,6 +20,7 @@ import 'package:tbilisi_car_rental/features/catalog/presentation/cars_providers.
 import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_screen.dart';
 import 'package:tbilisi_car_rental/features/fleet/data/fleet_repository.dart';
 import 'package:tbilisi_car_rental/features/fleet/presentation/admin_car_edit_screen.dart';
+import 'package:tbilisi_car_rental/features/fleet/presentation/admin_car_new_screen.dart';
 import 'package:tbilisi_car_rental/features/fleet/presentation/admin_cars_screen.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/settings_providers.dart';
 import 'package:tbilisi_car_rental/l10n/generated/app_localizations.dart';
@@ -288,6 +289,17 @@ void main() {
       await open(tester, '/admin/cars/car-1/edit');
 
       expect(find.byType(AdminCarEditScreen), findsOneWidget);
+      expect(rail, findsNothing);
+      expect(bar, findsNothing);
+    });
+
+    testWidgets('the "new car" form: in the Cars section, without '
+        'navigation, on a wide screen too', (tester) async {
+      await pumpApp(tester);
+      await open(tester, '/admin/cars/new');
+
+      expect(find.byType(AdminCarNewScreen), findsOneWidget);
+      expect(find.byType(AdminCarEditScreen), findsNothing);
       expect(rail, findsNothing);
       expect(bar, findsNothing);
     });

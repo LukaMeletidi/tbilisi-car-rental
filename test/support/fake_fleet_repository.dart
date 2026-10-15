@@ -8,8 +8,7 @@ import 'package:tbilisi_car_rental/features/fleet/domain/fleet_list.dart';
 
 /// Stands in for the fleet repository in tests. Nothing here contacts
 /// Firebase. The live reads are faked with stream controllers; the writes
-/// record their calls and answer as the test says. createCar is not used
-/// by the screens yet and fails the test when called.
+/// record their calls and answer as the test says.
 class FakeFleetRepository implements FleetRepository {
   final _controllers = <StreamController<RawCarsResult>>[];
   final _carControllers = <StreamController<RawCarAnswer>>[];
@@ -92,14 +91,32 @@ class FakeFleetRepository implements FleetRepository {
     return controller.stream;
   }
 
+  /// How many new car IDs were asked for; the IDs are 'new-1', 'new-2', …
+  var newIdCalls = 0;
+
+  /// The calls of createCar.
+  final created = <Car>[];
+
+  /// What createCar returns when [createError] is null.
+  CarCreateResult createResult = CarCreateResult.created;
+
+  /// What createCar throws, as [replaceError].
+  Object? createError;
+
   @override
-  String newCarId() => throw UnimplementedError('not used yet');
+  String newCarId() => 'new-${++newIdCalls}';
 
   @override
   Future<CarCreateResult> createCar(
     Car car, {
     Duration timeout = carWriteTimeout,
-  }) => throw UnimplementedError('not used yet');
+  }) async {
+    created.add(car);
+    await writeGate?.future;
+    final error = createError;
+    if (error != null) throw error;
+    return createResult;
+  }
 
   @override
   Future<void> replaceCar(

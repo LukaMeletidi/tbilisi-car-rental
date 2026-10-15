@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -235,6 +236,13 @@ Object mapCarWriteError(Object error) {
   if (error is FirebaseException) {
     return CarWriteException(carWriteFailureFromCode(error.code));
   }
+  // Only the type, never the message or a value: it tells which error
+  // the web (or another platform) sends, so that it can be mapped later.
+  developer.log(
+    'An unexpected error type in a car write: ${error.runtimeType}',
+    name: 'FleetRepository',
+    level: 900, // warning
+  );
   return const CarWriteException(CarWriteFailure.unknown);
 }
 

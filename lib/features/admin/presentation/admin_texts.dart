@@ -17,6 +17,7 @@ import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings_filter.d
 import 'package:tbilisi_car_rental/features/admin/domain/admin_sign_in_failure.dart';
 import 'package:tbilisi_car_rental/features/catalog/domain/car_display.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/car_edit.dart';
+import 'package:tbilisi_car_rental/features/fleet/domain/car_new.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/car_limits.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/car_validation.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/fleet_list.dart';
@@ -109,6 +110,18 @@ const adminCarMovePhotoUp = 'Move up';
 const adminCarMovePhotoDown = 'Move down';
 const adminCarRemovePhoto = 'Remove';
 const adminCarLabelVisible = 'Visible in the catalog';
+
+/// The "new car" form (step 4.6).
+const adminAddCar = 'Add a car';
+const adminNewCarTitle = 'New car';
+const adminNewCarVisibilityNote =
+    'A new car is saved hidden. Turn this on to show it in the public '
+    'catalog at once.';
+const adminNewCarSavedHidden =
+    'Saved. The new car is hidden; use Show on its card to put it in the '
+    'catalog.';
+const adminNewCarSavedVisible = 'Saved.';
+const adminCarMayExistText = 'The car may already exist. Check the cars list.';
 const adminLoadMore = 'Load more';
 const adminEstimate = 'estimate';
 
@@ -881,6 +894,26 @@ String adminCarSaveNoticeText(CarSaveNotice notice) {
           'car to see what is stored.';
     case CarSaveNotice.unknown:
       return 'Not saved. Something went wrong. Try again.';
+  }
+}
+
+/// What the "new car" form says after an attempt to save.
+String adminCarCreateNoticeText(CarCreateNotice notice) {
+  switch (notice) {
+    case CarCreateNotice.saved:
+      return adminNewCarSavedVisible;
+    case CarCreateNotice.noAnswer:
+      return 'No answer from the server. The car may or may not be saved. '
+          'Press "$adminCheckAgain": if it was saved, it is not created '
+          'twice.';
+    case CarCreateNotice.noConnection:
+      return 'Not saved. No connection. Check your internet and try again.';
+    case CarCreateNotice.refused:
+      return 'Not saved. The server refused the car. Check that you are '
+          'still signed in as the admin.';
+    case CarCreateNotice.unknown:
+      return 'Something went wrong. The car may or may not be saved. Press '
+          '"$adminCheckAgain": if it was saved, it is not created twice.';
   }
 }
 

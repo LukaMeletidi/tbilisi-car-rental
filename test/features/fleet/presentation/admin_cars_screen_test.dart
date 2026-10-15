@@ -65,6 +65,10 @@ Future<void> pumpScreen(
               builder: (context, state) => const AdminCarsScreen(),
               routes: [
                 GoRoute(
+                  path: AppRoutes.adminCarNewPattern,
+                  builder: (context, state) => const Text('New car form'),
+                ),
+                GoRoute(
                   path: AppRoutes.adminCarEditPattern,
                   builder: (context, state) =>
                       Text('Edit form of ${state.pathParameters['carId']}'),
@@ -205,6 +209,37 @@ void main() {
     await tester.tap(find.text('Honda Civic'));
     await settle(tester);
     expect(find.text('Edit form of car-7'), findsOneWidget);
+  });
+
+  group('"Add a car"', () {
+    testWidgets('below the count line; it opens the "new car" form', (
+      tester,
+    ) async {
+      await pumpScreen(tester);
+      await emit(tester, [(id: 'a', data: rawCar())]);
+      final counts = tester.getTopLeft(find.textContaining('1 car:')).dy;
+      final add = tester.getTopLeft(find.text(adminAddCar)).dy;
+      expect(add, greaterThan(counts));
+
+      await tester.tap(find.text(adminAddCar));
+      await settle(tester);
+      expect(find.text('New car form'), findsOneWidget);
+    });
+
+    testWidgets('also with "No cars yet."', (tester) async {
+      await pumpScreen(tester);
+      await emit(tester, const []);
+      expect(find.text(adminNoCars), findsOneWidget);
+      expect(find.text(adminAddCar), findsOneWidget);
+    });
+
+    testWidgets('not while loading, and not after a failure', (tester) async {
+      await pumpScreen(tester);
+      expect(find.text(adminAddCar), findsNothing);
+      fleet.fail(StateError('broken'));
+      await settle(tester);
+      expect(find.text(adminAddCar), findsNothing);
+    });
   });
 
   testWidgets('an unreadable card cannot be tapped and has no button', (
