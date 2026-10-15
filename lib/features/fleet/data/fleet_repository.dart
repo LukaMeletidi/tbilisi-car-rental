@@ -6,11 +6,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tbilisi_car_rental/core/models/car.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/car_draft.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/car_write.dart';
+import 'package:tbilisi_car_rental/features/fleet/domain/fleet_list.dart';
 
-/// Admin writes of the "cars" collection. Only an account with the admin
-/// claim may write; the Firestore rules check every write. This is the only
-/// file of the fleet feature that talks to Firestore. It hands on plain Dart
-/// values and never a Firestore type.
+/// The admin's access to the "cars" collection: the live list of every car,
+/// and the writes. Only an account with the admin claim may read every car
+/// or write one; the Firestore rules check it. This is the only file of the
+/// fleet feature that talks to Firestore. It hands on plain Dart values and
+/// never a Firestore type.
 ///
 /// Every write runs in a transaction, tried once, with [carWriteTimeout]: a
 /// transaction is never kept in the offline queue, so without a connection
@@ -21,6 +23,33 @@ class FleetRepository {
   FleetRepository(this._firestore);
 
   final FirebaseFirestore _firestore;
+
+  /// Every car, also the hidden ones, live: a new answer comes whenever a
+  /// car is added, changed or removed.
+  ///
+  /// Metadata changes are included, so that an answer of the server comes
+  /// also when it only confirms what was known; [RawCarsResult.fromCache]
+  /// says which an answer is. What an empty answer means is decided by the
+  /// provider (answerMeaning), as for the bookings list.
+  ///
+  /// An error is reported as a [FleetLoadException].
+  Stream<RawCarsResult> watchAllCars() {
+    return _firestore
+        .collection('cars')
+        .snapshots(includeMetadataChanges: true)
+        .map(
+          (snapshot) => RawCarsResult(
+            documents: [
+              for (final document in snapshot.docs)
+                (id: document.id, data: document.data()),
+            ],
+            fromCache: snapshot.metadata.isFromCache,
+          ),
+        )
+        .handleError((Object error, StackTrace stackTrace) {
+          Error.throwWithStackTrace(mapFleetLoadError(error), stackTrace);
+        });
+  }
 
   /// A new, unused car ID, made on the device; no request is sent. The
   /// "new car" form asks for one when it opens and uses it for every
@@ -184,6 +213,15 @@ Object mapCarWriteError(Object error) {
     return CarWriteException(carWriteFailureFromCode(error.code));
   }
   return const CarWriteException(CarWriteFailure.unknown);
+}
+
+/// Turns an error of reading the cars into a [FleetLoadException].
+FleetLoadException mapFleetLoadError(Object error) {
+  if (error is FleetLoadException) return error;
+  if (error is FirebaseException) {
+    return FleetLoadException(fleetLoadFailureFromCode(error.code));
+  }
+  return const FleetLoadException(FleetLoadFailure.other);
 }
 
 final fleetRepositoryProvider = Provider<FleetRepository>(

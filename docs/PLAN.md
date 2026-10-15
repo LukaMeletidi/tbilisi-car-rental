@@ -2171,8 +2171,25 @@ of behaviour): tests and one short look, no emulator checklist.
     web nothing is intercepted: the browser's Back follows its history.
   - Sign out is one shared button in the app bar of each section. It closes the
     bookings listener first when the list is alive, and never starts it.
-- 4.4b The fleet list: every car, hidden ones marked, read only. Tier 2 — not
-  started.
+- 4.4b The fleet list: every car, hidden ones marked, read only. Tier 2 — written,
+  not committed yet.
+  - The Cars section reads every car, also the hidden ones, live, the same way as
+    the bookings list: an empty answer that did not come from the server is not
+    "No cars yet."; after 3 seconds "No connection. The cars could not be loaded."
+    with Try again, and the cars appear by themselves when the server answers.
+    Nothing is written.
+  - One centred column of white cards: the first photo or the placeholder,
+    "Brand Model", the year, the price per day as in the catalog, and the badges
+    Visible or Hidden and "Needs repair". Order: visible cars, then hidden ones,
+    by brand, model and year; unreadable documents last. A count line above the
+    list. A tap does nothing yet; there is no "Add car" button yet.
+  - "Needs repair" means: the next full save would be refused by the rules or
+    would change the stored document (a missing description, a missing photos
+    field, an unknown field, a year stored as a decimal, a text with a space at
+    an end). The same comparison as the "already saved" check of a replace. A car
+    without photos (an empty list) does not need repair.
+  - A document that the app cannot read at all shows "Unreadable car" and its
+    shortened document ID, nothing else.
 - 4.5 Edit a car, and hide or show it. Tier 1 — not started.
   - Question for the 4.5 plan: a save without any change writes nothing (4.3).
     Should the form disable Save while nothing changed, or say "No changes"?

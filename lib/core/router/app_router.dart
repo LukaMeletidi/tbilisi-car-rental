@@ -9,7 +9,6 @@ import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_new.dart'
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_booking_edit_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_booking_new_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_bookings_screen.dart';
-import 'package:tbilisi_car_rental/features/admin/presentation/admin_cars_placeholder_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_gate_screens.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_login_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_session_provider.dart';
@@ -18,6 +17,7 @@ import 'package:tbilisi_car_rental/features/booking/presentation/booking_form_sc
 import 'package:tbilisi_car_rental/features/booking/presentation/booking_sent_screen.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/car_detail_screen.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_screen.dart';
+import 'package:tbilisi_car_rental/features/fleet/presentation/admin_cars_screen.dart';
 
 /// Route paths in one place, so screens never hard-code URL strings.
 abstract final class AppRoutes {
@@ -197,8 +197,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: _below(AppRoutes.adminCars),
-                    builder: (context, state) =>
-                        const AdminCarsPlaceholderScreen(),
+                    builder: (context, state) => const AdminCarsScreen(),
                   ),
                 ],
               ),

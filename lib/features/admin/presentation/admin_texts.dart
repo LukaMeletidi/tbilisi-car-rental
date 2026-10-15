@@ -17,6 +17,7 @@ import 'package:tbilisi_car_rental/features/admin/domain/admin_sign_in_failure.d
 import 'package:tbilisi_car_rental/features/catalog/domain/car_display.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/car_limits.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/car_validation.dart';
+import 'package:tbilisi_car_rental/features/fleet/domain/fleet_list.dart';
 
 const adminSignInTitle = 'Admin sign-in';
 const adminEmailLabel = 'E-mail';
@@ -39,10 +40,20 @@ const adminBookingsNoConnection =
 const adminTryAgain = 'Try again';
 const adminOfflineNote = 'Offline: showing saved data';
 
-/// The entries of the admin navigation, and the Cars page until step 4.4b.
+/// The entries of the admin navigation.
 const adminNavBookings = 'Bookings';
 const adminNavCars = 'Cars';
-const adminCarsComingSoon = 'Cars: coming soon';
+
+/// The fleet list (step 4.4b).
+const adminCarsTitle = 'Cars';
+const adminNoCars = 'No cars yet.';
+const adminCarsNoConnection = 'No connection. The cars could not be loaded.';
+const adminCarsNoAccess = 'You do not have access to the cars.';
+const adminCarsLoadError = 'Could not load the cars.';
+const adminCarBadgeVisible = 'Visible';
+const adminCarBadgeHidden = 'Hidden';
+const adminCarNeedsRepair = 'Needs repair';
+const adminCarUnreadable = 'Unreadable car';
 const adminLoadMore = 'Load more';
 const adminEstimate = 'estimate';
 
@@ -743,4 +754,45 @@ String adminCarPhotoErrorText(CarPhotoError error) {
     case CarPhotoError.duplicate:
       return 'This photo is already in the list.';
   }
+}
+
+/// The text shown when the cars could not be loaded.
+String adminCarsFailureText(FleetLoadFailure failure) {
+  switch (failure) {
+    case FleetLoadFailure.permissionDenied:
+      return adminCarsNoAccess;
+    case FleetLoadFailure.noConnection:
+      return adminCarsNoConnection;
+    case FleetLoadFailure.other:
+      return adminCarsLoadError;
+  }
+}
+
+/// "Year 2019".
+String adminCarYear(int year) => 'Year $year';
+
+/// "\$45 per day", "\$45.50 per day": the price as the catalog shows it.
+String adminCarPrice(double pricePerDay) =>
+    '\$${formatPrice(pricePerDay)} per day';
+
+/// "ID: abcd1234…"; [shortId] is already shortened.
+String adminCarIdText(String shortId) => 'ID: $shortId';
+
+/// "7 cars: 6 visible, 1 hidden. 6 need repair." The part about repair is
+/// left out when no car needs it; one car "needs repair". Unreadable
+/// documents are counted as cars and named when there are any.
+String adminFleetCounts(FleetCounts counts) {
+  final total = counts.total;
+  final parts = StringBuffer(
+    '$total ${total == 1 ? 'car' : 'cars'}: '
+    '${counts.visible} visible, ${counts.hidden} hidden',
+  );
+  if (counts.unreadable > 0) parts.write(', ${counts.unreadable} unreadable');
+  parts.write('.');
+  if (counts.needRepair == 1) {
+    parts.write(' 1 needs repair.');
+  } else if (counts.needRepair > 1) {
+    parts.write(' ${counts.needRepair} need repair.');
+  }
+  return parts.toString();
 }

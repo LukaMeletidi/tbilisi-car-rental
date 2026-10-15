@@ -19,11 +19,13 @@ import 'package:tbilisi_car_rental/features/admin/presentation/admin_texts.dart'
 import 'package:tbilisi_car_rental/features/catalog/presentation/car_detail_screen.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/cars_providers.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_screen.dart';
+import 'package:tbilisi_car_rental/features/fleet/data/fleet_repository.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/settings_providers.dart';
 import 'package:tbilisi_car_rental/l10n/generated/app_localizations.dart';
 
 import '../../../support/fake_admin_auth_repository.dart';
 import '../../../support/fake_admin_bookings_repository.dart';
+import '../../../support/fake_fleet_repository.dart';
 
 const car = Car(
   id: 'car-1',
@@ -83,6 +85,8 @@ Future<void> pumpApp(
       overrides: [
         adminAuthRepositoryProvider.overrideWithValue(repository),
         adminBookingsRepositoryProvider.overrideWithValue(bookingsRepository),
+        // The Cars section reads the fleet; this keeps Firebase out.
+        fleetRepositoryProvider.overrideWithValue(FakeFleetRepository()),
         activeCarsProvider.overrideWith((ref) => Stream.value([car])),
         carProvider.overrideWith((ref, id) => Stream.value(car)),
         // The booking detail looks the names of the places up.

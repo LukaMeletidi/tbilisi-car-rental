@@ -13,17 +13,19 @@ import 'package:tbilisi_car_rental/features/admin/presentation/admin_booking_det
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_booking_edit_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_booking_new_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_bookings_screen.dart';
-import 'package:tbilisi_car_rental/features/admin/presentation/admin_cars_placeholder_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_gate_screens.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_login_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_texts.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/cars_providers.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_screen.dart';
+import 'package:tbilisi_car_rental/features/fleet/data/fleet_repository.dart';
+import 'package:tbilisi_car_rental/features/fleet/presentation/admin_cars_screen.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/settings_providers.dart';
 import 'package:tbilisi_car_rental/l10n/generated/app_localizations.dart';
 
 import '../../../support/fake_admin_auth_repository.dart';
 import '../../../support/fake_admin_bookings_repository.dart';
+import '../../../support/fake_fleet_repository.dart';
 
 /// A made-up car for the public part of the router.
 const car = Car(
@@ -89,6 +91,8 @@ Future<void> pumpApp(
       overrides: [
         adminAuthRepositoryProvider.overrideWithValue(auth),
         adminBookingsRepositoryProvider.overrideWithValue(bookings),
+        // The Cars section reads the fleet; this keeps Firebase out.
+        fleetRepositoryProvider.overrideWithValue(FakeFleetRepository()),
         activeCarsProvider.overrideWith((ref) => Stream.value([car])),
         carProvider.overrideWith((ref, id) => Stream.value(car)),
         pickupLocationsProvider.overrideWith((ref) => Stream.value(const [])),
@@ -163,8 +167,7 @@ void main() {
 
         await tapEntry(tester, adminNavCars);
         expect(address(tester), '/admin/cars');
-        expect(find.byType(AdminCarsPlaceholderScreen), findsOneWidget);
-        expect(find.text(adminCarsComingSoon), findsOneWidget);
+        expect(find.byType(AdminCarsScreen), findsOneWidget);
         expect(selectedIndex(tester), 1);
 
         await tapEntry(tester, adminNavBookings);
@@ -208,7 +211,7 @@ void main() {
       await pumpApp(tester);
       await open(tester, '/admin/cars');
 
-      expect(find.byType(AdminCarsPlaceholderScreen), findsOneWidget);
+      expect(find.byType(AdminCarsScreen), findsOneWidget);
       expect(selectedIndex(tester), 1);
       expect(bookings.limits, isEmpty);
     });
@@ -301,7 +304,7 @@ void main() {
           ),
           findsOneWidget,
         );
-        expect(find.byType(AdminCarsPlaceholderScreen), findsNothing);
+        expect(find.byType(AdminCarsScreen), findsNothing);
         expect(rail, findsNothing);
         expect(bar, findsNothing);
         expect(bookings.limits, isEmpty);
@@ -318,7 +321,7 @@ void main() {
       await settle(tester);
 
       expect(address(tester), '/admin/cars');
-      expect(find.byType(AdminCarsPlaceholderScreen), findsOneWidget);
+      expect(find.byType(AdminCarsScreen), findsOneWidget);
       expect(rail, findsOneWidget);
     });
   });

@@ -150,18 +150,20 @@ bool sameCarDocument(
   if (stored.length != document.length) return false;
   for (final entry in document.entries) {
     if (!stored.containsKey(entry.key)) return false;
-    if (!_sameValue(stored[entry.key], entry.value)) return false;
+    if (!sameStoredValue(stored[entry.key], entry.value)) return false;
   }
   return true;
 }
 
-bool _sameValue(Object? stored, Object? wanted) {
+/// Whether one stored value is [wanted], with the rule of [sameCarDocument]:
+/// where [wanted] is a whole number, the stored value must be one too.
+bool sameStoredValue(Object? stored, Object? wanted) {
   if (wanted is int) return stored is int && stored == wanted;
   if (wanted is double) return stored is num && stored.toDouble() == wanted;
   if (wanted is List) {
     if (stored is! List || stored.length != wanted.length) return false;
     for (var i = 0; i < wanted.length; i++) {
-      if (!_sameValue(stored[i], wanted[i])) return false;
+      if (!sameStoredValue(stored[i], wanted[i])) return false;
     }
     return true;
   }
@@ -169,7 +171,7 @@ bool _sameValue(Object? stored, Object? wanted) {
     if (stored is! Map || stored.length != wanted.length) return false;
     for (final key in wanted.keys) {
       if (!stored.containsKey(key)) return false;
-      if (!_sameValue(stored[key], wanted[key])) return false;
+      if (!sameStoredValue(stored[key], wanted[key])) return false;
     }
     return true;
   }
