@@ -2194,12 +2194,30 @@ of behaviour): tests and one short look, no emulator checklist.
     without photos (an empty list) does not need repair.
   - A document that the app cannot read at all shows "Unreadable car" and its
     shortened document ID, nothing else.
-- 4.5 Edit a car, and hide or show it. Tier 1 — not started.
-  - Question for the 4.5 plan: a save without any change writes nothing (4.3).
-    Should the form disable Save while nothing changed, or say "No changes"?
-  - A car that Car.fromMap cannot read at all cannot be opened in the form. The
-    fleet list of 4.4b shows it as unreadable, with only hide and show.
+- 4.5 Edit a car, and hide or show it. Tier 1 — written, not committed yet.
+  - The form is at /admin/cars/<id>/edit, below the list; a tap on a readable card
+    opens it. No navigation on it (a form). It reads the car live, like the
+    booking edit, and saves the WHOLE car with replaceCar after the server's
+    answer only; nothing is queued offline. A successful save returns to the list
+    with "Saved".
+  - Save is disabled while nothing changed, EXCEPT for a car that needs repair: a
+    save of such a car as it is repairs it. A car that needs repair opens with a
+    note and its field errors shown at once; other errors appear after Save.
+  - "No answer": the fields are locked; "Save again" (a retry finds the car already
+    saved and writes nothing twice) or "Load the current car". When the server
+    then shows the car exactly as written, it counts as saved at once.
+  - "Changed elsewhere": the form reloads only through "Load the current car".
+  - Hide or show: a button on each readable card (setCarActive, works for every
+    stored car, also one that needs repair); hiding asks "Hide this car?" first.
+    The Visible switch of the form is saved with the whole car and asks the same
+    question at Save. The Phase 5 warning about future bookings is not here.
+  - "Discard your changes?" on the back arrow and the Android Back, as on the
+    booking edit page.
+  - An unreadable car has no button and cannot be opened; it is repaired in the
+    console if it ever happens.
+  - The photo addresses (4.7) are part of this form: add, remove, move up and
+    down, at most 10, each checked with the rules' pattern. No previews.
 - 4.6 Add a car (saved hidden by default). Tier 1 — not started.
-- 4.7 The photo addresses of a car in the form (add, remove, order). Tier 2; it may
-  be folded into 4.5 and 4.6 — not started.
+- 4.7 The photo addresses of a car in the form (add, remove, order). Tier 2 —
+  folded into 4.5 (the edit form); 4.6 reuses the same form.
 - 4.8 Verify Phase 4 and close it. Tier 3 — not started.

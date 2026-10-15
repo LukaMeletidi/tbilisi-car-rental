@@ -17,6 +17,7 @@ import 'package:tbilisi_car_rental/features/booking/presentation/booking_form_sc
 import 'package:tbilisi_car_rental/features/booking/presentation/booking_sent_screen.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/car_detail_screen.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_screen.dart';
+import 'package:tbilisi_car_rental/features/fleet/presentation/admin_car_edit_screen.dart';
 import 'package:tbilisi_car_rental/features/fleet/presentation/admin_cars_screen.dart';
 
 /// Route paths in one place, so screens never hard-code URL strings.
@@ -74,6 +75,13 @@ abstract final class AppRoutes {
 
   /// The Cars section of the admin area.
   static const adminCars = adminCarsPath;
+
+  /// Path pattern of the edit form of one car, below [adminCars].
+  static const adminCarEditPattern = ':carId/edit';
+
+  /// The address of the edit form of one car: "/admin/cars/abc123/edit".
+  static String adminCarEdit(String carId) =>
+      '$adminCars/${Uri.encodeComponent(carId)}/edit';
 }
 
 /// Tells the router to run its redirect again. The router listens to it;
@@ -198,6 +206,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: _below(AppRoutes.adminCars),
                     builder: (context, state) => const AdminCarsScreen(),
+                    routes: [
+                      // Below the list, so Back returns to the list. A form:
+                      // adminShowsNavigation hides the navigation here.
+                      GoRoute(
+                        path: AppRoutes.adminCarEditPattern,
+                        builder: (context, state) => AdminCarEditScreen(
+                          carId: state.pathParameters['carId']!,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

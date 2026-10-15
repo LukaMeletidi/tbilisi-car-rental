@@ -5,6 +5,7 @@ library;
 import 'package:tbilisi_car_rental/core/localization/app_language.dart';
 import 'package:tbilisi_car_rental/core/models/booking.dart';
 import 'package:tbilisi_car_rental/core/models/booking_status.dart';
+import 'package:tbilisi_car_rental/core/models/car.dart';
 import 'package:tbilisi_car_rental/core/models/extra.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_delete.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_detail.dart';
@@ -15,6 +16,7 @@ import 'package:tbilisi_car_rental/features/admin/domain/admin_date_format.dart'
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings_filter.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_sign_in_failure.dart';
 import 'package:tbilisi_car_rental/features/catalog/domain/car_display.dart';
+import 'package:tbilisi_car_rental/features/fleet/domain/car_edit.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/car_limits.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/car_validation.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/fleet_list.dart';
@@ -54,6 +56,59 @@ const adminCarBadgeVisible = 'Visible';
 const adminCarBadgeHidden = 'Hidden';
 const adminCarNeedsRepair = 'Needs repair';
 const adminCarUnreadable = 'Unreadable car';
+
+/// Hide and show on the fleet list (step 4.5).
+const adminCarHide = 'Hide';
+const adminCarShow = 'Show';
+const adminCancel = 'Cancel';
+const adminHideCarTitle = 'Hide this car?';
+const adminHiddenCarNote =
+    'A hidden car disappears from the public catalog. '
+    'Existing bookings are not changed.';
+
+/// The edit form of a car (step 4.5).
+const adminCarEditTitle = 'Edit the car';
+const adminBackToCars = 'Back to the cars';
+const adminCarMissing = 'This car does not exist.';
+const adminCarUnreadableText =
+    'This car cannot be read by the app. Repair it in the Firebase console.';
+const adminCarRepairNote =
+    'This car needs repair: it does not meet the current rules. Fill in the '
+    'marked fields. A save writes the whole car again and removes anything '
+    'the app does not know.';
+const adminCarChangedElsewhereBanner =
+    'This car was changed elsewhere. Saving will be refused.';
+const adminLoadCurrentCar = 'Load the current car';
+const adminSaveAgain = 'Save again';
+const adminCarSaved = 'Saved';
+const adminCarSectionCar = 'The car';
+const adminCarSectionPrice = 'Price';
+const adminCarSectionDescriptions = 'Descriptions';
+const adminCarSectionPhotos = 'Photos';
+const adminCarSectionVisibility = 'Visibility';
+const adminCarLabelBrand = 'Brand';
+const adminCarLabelModel = 'Model';
+const adminCarLabelYear = 'Year';
+const adminCarLabelDrivetrain = 'Drivetrain';
+const adminCarLabelTransmission = 'Transmission';
+const adminCarLabelFuelType = 'Fuel type';
+const adminCarLabelSeats = 'Seats';
+const adminCarLabelEngineSize = 'Engine size (litres, optional)';
+const adminCarLabelPrice = 'Price per day (USD)';
+const adminCarPriceNote =
+    'Changing the price does not change the totals of existing bookings.';
+const adminCarLabelDescriptionKa = 'Description (Georgian)';
+const adminCarLabelDescriptionRu = 'Description (Russian)';
+const adminCarLabelDescriptionEn = 'Description (English)';
+const adminCarPhotosNote =
+    'At most $carMaxPhotos addresses, each starting with $carPhotoScheme. '
+    'The first photo is shown in the catalog.';
+const adminCarNoPhotos = 'No photos. The catalog shows a placeholder.';
+const adminCarAddPhoto = 'Add photo address';
+const adminCarMovePhotoUp = 'Move up';
+const adminCarMovePhotoDown = 'Move down';
+const adminCarRemovePhoto = 'Remove';
+const adminCarLabelVisible = 'Visible in the catalog';
 const adminLoadMore = 'Load more';
 const adminEstimate = 'estimate';
 
@@ -765,6 +820,88 @@ String adminCarsFailureText(FleetLoadFailure failure) {
       return adminCarsNoConnection;
     case FleetLoadFailure.other:
       return adminCarsLoadError;
+  }
+}
+
+/// The text shown when the car of the edit form could not be loaded.
+String adminCarFailureText(FleetLoadFailure failure) {
+  switch (failure) {
+    case FleetLoadFailure.permissionDenied:
+      return 'You do not have access to this car.';
+    case FleetLoadFailure.noConnection:
+      return 'No connection. The car could not be loaded.';
+    case FleetLoadFailure.other:
+      return 'Could not load the car.';
+  }
+}
+
+/// "Photo address 1".
+String adminCarPhotoLabel(int index) => 'Photo address ${index + 1}';
+
+String adminTransmissionLabel(Transmission transmission) {
+  switch (transmission) {
+    case Transmission.automatic:
+      return 'Automatic';
+    case Transmission.manual:
+      return 'Manual';
+  }
+}
+
+String adminFuelTypeLabel(FuelType fuelType) {
+  switch (fuelType) {
+    case FuelType.petrol:
+      return 'Petrol';
+    case FuelType.diesel:
+      return 'Diesel';
+    case FuelType.hybrid:
+      return 'Hybrid';
+    case FuelType.electric:
+      return 'Electric';
+  }
+}
+
+/// What the edit form says after an attempt to save the car.
+String adminCarSaveNoticeText(CarSaveNotice notice) {
+  switch (notice) {
+    case CarSaveNotice.saved:
+      return adminCarSaved;
+    case CarSaveNotice.noAnswer:
+      return 'No answer from the server. The car may or may not be saved. '
+          'Press "$adminSaveAgain" to check: if it was saved, nothing is '
+          'written twice. Or load the car as it is stored now.';
+    case CarSaveNotice.noConnection:
+      return 'Not saved. No connection. Check your internet and try again.';
+    case CarSaveNotice.refused:
+      return 'Not saved. The server refused the change. Check that you are '
+          'still signed in as the admin.';
+    case CarSaveNotice.carMissing:
+      return 'Not saved. This car no longer exists.';
+    case CarSaveNotice.changedElsewhere:
+      return 'Not saved. This car was changed elsewhere. Load the current '
+          'car to see what is stored.';
+    case CarSaveNotice.unknown:
+      return 'Not saved. Something went wrong. Try again.';
+  }
+}
+
+/// What the list says after hiding or showing a car.
+String adminCarActiveNoticeText(CarActiveNotice notice) {
+  switch (notice) {
+    case CarActiveNotice.hidden:
+      return 'The car is hidden.';
+    case CarActiveNotice.shown:
+      return 'The car is visible.';
+    case CarActiveNotice.noAnswer:
+      return 'No answer from the server. The list shows the real state as '
+          'soon as the server answers.';
+    case CarActiveNotice.noConnection:
+      return 'Not changed. No connection. Check your internet and try again.';
+    case CarActiveNotice.refused:
+      return 'Not changed. The server refused it.';
+    case CarActiveNotice.carMissing:
+      return 'Not changed. This car no longer exists.';
+    case CarActiveNotice.unknown:
+      return 'Not changed. Something went wrong. Try again.';
   }
 }
 

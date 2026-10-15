@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:tbilisi_car_rental/core/models/car.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/car_draft.dart';
+import 'package:tbilisi_car_rental/features/fleet/domain/car_edit.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/car_write.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/fleet_list.dart';
 
@@ -46,6 +47,28 @@ class FleetRepository {
             fromCache: snapshot.metadata.isFromCache,
           ),
         )
+        .handleError((Object error, StackTrace stackTrace) {
+          Error.throwWithStackTrace(mapFleetLoadError(error), stackTrace);
+        });
+  }
+
+  /// One car, live, for the edit form: a new answer comes whenever it is
+  /// changed or removed. Metadata changes are included, so that the
+  /// server's answer comes also when it only confirms the saved copy;
+  /// readCarAnswer decides what an answer means.
+  ///
+  /// [id] must pass isPlausibleCarId. An error is reported as a
+  /// [FleetLoadException].
+  Stream<RawCarAnswer> watchCar(String id) {
+    return _document(id)
+        .snapshots(includeMetadataChanges: true)
+        .map((snapshot) {
+          final data = snapshot.data();
+          return RawCarAnswer(
+            document: data == null ? null : (id: snapshot.id, data: data),
+            fromCache: snapshot.metadata.isFromCache,
+          );
+        })
         .handleError((Object error, StackTrace stackTrace) {
           Error.throwWithStackTrace(mapFleetLoadError(error), stackTrace);
         });

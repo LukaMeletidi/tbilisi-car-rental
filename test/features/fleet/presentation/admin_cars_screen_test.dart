@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:tbilisi_car_rental/core/data/server_answer.dart';
+import 'package:tbilisi_car_rental/core/router/app_router.dart';
 import 'package:tbilisi_car_rental/core/theme/app_theme.dart';
 import 'package:tbilisi_car_rental/core/time/clock_provider.dart';
 import 'package:tbilisi_car_rental/core/widgets/app_card.dart';
@@ -12,6 +16,8 @@ import 'package:tbilisi_car_rental/features/admin/presentation/admin_texts.dart'
 import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_layout.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/widgets/car_photo.dart';
 import 'package:tbilisi_car_rental/features/fleet/data/fleet_repository.dart';
+import 'package:tbilisi_car_rental/features/fleet/domain/car_edit.dart';
+import 'package:tbilisi_car_rental/features/fleet/domain/car_write.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/fleet_list.dart';
 import 'package:tbilisi_car_rental/features/fleet/presentation/admin_cars_screen.dart';
 import 'package:tbilisi_car_rental/features/fleet/presentation/widgets/admin_car_card.dart';
@@ -44,12 +50,29 @@ Future<void> pumpScreen(
         fleetRepositoryProvider.overrideWithValue(fleet),
         clockProvider.overrideWithValue(() => now),
       ],
-      child: MaterialApp(
+      // A small router: the list, and a stand-in for the edit form at its
+      // real address, so a tap on a card can be followed.
+      child: MaterialApp.router(
         theme: buildAppTheme(),
         locale: const Locale('en'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const AdminCarsScreen(),
+        routerConfig: GoRouter(
+          initialLocation: AppRoutes.adminCars,
+          routes: [
+            GoRoute(
+              path: AppRoutes.adminCars,
+              builder: (context, state) => const AdminCarsScreen(),
+              routes: [
+                GoRoute(
+                  path: AppRoutes.adminCarEditPattern,
+                  builder: (context, state) =>
+                      Text('Edit form of ${state.pathParameters['carId']}'),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     ),
   );
@@ -174,11 +197,23 @@ void main() {
     );
   });
 
-  testWidgets('a tap on a card does nothing: no tap handler, no ink', (
+  testWidgets('a tap on a card opens the edit form of that car', (
     tester,
   ) async {
     await pumpScreen(tester);
-    await emit(tester, [(id: 'a', data: rawCar())]);
+    await emit(tester, [(id: 'car-7', data: rawCar())]);
+    await tester.tap(find.text('Honda Civic'));
+    await settle(tester);
+    expect(find.text('Edit form of car-7'), findsOneWidget);
+  });
+
+  testWidgets('an unreadable card cannot be tapped and has no button', (
+    tester,
+  ) async {
+    await pumpScreen(tester);
+    await emit(tester, [
+      (id: 'abcdefghijkl', data: {'brand': 5}),
+    ]);
     final card = tester.widget<AppCard>(
       find.descendant(
         of: find.byType(AdminCarCard),
@@ -186,9 +221,91 @@ void main() {
       ),
     );
     expect(card.onTap, isNull);
-    await tester.tap(find.byType(AdminCarCard));
-    await settle(tester);
-    expect(find.byType(AdminCarCard), findsOneWidget);
+    expect(find.text(adminCarHide), findsNothing);
+    expect(find.text(adminCarShow), findsNothing);
+  });
+
+  group('hide and show', () {
+    testWidgets('Hide asks first; Cancel changes nothing', (tester) async {
+      await pumpScreen(tester);
+      await emit(tester, [(id: 'a', data: rawCar())]);
+      await tester.tap(find.text(adminCarHide));
+      await settle(tester);
+      expect(find.text(adminHideCarTitle), findsOneWidget);
+      expect(find.text(adminHiddenCarNote), findsOneWidget);
+
+      await tester.tap(find.text(adminCancel));
+      await settle(tester);
+      expect(fleet.activeChanges, isEmpty);
+    });
+
+    testWidgets('Hide, confirmed: active false, then a notice', (tester) async {
+      await pumpScreen(tester);
+      await emit(tester, [(id: 'a', data: rawCar())]);
+      await tester.tap(find.text(adminCarHide));
+      await settle(tester);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.text(adminCarHide),
+        ),
+      );
+      await settle(tester);
+      expect(fleet.activeChanges, [(id: 'a', active: false)]);
+      expect(find.text('The car is hidden.'), findsOneWidget);
+    });
+
+    testWidgets('Show on a hidden car: at once, without a question', (
+      tester,
+    ) async {
+      await pumpScreen(tester);
+      await emit(tester, [(id: 'h', data: rawCar(active: false))]);
+      await tester.tap(find.text(adminCarShow));
+      await settle(tester);
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(fleet.activeChanges, [(id: 'h', active: true)]);
+      expect(find.text('The car is visible.'), findsOneWidget);
+    });
+
+    testWidgets('while it runs: a spinner instead of the button, and the '
+        'card cannot be opened', (tester) async {
+      await pumpScreen(tester);
+      await emit(tester, [(id: 'h', data: rawCar(active: false))]);
+      fleet.writeGate = Completer<void>();
+      await tester.tap(find.text(adminCarShow));
+      await settle(tester);
+      expect(find.text(adminCarShow), findsNothing);
+      await tester.tap(find.text('Honda Civic'));
+      await settle(tester);
+      expect(find.textContaining('Edit form'), findsNothing);
+
+      fleet.writeGate!.complete();
+      await settle(tester);
+      expect(find.text(adminCarShow), findsOneWidget);
+    });
+
+    testWidgets('no answer: says that the list will show the real state', (
+      tester,
+    ) async {
+      await pumpScreen(tester);
+      await emit(tester, [(id: 'h', data: rawCar(active: false))]);
+      fleet.setActiveError = const CarWriteNoAnswer();
+      await tester.tap(find.text(adminCarShow));
+      await settle(tester);
+      expect(
+        find.text(adminCarActiveNoticeText(CarActiveNotice.noAnswer)),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('refused: "Not changed"', (tester) async {
+      await pumpScreen(tester);
+      await emit(tester, [(id: 'h', data: rawCar(active: false))]);
+      fleet.setActiveError = const CarWriteException(CarWriteFailure.refused);
+      await tester.tap(find.text(adminCarShow));
+      await settle(tester);
+      expect(find.text('Not changed. The server refused it.'), findsOneWidget);
+    });
   });
 
   testWidgets('the offline note after 3 seconds of data from memory', (

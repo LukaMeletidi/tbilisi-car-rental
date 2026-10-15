@@ -9,32 +9,59 @@ import 'package:tbilisi_car_rental/features/fleet/domain/fleet_list.dart';
 const adminCarPhotoSize = 88.0;
 
 /// One row of the fleet list: a white card. A readable car shows its first
-/// photo (or the placeholder), "Brand Model", the year, the price per day
-/// and its badges; an unreadable document shows only a warning and its
-/// shortened ID. Nothing happens on a tap yet (step 4.5 adds the form).
+/// photo (or the placeholder), "Brand Model", the year, the price per day,
+/// its badges and a Hide or Show button; a tap opens its edit form. An
+/// unreadable document shows only a warning and its shortened ID, and
+/// cannot be tapped.
 class AdminCarCard extends StatelessWidget {
-  const AdminCarCard({super.key, required this.entry});
+  const AdminCarCard({
+    super.key,
+    required this.entry,
+    this.onOpen,
+    this.onToggleActive,
+    this.busy = false,
+  });
 
   final FleetEntry entry;
 
+  /// Opens the edit form. Not used for an unreadable document.
+  final VoidCallback? onOpen;
+
+  /// Hides a visible car or shows a hidden one.
+  final VoidCallback? onToggleActive;
+
+  /// True while a hide or show of this car runs.
+  final bool busy;
+
   @override
   Widget build(BuildContext context) {
-    return AppCard(
-      child: switch (entry) {
-        final FleetCarEntry car => _CarContent(entry: car),
-        final FleetUnreadableEntry unreadable => _UnreadableContent(
-          id: unreadable.id,
+    return switch (entry) {
+      final FleetCarEntry car => AppCard(
+        onTap: busy ? null : onOpen,
+        child: _CarContent(
+          entry: car,
+          onToggleActive: busy ? null : onToggleActive,
+          busy: busy,
         ),
-      },
-    );
+      ),
+      final FleetUnreadableEntry unreadable => AppCard(
+        child: _UnreadableContent(id: unreadable.id),
+      ),
+    };
   }
 }
 
 /// Built inside the white card, so Theme.of(context) is the dark-on-white one.
 class _CarContent extends StatelessWidget {
-  const _CarContent({required this.entry});
+  const _CarContent({
+    required this.entry,
+    required this.onToggleActive,
+    required this.busy,
+  });
 
   final FleetCarEntry entry;
+  final VoidCallback? onToggleActive;
+  final bool busy;
 
   @override
   Widget build(BuildContext context) {
@@ -82,6 +109,21 @@ class _CarContent extends StatelessWidget {
                       color: Color(0xFF8A5A00), // amber, dark enough
                     ),
                 ],
+              ),
+              Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: busy
+                    ? const Padding(
+                        padding: EdgeInsets.all(12),
+                        child: SizedBox.square(
+                          dimension: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : TextButton(
+                        onPressed: onToggleActive,
+                        child: Text(car.active ? adminCarHide : adminCarShow),
+                      ),
               ),
             ],
           ),

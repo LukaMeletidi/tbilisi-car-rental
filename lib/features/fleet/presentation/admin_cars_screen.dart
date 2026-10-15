@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:tbilisi_car_rental/core/router/app_router.dart';
 import 'package:tbilisi_car_rental/core/widgets/app_bar_logo.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_texts.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/widgets/admin_note.dart';
@@ -8,8 +10,10 @@ import 'package:tbilisi_car_rental/features/admin/presentation/widgets/admin_sig
 import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_layout.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/widgets/catalog_message.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/fleet_list.dart';
+import 'package:tbilisi_car_rental/features/fleet/presentation/admin_car_visibility_provider.dart';
 import 'package:tbilisi_car_rental/features/fleet/presentation/admin_cars_provider.dart';
 import 'package:tbilisi_car_rental/features/fleet/presentation/widgets/admin_car_card.dart';
+import 'package:tbilisi_car_rental/features/fleet/presentation/widgets/admin_hide_car_dialog.dart';
 
 /// The Cars section of the admin area: every car, also the hidden ones,
 /// live and read only. The router shows it only to an admin, and the
@@ -21,6 +25,18 @@ class AdminCarsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(adminCarsProvider);
     final notifier = ref.read(adminCarsProvider.notifier);
+
+    // Each finished hide or show is told once, in a SnackBar.
+    ref.listen(adminCarVisibilityProvider, (previous, next) {
+      final notice = next.notice;
+      if (notice == null) return;
+      if (previous != null && previous.noticeCount == next.noticeCount) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(adminCarActiveNoticeText(notice))),
+        );
+    });
 
     final Widget body;
     switch (state.status) {
@@ -60,14 +76,28 @@ class AdminCarsScreen extends ConsumerWidget {
   }
 }
 
-class _CarsList extends StatelessWidget {
+class _CarsList extends ConsumerWidget {
   const _CarsList({required this.state});
 
   final AdminCarsState state;
 
+  /// Hides after "Hide this car?"; shows at once.
+  Future<void> _toggle(
+    BuildContext context,
+    WidgetRef ref,
+    FleetCarEntry entry,
+  ) async {
+    final hide = entry.car.active;
+    if (hide && !await confirmHideCar(context)) return;
+    await ref
+        .read(adminCarVisibilityProvider.notifier)
+        .setActive(entry.id, active: !hide);
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
+    final busy = ref.watch(adminCarVisibilityProvider).busy;
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: carDetailMaxWidth),
@@ -92,7 +122,16 @@ class _CarsList extends StatelessWidget {
                 ],
               ),
             ),
-            for (final entry in state.entries) AdminCarCard(entry: entry),
+            for (final entry in state.entries)
+              switch (entry) {
+                final FleetCarEntry car => AdminCarCard(
+                  entry: car,
+                  busy: busy.contains(car.id),
+                  onOpen: () => context.go(AppRoutes.adminCarEdit(car.id)),
+                  onToggleActive: () => _toggle(context, ref, car),
+                ),
+                FleetUnreadableEntry() => AdminCarCard(entry: entry),
+              },
           ],
         ),
       ),
