@@ -2427,7 +2427,22 @@ in Section 3.4. The tiers are those of Section 19.
     bookingsConflict, findConflicts, needsConflictCheck and futureConfirmed, on
     UTC moments only; a time that is not UTC throws an ArgumentError.
 - 5.2 Read the confirmed bookings of one car from the server only (10 second
-  limit, error mapping); one new emulator case. Tier 1 — not started.
+  limit, error mapping); one new emulator case. Tier 1 — DONE. Commit 23bd801.
+  - 1768 Flutter tests pass (19 new) and analyze is clean; the 47 tests of the
+    secrets scan pass; the emulator script passes with 104 of 104 public and
+    400 of 400 admin and signed-in checks.
+  - readConfirmedBookingsOfCar never throws: a server answer is "checked" (the
+    readable confirmed bookings of the car, and how many documents could not be
+    read); no connection, an answer from memory, the 10 second limit, a refusal
+    and any other error are "could not be checked". Equality filters only (carId
+    and status), so no composite index. Only the failure kind and the error type
+    or Firestore code are printed, in debug builds.
+  - The car ID guard accepts exactly the IDs the cars rules allow.
+  - The emulator script has two new signed-in cases (an admin may run the query,
+    a request without sign-in may not): 104 of 104 public, 400 of 400 admin and
+    signed-in. firestore.rules is unchanged.
+  - No manual steps: nothing calls it from a screen yet. Its first live run is
+    step 1 of the 5.3 checklist.
 - 5.3 The conflict warning in the status change, the edit form and the new
   booking ("Checking…", "Continue anyway", "could not be checked"). Tier 1 —
   not started.
