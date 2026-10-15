@@ -1001,13 +1001,17 @@ Phase 3 decisions (the steps are in Section 18):
 ### 3.3 Fleet management
 
 - Add / edit / hide cars. "Remove" = `active: false` (soft delete), never hard delete.
-- Photo upload.
+- Photos: in Phase 4 https addresses typed in the form (no upload; see the Phase 4
+  decisions below). A real upload is a Phase 7 question (Section 15).
 - Description fields for ka/ru/en.
 - Fixed-category specs (transmission, fuel type, drivetrain) via dropdowns/selectors,
   not free text. Seats is the exact number.
 - Price per day (USD), set individually per car.
 - Every field must have clear helper text or a placeholder example, because the person
   filling it in is non-technical staff.
+  In Phase 4 the car form has a label on every field, notes for the price, the
+  photos and the visibility, and error texts with examples ("for example 2019");
+  there is no helper text under every field yet (Phase 7 polish, if wanted).
 
 Phase 4 decisions (made before step 4.1; the steps are in Section 19):
 - Photos in Phase 4: an https address typed or pasted by the admin. `photos` stays a
@@ -1057,7 +1061,8 @@ Phase 4 decisions (made before step 4.1; the steps are in Section 19):
   - active: true or false.
   - Any other field is refused. The ID of a new car: letters, digits, "_" and "-",
     1 to 128 characters.
-- Decisions of step 4.1 (the cars rules; local file and emulator only, NOT deployed):
+- Decisions of step 4.1 (the cars rules; written in step 4.1, deployed in step
+  4.2 from commit 4e5fb1d):
   - An admin may create and update a car; the whole document is checked on every
     write (isValidCar), except for the hide-or-show update above. Reading is
     unchanged: the public reads active cars, an admin reads every car.
@@ -1441,7 +1446,8 @@ Implementation decisions (step 2.2):
    console, because the admin screens for them come in Phase 6. — DONE (Section 17;
    App Check step 2.9b moved to Phase 7).
 3. Admin auth (custom claim script) + bookings list and editing — DONE (Section 18).
-4. Fleet management + photo upload — open.
+4. Fleet management — DONE (Section 19). The photo upload moved to Phase 7
+   (Section 15).
 5. Calendar + conflict warning — open.
 6. Settings screens (Extras & Prices, Company Info) + About Us page — open.
 7. Cloud Functions + compliance + polish (App Check step 2.9b, consent banner, Privacy
@@ -1516,6 +1522,10 @@ Phase 0 is complete.
 
 ## 15. Open reminders
 
+- BEFORE PHASE 5 (start here): some cars in the live catalog still need repair
+  (5 of 7 at the end of Phase 4); the admin list shows them with "Needs repair".
+  The owner completes them in the admin app: Cars, open the car, fill in what
+  is marked, Save. Until then they stay incomplete in the catalog.
 - CLOSED before step 4.1: the Cloud Storage question. It needs the Blaze plan, so
   Phase 4 has no upload; photos are https addresses (Section 3.3, Phase 4 decisions).
 - For Phase 7, not decided: car photos by a real upload to Cloud Storage. It needs
@@ -1679,12 +1689,22 @@ Phase 0 is complete.
   release web build: open /admin as admin, go offline, reload, and see the spinner
   and then "No connection. The bookings could not be loaded.", never "No bookings
   yet."; go online again and see the bookings appear by themselves.
+- For Phase 7 (polish): offline car writes on the web. In Chrome without a
+  connection a car transaction fails with a raw JavaScript error (NativeError),
+  not a FirebaseException, so the forms take the safe "may or may not be saved"
+  path instead of "No connection" (step 4.6b). Decide whether and how to read
+  only the "code" of such an error safely on the web. Caution: "unavailable" on
+  a transaction commit may also mean that the write arrived, so a create may
+  need to stay "may or may not be saved".
 - Android system Back of the admin navigation, not verified on a device (for Phase
   7): in step 4.4a the emulator did not boot, so Back on Cars (to Bookings, then to
   the catalog) is covered by a widget test only. Check it once on a healthy
   emulator or a phone: sign in as admin, open Cars, press Back twice.
-- An unknown address under /admin shows go_router's raw "Page Not Found" screen. A
-  proper admin "not found" page comes in step 3.6.
+  The car screens of steps 4.4b to 4.6 (the list, the edit form, the new-car
+  form, hide and show) were checked in Chrome only; check them once on Android
+  too.
+- CLOSED in step 3.6: an unknown address under /admin shows the admin "not
+  found" page (outside the navigation shell since step 4.4a).
 - App Check state after step 3.5: Monitoring only, for Authentication and for
   Firestore (Authentication about 44% verified requests, Firestore about 68%; web
   requests carry no token). Enforcement, if ever, is the Phase 7 decision 2.9b, and
@@ -1817,6 +1837,33 @@ Phase 0 is complete.
     - The optional local file tool/private_denylist.txt exists on the owner's
       machine. git ignores it; it is never printed, pasted, read aloud or committed,
       and the scan never shows its content (3.12a).
+
+- Known limits of fleet management after Phase 4 (gathered in step 4.8; the step
+  in brackets has the details in Section 19):
+  - Photos are https addresses typed by hand; there is no upload and no preview
+    in the form, and nothing checks that an address really leads to an image
+    (Phase 4 decisions; upload: Phase 7).
+  - Hiding a car with confirmed future bookings gives no warning yet (Phase 5).
+  - A car is never deleted from the app; a document is removed only in the
+    Firebase console (Phase 4 decisions).
+  - A car document that the app cannot read is shown by its short ID only; it
+    cannot be opened, hidden or shown in the app and is repaired in the console
+    (4.4b, 4.5).
+  - A save of the edit form replaces the whole car: fields the app does not know
+    are dropped. This repairs old cars on purpose (4.1, 4.5).
+  - After "No answer" the car forms lock their fields; "Save again" or "Check
+    again" never writes twice, and "changed elsewhere" reloads only on request
+    (4.5, 4.6).
+  - Offline on the web a car write shows "may or may not be saved", not "No
+    connection" (4.6b; Phase 7).
+  - On the web the browser's Back, a typed address and closing the tab leave a
+    car form without the discard question, as for the booking forms (4.5, 4.6).
+  - The newest allowed year comes from the device clock; the rules use the
+    server's clock. This matters only around New Year (4.5).
+  - The car transactions were tested against the live database only by hand;
+    there is no Firestore fake (4.3).
+  - The diagnosis line of an unknown car write error appears only in debug
+    builds (4.6b).
 
 ## 16. Phase 1 status
 
@@ -2272,4 +2319,54 @@ of behaviour): tests and one short look, no emulator checklist.
   - Replaces the Stage A developer.log line, which the web console does not show.
 - 4.7 The photo addresses of a car in the form (add, remove, order). Tier 2 —
   folded into 4.5 (the edit form); 4.6 reuses the same form.
-- 4.8 Verify Phase 4 and close it. Tier 3 — not started.
+- 4.8 Verify Phase 4 and close it. Tier 3 — DONE (in the commit "Close Phase
+  4"). Only this file changed; nothing in the app, tool/, the rules, the ARB
+  files, the packages or the indexes. The results are in "Phase 4 totals".
+
+Phase 4 totals (written in step 4.8):
+- Steps 4.1 to 4.6b are done; 4.7 (the photo addresses) was folded into 4.5 and
+  4.6. The admin area now has: the cars rules, deployed in step 4.2; the
+  navigation shell with Bookings and Cars (a rail on wide screens, a bottom bar
+  on phones); the live fleet list with every car, the badges Visible, Hidden and
+  "Needs repair", and unreadable documents shown by their short ID only; the
+  edit form, which repairs an old car in one save; hide and show from the list;
+  the photo addresses (add, remove, order, at most 10); the "new car" form,
+  saved hidden by default; a debug-only diagnosis line for car write errors.
+- Tests: 1719 Flutter tests pass and "flutter analyze" is clean. The tests of the
+  secrets scan: 47 pass. (At the end of Phase 3 there were 1408 Flutter tests.)
+- Rules: run again in step 4.8 on the local emulator (project
+  demo-tbilisi-car-rental; Java from "Android Studio1\jbr", set for that one
+  command only): 104 of 104 public checks and 398 of 398 admin and signed-in
+  checks. firestore.rules was last changed in commit 4e5fb1d (step 4.1) and
+  deployed in step 4.2; "git diff 4e5fb1d" is empty for it. No firebase command
+  was run against the real project in step 4.8.
+- By the git history of Phase 4 (the 16 commits after 4e68af0): no package was
+  added (pubspec.yaml and pubspec.lock last changed in step 3.4); the ARB files
+  are unchanged since step 2.8; firestore.indexes.json since Phase 0.
+- Secrets scan of the repository: 0 errors, 6 warnings, all intentionally
+  invalid phone values in tests (booking_form_validation_test.dart and
+  tool/check_booking_rules.mjs): two made-up 555 numbers that start with "+0",
+  and four counting sequences that test the length limits.
+- The Phase 4 history: every file version changed in the 16 commits and every
+  commit message, read with the scan's own code by a temporary helper outside
+  the repository (deleted afterwards; no snapshot files): 0 errors, 6 warnings
+  (the same three lines of check_booking_rules.mjs, in two commits). An extra
+  search of the added lines found no e-mail address other than @example.com
+  and the Co-Authored-By address, and nothing shaped like a JWT token.
+- Checked by hand by the owner, step by step, in Chrome: 4.4a to 4.6b, with real
+  writes in 4.5 (the hidden car repaired) and 4.6 (a made-up demo car, deleted
+  by the owner in the console afterwards). The car screens were NOT checked on
+  Android: the emulator could not be used in Phase 4. No separate regression
+  pass was made at the end of the phase.
+- The live data at the end of Phase 4 (counts only, read by the owner in the
+  admin app): 7 cars, 7 visible, 0 hidden; 5 still need repair (see the first
+  item of Section 15).
+- Moved on: Phase 5: the conflict warning, and a warning when a car with
+  confirmed future bookings is hidden. Phase 6: nothing from Phase 4. Phase 7:
+  the photo upload (Blaze), the offline error of car writes on the web, the
+  Android check of the admin navigation and the car screens, App Check
+  enforcement (decision 2.9b).
+- The known limits are in Section 15, "Known limits of fleet management after
+  Phase 4".
+
+Phase 4 is complete.
