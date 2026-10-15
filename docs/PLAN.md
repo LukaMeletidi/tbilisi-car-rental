@@ -1096,6 +1096,49 @@ Note for Phase 5 (decided before step 4.1): add a warning, also non-blocking, wh
 admin hides a car that has confirmed bookings in the future. In Phase 4 hiding is
 allowed without any warning.
 
+Phase 5 decisions (made before step 5.1; the steps are in Section 20):
+- A conflict is exactly the rule of Section 7: the same car, the other booking
+  confirmed, and newPickup < otherDropoff + 5 h AND newDropoff + 5 h >
+  otherPickup, on UTC moments. A gap of exactly 5 hours is no conflict. The
+  booking itself is never its own conflict.
+- The check runs when a booking becomes confirmed (status change, edit, or a
+  new booking saved as confirmed), and when a confirmed booking changes its
+  car, pickup or dropoff. Not for changes of notes, customer, extras or total,
+  and never for new, pending or cancelled bookings.
+- A conflict only warns: a dialog with "Continue anyway" and "Cancel". Cancel
+  keeps the form as it was. It never blocks and is never silent.
+- The check reads from the server only, with a 10 second limit. When it
+  cannot be done (no connection, timeout, error), the dialog says "Conflicts
+  could not be checked" with the same two buttons; an empty answer from
+  memory never counts as "no conflicts".
+- Any failure inside a conflict check or hide check, including a thrown
+  ArgumentError, a timeout or an unexpected error, counts as 'could not be
+  checked' (never a crash, never a silent pass).
+- While a check runs, the Save control shows "Checking…" and cannot be pressed
+  twice: a double press sends one check and one write.
+- The warning shows the dates and times (Tbilisi time) of at most 3
+  conflicting bookings and "and N more"; no customer names.
+- Hiding a car: the "Hide this car?" dialog also names the confirmed bookings
+  whose dropoff is after now (a rental in progress counts). It does not block.
+- Two admins confirming at the same moment can both pass the check (it runs
+  before the write, not inside it). Accepted: it is a warning, and the
+  calendar shows the result.
+- A new booking for a hidden car stays allowed, marked "(hidden)", with no
+  extra warning.
+- The calendar reads only status == confirmed and cuts the visible window in
+  Dart: no composite index and no index deploy. A range query with an index
+  is the later option (a known limit in Section 15).
+- The calendar shows 14 days from today in Tbilisi time, with "previous" and
+  "next" by 7 days; a day starts at 00:00 Tbilisi time. Rows: the visible cars
+  and any hidden car with a booking in the window (marked). Today is
+  highlighted. On a narrow screen it scrolls sideways with a fixed column of
+  car names. Navigation order: Bookings, Calendar, Cars.
+- Step 5.2 adds one emulator case (an admin may list the confirmed bookings of
+  one car, the public may not); it changes tool/check_booking_rules.mjs only,
+  never firestore.rules.
+- The repair of the cars that need it is done by the owner in parallel, not a
+  gate for any step; ideally before step 5.5b.
+
 ### 3.5 Extras & Prices screen
 
 Separate admin screen where admin edits the global per-day prices of the four extras.
@@ -1448,7 +1491,7 @@ Implementation decisions (step 2.2):
 3. Admin auth (custom claim script) + bookings list and editing — DONE (Section 18).
 4. Fleet management — DONE (Section 19). The photo upload moved to Phase 7
    (Section 15).
-5. Calendar + conflict warning — open.
+5. Calendar + conflict warning — in progress (Section 20).
 6. Settings screens (Extras & Prices, Company Info) + About Us page — open.
 7. Cloud Functions + compliance + polish (App Check step 2.9b, consent banner, Privacy
    Policy, TTL, email, README with screenshots, launcher icon). The launcher icon is
@@ -2370,3 +2413,27 @@ Phase 4 totals (written in step 4.8):
   Phase 4".
 
 Phase 4 is complete.
+
+## 20. Phase 5 status
+
+Phase 5: the calendar and the conflict warnings (Section 11). The decisions are
+in Section 3.4. The tiers are those of Section 19.
+
+- 5.1 The conflict logic: pure Dart and unit tests, no screen. Tier 3 — DONE.
+  Commit ec126a4.
+  - 1749 Flutter tests pass (30 new) and analyze is clean; the 47 tests of the
+    secrets scan pass.
+  - lib/features/admin/domain/booking_conflicts.dart: conflictBuffer (5 hours),
+    bookingsConflict, findConflicts, needsConflictCheck and futureConfirmed, on
+    UTC moments only; a time that is not UTC throws an ArgumentError.
+- 5.2 Read the confirmed bookings of one car from the server only (10 second
+  limit, error mapping); one new emulator case. Tier 1 — not started.
+- 5.3 The conflict warning in the status change, the edit form and the new
+  booking ("Checking…", "Continue anyway", "could not be checked"). Tier 1 —
+  not started.
+- 5.4 The future confirmed bookings in the "Hide this car?" dialog (card and
+  form switch). Tier 1 — not started.
+- 5.5a The Calendar entry of the navigation, with an empty page. Tier 1 — not
+  started.
+- 5.5b The calendar grid. Tier 2 — not started.
+- 5.6 Verify Phase 5 and close it. Tier 3 — not started.
