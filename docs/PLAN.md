@@ -2445,7 +2445,20 @@ in Section 3.4. The tiers are those of Section 19.
     step 1 of the 5.3 checklist.
 - 5.3 The conflict warning in the status change, the edit form and the new
   booking ("Checking…", "Continue anyway", "could not be checked"). Tier 1 —
-  not started.
+  DONE. Commit e6fa3d0.
+  - 1828 Flutter tests pass (60 new) and analyze is clean; the 47 tests of the
+    secrets scan pass. No existing test changed.
+  - Checked by hand in Chrome by the owner, 10 steps, all passed: the first live
+    run of the query (online, no dialog, no index request, no Console line), the
+    dialogs with times only, Cancel and "Continue anyway", and offline "Conflicts
+    could not be checked".
+  - After "Continue anyway" offline, the write fails with the old generic text
+    ("Not saved. Please try again."); nothing is written. The mapping of the
+    Chrome offline error stays a Phase 7 item.
+  - "Check again" on the new-booking form re-sends the same booking with the
+    same ID and runs no conflict check, by decision.
+  - In Chrome debug, a car photo from an external image host is blocked by CORS
+    and shows two Console errors; photos move to Storage in Phase 7.
 - 5.4 The future confirmed bookings in the "Hide this car?" dialog (card and
   form switch). Tier 1 — not started.
 - 5.5a The Calendar entry of the navigation, with an empty page. Tier 1 — not
