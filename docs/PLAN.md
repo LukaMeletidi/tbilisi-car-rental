@@ -1908,6 +1908,14 @@ Phase 0 is complete.
   - The diagnosis line of an unknown car write error appears only in debug
     builds (4.6b).
 
+- Known limit of the calendar (5.5b): it listens to every confirmed booking
+  of all time (status == confirmed, no date filter) and cuts the 14 days in
+  Dart, so it needs no composite index. Each opening reads all of them once.
+  Fine up to about 1,000 confirmed bookings (about 1,000 reads and 1-2 MB per
+  opening; the free level allows 50,000 reads a day). Before that, switch to
+  a query on status and dropoff with a composite index in
+  firestore.indexes.json, deployed with approval.
+
 ## 16. Phase 1 status
 
 - 1.1 Docs: Phase 1 decisions recorded in this file — DONE.
@@ -2494,5 +2502,21 @@ in Section 3.4. The tiers are those of Section 19.
     It needs a public "not found" page and an errorBuilder.
   - Android's system Back on Calendar (to Bookings) is covered by tests only, as
     for the other sections.
-- 5.5b The calendar grid. Tier 2 — not started.
+- 5.5b The calendar grid. Tier 2 — DONE. Commit 71ed42e.
+  - 2001 Flutter tests pass (113 new) and analyze is clean; the 47 tests of the
+    secrets scan pass; the emulator script passes with 104 of 104 public and
+    402 of 402 admin and signed-in checks (two new cases: an admin may read the
+    confirmed bookings of all cars, a request without sign-in may not).
+    firestore.rules is unchanged.
+  - Checked by hand in Chrome by the owner, all passed: the wide window, the
+    narrow window, hiding and showing a car, offline on the first visit and
+    offline with the grid shown, with four made-up test bookings.
+  - 14 days per car in Tbilisi time, Previous and Next by 7 days, Today; hidden
+    cars with a booking in the window and unknown car IDs get marked rows; a
+    warning icon marks a booking too close to another of the same car; a tap
+    opens the booking detail. Bars show times only, never a customer detail.
+  - The grid is drawn only after the server has answered both reads; before
+    that, "loading" and after 3 seconds "No connection", never "no bookings".
+  - The old 5.5a screen test was replaced; no other existing test changed.
+  - The query limit is in Section 15, "Known limit of the calendar (5.5b)".
 - 5.6 Verify Phase 5 and close it. Tier 3 — not started.
