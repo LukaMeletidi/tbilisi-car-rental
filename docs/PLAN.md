@@ -2477,7 +2477,22 @@ in Section 3.4. The tiers are those of Section 19.
   - setActive(active: false) stays for its existing tests; the card hides with
     hide().
   - Hiding offline fails with the old text, as before.
-- 5.5a The Calendar entry of the navigation, with an empty page. Tier 1 — not
-  started.
+- 5.5a The Calendar entry of the navigation, with an empty page. Tier 1 — DONE.
+  Commit b4ca321.
+  - 1892 Flutter tests pass (19 new) and analyze is clean; the 47 tests of the
+    secrets scan pass.
+  - Checked by hand in Chrome by the owner, 7 steps, all passed: the order
+    Bookings, Calendar, Cars with the right entry selected; the Calendar page;
+    reload; signed out, /admin/calendar went to the login page and back to
+    Calendar after sign-in; the bottom bar when narrow; /admin/calendar/x showed
+    the admin "not found" page without the navigation.
+  - Three existing expectations changed, only because of the new branch: the
+    list of AdminSection values, and Cars at index 2 instead of 1 (two lines in
+    admin_shell_test.dart).
+  - Phase 7 reminder: an unknown public address (for example /zzz, or one with
+    a double slash) shows go_router's raw "Page Not Found / GoException" page.
+    It needs a public "not found" page and an errorBuilder.
+  - Android's system Back on Calendar (to Bookings) is covered by tests only, as
+    for the other sections.
 - 5.5b The calendar grid. Tier 2 — not started.
 - 5.6 Verify Phase 5 and close it. Tier 3 — not started.
