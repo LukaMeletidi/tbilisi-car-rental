@@ -13,6 +13,7 @@ import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_edit.dart
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_session.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_session_provider.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/booking_conflict_check.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/settings_providers.dart';
 
 /// Where the edit of one booking stands.
@@ -48,6 +49,7 @@ class AdminBookingEditState {
     this.extrasPrices,
     this.showErrors = false,
     this.saving = false,
+    this.checking = false,
     this.notice,
     this.noticeFields = const [],
     this.failure,
@@ -89,6 +91,10 @@ class AdminBookingEditState {
 
   /// True while a save is running: the form is locked.
   final bool saving;
+
+  /// True while the conflict check of a save reads the bookings of the car
+  /// ("Checking…"). [saving] is true then too.
+  final bool checking;
 
   /// What to tell the admin about the last attempt to save.
   final AdminBookingSaveNotice? notice;
@@ -202,6 +208,7 @@ class AdminBookingEditState {
     ExtrasPrices? extrasPrices,
     bool? showErrors,
     bool? saving,
+    bool? checking,
     AdminBookingSaveNotice? notice,
     List<String> noticeFields = const [],
     int? formVersion,
@@ -217,6 +224,7 @@ class AdminBookingEditState {
       extrasPrices: extrasPrices ?? this.extrasPrices,
       showErrors: showErrors ?? this.showErrors,
       saving: saving ?? this.saving,
+      checking: checking ?? this.checking,
       notice: notice,
       noticeFields: noticeFields,
       failure: failure,
@@ -349,14 +357,17 @@ class AdminBookingEditNotifier extends Notifier<AdminBookingEditState> {
   ///
   /// It has two stages. Stage 1 checks: the fields and the choice of the
   /// total must be valid and something must have changed; otherwise
-  /// nothing is sent and the form shows its errors. Stage 2 writes the
-  /// changed parts and waits for the server.
+  /// nothing is sent and the form shows its errors. Then the conflict check
+  /// of Phase 5 runs when it is needed ([AdminBookingEditState.checking]),
+  /// and [decide] (the screen's dialog) answers a conflict; without a
+  /// screen the answer is "Cancel". Stage 2 writes the changed parts,
+  /// exactly as computed before the check, and waits for the server.
   ///
   /// While it runs, [AdminBookingEditState.saving] is true and a second
   /// call does nothing. Afterwards [AdminBookingEditState.notice] says what
   /// happened. Only after the server's answer does the form take the
   /// edited booking as its new starting point.
-  Future<void> save() async {
+  Future<void> save({ConflictDecision decide = cancelOnConflict}) async {
     final base = state.base;
     final draft = state.draft;
     final totals = state.totals;
@@ -381,10 +392,11 @@ class AdminBookingEditNotifier extends Notifier<AdminBookingEditState> {
     }
 
     state = state.copyWith(saving: true, showErrors: true);
-    final mayWrite = await _checkBeforeSave(base, edited);
+    final mayWrite = await _checkBeforeSave(base, edited, decide);
     if (!ref.mounted || !_isAdmin) return;
     if (!mayWrite) {
-      state = state.copyWith(saving: false);
+      // Cancel: nothing is written and the form is as it was.
+      state = state.copyWith(saving: false, checking: false);
       return;
     }
 
@@ -419,6 +431,7 @@ class AdminBookingEditNotifier extends Notifier<AdminBookingEditState> {
         draft: AdminBookingDraft.fromBooking(edited),
         showErrors: false,
         saving: false,
+        checking: false,
         notice: notice,
         formVersion: state.formVersion + 1,
       );
@@ -426,6 +439,7 @@ class AdminBookingEditNotifier extends Notifier<AdminBookingEditState> {
       // The form keeps what the admin typed.
       state = state.copyWith(
         saving: false,
+        checking: false,
         notice: notice,
         noticeFields: noticeFields,
       );
@@ -434,10 +448,23 @@ class AdminBookingEditNotifier extends Notifier<AdminBookingEditState> {
 
   /// The last part of stage 1. Returns true when the write may go ahead.
   ///
-  /// Nothing is checked yet. The conflict warning of Phase 5 (another
-  /// confirmed booking of the same car at that time) belongs here.
-  Future<bool> _checkBeforeSave(Booking base, Booking edited) async {
-    return true;
+  /// The conflict check: when the edited booking is confirmed and became
+  /// so, or changed its car or dates, the confirmed bookings of its car are
+  /// read and [decide] answers a conflict (checkConflictsBeforeWrite).
+  Future<bool> _checkBeforeSave(
+    Booking base,
+    Booking edited,
+    ConflictDecision decide,
+  ) {
+    return checkConflictsBeforeWrite(
+      ref,
+      base: base,
+      edited: edited,
+      selfId: bookingId,
+      decide: decide,
+      setChecking: (checking) =>
+          state = state.copyWith(saving: state.saving, checking: checking),
+    );
   }
 
   void _onSettings() {
@@ -520,6 +547,7 @@ class AdminBookingEditNotifier extends Notifier<AdminBookingEditState> {
           extrasPrices: state.extrasPrices,
           showErrors: keepForm && state.showErrors,
           saving: state.saving,
+          checking: state.checking,
           notice: state.notice,
           noticeFields: state.noticeFields,
         );

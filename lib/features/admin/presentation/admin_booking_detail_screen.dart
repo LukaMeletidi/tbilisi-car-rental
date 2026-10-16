@@ -22,6 +22,7 @@ import 'package:tbilisi_car_rental/features/admin/presentation/admin_texts.dart'
 import 'package:tbilisi_car_rental/features/admin/presentation/widgets/admin_booking_card.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/widgets/admin_note.dart';
 import 'package:tbilisi_car_rental/features/booking/domain/booking_place_text.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/widgets/admin_conflict_dialog.dart';
 import 'package:tbilisi_car_rental/features/booking/domain/booking_rental.dart';
 import 'package:tbilisi_car_rental/features/booking/presentation/widgets/booking_section.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_layout.dart';
@@ -53,7 +54,13 @@ class AdminBookingDetailScreen extends ConsumerWidget {
     }
     await ref
         .read(adminBookingDetailProvider(bookingId).notifier)
-        .changeStatus(to);
+        .changeStatus(
+          to,
+          // The conflict dialog; "Cancel" when this page is gone.
+          decide: (outcome) => context.mounted
+              ? confirmDespiteConflicts(context, outcome)
+              : Future.value(false),
+        );
   }
 
   /// Asks "Delete this booking?" and deletes only after a tap on
@@ -232,6 +239,7 @@ class _Detail extends StatelessWidget {
               child: _StatusContent(
                 status: booking.status,
                 saving: state.saving,
+                checking: state.checking,
                 // No status change while the booking is being deleted.
                 locked: state.deleting || state.deleted != null,
                 notice: state.notice,
@@ -284,6 +292,7 @@ class _StatusContent extends StatelessWidget {
   const _StatusContent({
     required this.status,
     required this.saving,
+    required this.checking,
     required this.locked,
     required this.notice,
     required this.noticeFields,
@@ -293,6 +302,10 @@ class _StatusContent extends StatelessWidget {
 
   final BookingStatus status;
   final bool saving;
+
+  /// True while the conflict check reads: "Checking…" instead of
+  /// "Saving…".
+  final bool checking;
 
   /// True while the booking is being deleted: the choices are disabled.
   final bool locked;
@@ -326,15 +339,15 @@ class _StatusContent extends StatelessWidget {
         ),
         if (saving) ...[
           const SizedBox(height: 12),
-          const Row(
+          Row(
             children: [
-              SizedBox(
+              const SizedBox(
                 width: 16,
                 height: 16,
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
-              SizedBox(width: 12),
-              Text(adminSaving),
+              const SizedBox(width: 12),
+              Text(checking ? adminChecking : adminSaving),
             ],
           ),
         ],

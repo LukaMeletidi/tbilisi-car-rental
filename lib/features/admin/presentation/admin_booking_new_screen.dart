@@ -12,6 +12,7 @@ import 'package:tbilisi_car_rental/features/admin/presentation/admin_booking_new
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_created_booking_provider.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_texts.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/widgets/admin_booking_field_cards.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/widgets/admin_conflict_dialog.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/widgets/admin_note.dart';
 import 'package:tbilisi_car_rental/features/booking/presentation/widgets/booking_section.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_layout.dart';
@@ -171,7 +172,12 @@ class _AdminBookingNewFormState extends ConsumerState<AdminBookingNewForm> {
   /// leaves by itself; here only the first card with an error is shown.
   Future<void> _save() async {
     FocusManager.instance.primaryFocus?.unfocus();
-    await _notifier.save();
+    await _notifier.save(
+      // The conflict dialog; "Cancel" when the form is gone.
+      decide: (outcome) => mounted
+          ? confirmDespiteConflicts(context, outcome)
+          : Future.value(false),
+    );
     if (!mounted) return;
     final after = ref.read(adminBookingNewProvider);
     if (after.showErrors && after.notice == null) {
@@ -297,7 +303,11 @@ class _AdminBookingNewFormState extends ConsumerState<AdminBookingNewForm> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           ),
                           const SizedBox(width: 12),
-                          Text(mayAlreadyExist ? adminChecking : adminSaving),
+                          Text(
+                            mayAlreadyExist || state.checking
+                                ? adminChecking
+                                : adminSaving,
+                          ),
                         ],
                       ),
                       const SizedBox(height: 12),

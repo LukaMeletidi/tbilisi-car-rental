@@ -6,6 +6,7 @@ import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_edit.dart
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_booking_edit_provider.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_texts.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/widgets/admin_booking_field_cards.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/widgets/admin_conflict_dialog.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/widgets/admin_note.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/widgets/admin_price_card.dart';
 import 'package:tbilisi_car_rental/features/booking/presentation/widgets/booking_section.dart';
@@ -77,7 +78,14 @@ class _AdminBookingEditFormState extends ConsumerState<AdminBookingEditForm> {
   Future<void> _save() async {
     FocusManager.instance.primaryFocus?.unfocus();
     final provider = adminBookingEditProvider(widget.bookingId);
-    await ref.read(provider.notifier).save();
+    await ref
+        .read(provider.notifier)
+        .save(
+          // The conflict dialog; "Cancel" when the form is gone.
+          decide: (outcome) => mounted
+              ? confirmDespiteConflicts(context, outcome)
+              : Future.value(false),
+        );
     if (!mounted) return;
     final after = ref.read(provider);
     if (after.showErrors && after.notice == null) {
@@ -184,15 +192,15 @@ class _AdminBookingEditFormState extends ConsumerState<AdminBookingEditForm> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     if (state.saving) ...[
-                      const Row(
+                      Row(
                         children: [
-                          SizedBox(
+                          const SizedBox(
                             width: 16,
                             height: 16,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           ),
-                          SizedBox(width: 12),
-                          Text(adminSaving),
+                          const SizedBox(width: 12),
+                          Text(state.checking ? adminChecking : adminSaving),
                         ],
                       ),
                       const SizedBox(height: 12),

@@ -15,6 +15,8 @@ import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_date_format.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings_filter.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_sign_in_failure.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/booking_conflicts.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/conflict_warning.dart';
 import 'package:tbilisi_car_rental/features/catalog/domain/car_display.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/car_edit.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/car_new.dart';
@@ -966,3 +968,34 @@ String adminFleetCounts(FleetCounts counts) {
   }
   return parts.toString();
 }
+
+/// The conflict warning before a write (step 5.3). Times only, never a
+/// customer name.
+const adminConflictTitle = 'Rentals of this car are too close';
+const adminConflictPartlyTitle = 'Not every booking could be compared';
+const adminConflictUncheckedTitle = 'Conflicts could not be checked';
+const adminContinueAnyway = 'Continue anyway';
+const adminConflictQuestion = 'Continue anyway?';
+const adminConflictUncheckedText =
+    'The other confirmed bookings of this car could not be read, so a '
+    'conflict cannot be ruled out. Continue anyway?';
+
+/// "These confirmed bookings of this car overlap this one or are less than
+/// 5 hours apart:"
+String adminConflictIntro() =>
+    'These confirmed bookings of this car overlap this one or are less than '
+    '${conflictBuffer.inHours} hours apart:';
+
+/// "10 Dec 2026 10:00 – 12 Dec 2026 10:00" (Tbilisi time).
+String adminConflictPeriod(ConflictPeriod period) =>
+    '${formatAdminUtc(period.pickup)} – ${formatAdminUtc(period.dropoff)}';
+
+/// "and 2 more".
+String adminConflictMore(int more) => 'and $more more';
+
+/// "1 booking of this car could not be read and was not compared." /
+/// "3 bookings of this car could not be read and were not compared."
+String adminConflictUnreadable(int count) => count == 1
+    ? '1 booking of this car could not be read and was not compared.'
+    : '$count bookings of this car could not be read and were not '
+          'compared.';

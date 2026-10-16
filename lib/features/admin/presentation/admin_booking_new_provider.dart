@@ -13,6 +13,7 @@ import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_new.dart'
 import 'package:tbilisi_car_rental/features/admin/domain/admin_session.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_deleted_notice_provider.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_session_provider.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/booking_conflict_check.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/settings_providers.dart';
 
 /// Where the "new booking" form stands.
@@ -36,6 +37,7 @@ class AdminBookingNewState {
     this.extrasPrices,
     this.showErrors = false,
     this.saving = false,
+    this.checking = false,
     this.notice,
     this.pending,
     this.createdId,
@@ -69,6 +71,10 @@ class AdminBookingNewState {
 
   /// True while a save is running: the form is locked.
   final bool saving;
+
+  /// True while the conflict check of a save reads the bookings of the car
+  /// ("Checking…"). [saving] is true then too.
+  final bool checking;
 
   /// What to tell the admin about the last attempt to save.
   final AdminBookingCreateNotice? notice;
@@ -159,6 +165,7 @@ class AdminBookingNewState {
     ExtrasPrices? extrasPrices,
     bool? showErrors,
     bool? saving,
+    bool? checking,
     AdminBookingCreateNotice? notice,
     Booking? pending,
     bool clearPending = false,
@@ -174,6 +181,7 @@ class AdminBookingNewState {
       extrasPrices: extrasPrices ?? this.extrasPrices,
       showErrors: showErrors ?? this.showErrors,
       saving: saving ?? this.saving,
+      checking: checking ?? this.checking,
       notice: notice,
       pending: clearPending ? null : pending ?? this.pending,
       createdId: createdId ?? this.createdId,
@@ -257,9 +265,12 @@ class AdminBookingNewNotifier extends Notifier<AdminBookingNewState> {
   /// Saves the form.
   ///
   /// It has two stages. Stage 1 checks: the fields and the total must be
-  /// valid; otherwise nothing is sent and the form shows its errors. Stage
-  /// 2 creates the booking under the ID of this form and waits for the
-  /// server.
+  /// valid; otherwise nothing is sent and the form shows its errors. Then
+  /// the conflict check of Phase 5 runs for a booking saved as confirmed
+  /// ([AdminBookingNewState.checking]), and [decide] (the screen's dialog)
+  /// answers a conflict; without a screen the answer is "Cancel". Stage 2
+  /// creates the booking under the ID of this form, exactly as computed
+  /// before the check, and waits for the server.
   ///
   /// While it runs, [AdminBookingNewState.saving] is true and a second
   /// call does nothing. Afterwards [AdminBookingNewState.notice] says what
@@ -269,7 +280,7 @@ class AdminBookingNewNotifier extends Notifier<AdminBookingNewState> {
   ///   again;
   /// - no answer in time: the booking may exist. The form is locked
   ///   ([AdminBookingNewState.mayAlreadyExist]) and [checkAgain] finds out.
-  Future<void> save() async {
+  Future<void> save({ConflictDecision decide = cancelOnConflict}) async {
     final id = state.bookingId;
     if (!_isAdmin || id == null || !state.canEdit) return;
 
@@ -282,10 +293,11 @@ class AdminBookingNewNotifier extends Notifier<AdminBookingNewState> {
     final booking = newBookingFromDraft(draft: state.draft, total: total);
 
     state = state.copyWith(saving: true, showErrors: true);
-    final mayWrite = await _checkBeforeSave(booking);
+    final mayWrite = await _checkBeforeSave(id, booking, decide);
     if (!ref.mounted || !_isAdmin) return;
     if (!mayWrite) {
-      state = state.copyWith(saving: false);
+      // Cancel: nothing is written and the form is as it was.
+      state = state.copyWith(saving: false, checking: false);
       return;
     }
 
@@ -296,6 +308,9 @@ class AdminBookingNewNotifier extends Notifier<AdminBookingNewState> {
   /// After "no answer from the server": asks again with the same ID and
   /// the same booking. When the booking exists nothing is written; when it
   /// does not, it is created now. Either way there is exactly one booking.
+  ///
+  /// It does not run the conflict check again: the admin already decided
+  /// on exactly this booking before the first attempt.
   Future<void> checkAgain() async {
     final id = state.bookingId;
     final booking = state.pending;
@@ -308,10 +323,24 @@ class AdminBookingNewNotifier extends Notifier<AdminBookingNewState> {
 
   /// The last part of stage 1. Returns true when the write may go ahead.
   ///
-  /// Nothing is checked yet. The conflict warning of Phase 5 (another
-  /// confirmed booking of the same car at that time) belongs here.
-  Future<bool> _checkBeforeSave(Booking booking) async {
-    return true;
+  /// The conflict check of a booking saved as confirmed: the confirmed
+  /// bookings of its car are read and [decide] answers a conflict
+  /// (checkConflictsBeforeWrite). [id] is the form's ID, so a stored
+  /// booking with it (an earlier attempt) is never its own conflict.
+  Future<bool> _checkBeforeSave(
+    String id,
+    Booking booking,
+    ConflictDecision decide,
+  ) {
+    return checkConflictsBeforeWrite(
+      ref,
+      base: null,
+      edited: booking,
+      selfId: id,
+      decide: decide,
+      setChecking: (checking) =>
+          state = state.copyWith(saving: state.saving, checking: checking),
+    );
   }
 
   // Stage 2. `state.saving` is true when this is called.

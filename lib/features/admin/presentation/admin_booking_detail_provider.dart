@@ -12,9 +12,11 @@ import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_delete.da
 import 'package:tbilisi_car_rental/features/admin/domain/admin_booking_detail.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_bookings.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_session.dart';
+import 'package:tbilisi_car_rental/features/admin/domain/conflict_warning.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_created_booking_provider.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_deleted_notice_provider.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_session_provider.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/booking_conflict_check.dart';
 
 /// Where the detail of one booking stands.
 enum AdminBookingDetailStatus {
@@ -47,6 +49,7 @@ class AdminBookingDetailState {
     this.showOfflineNote = false,
     this.failure,
     this.saving = false,
+    this.checking = false,
     this.notice,
     this.noticeFields = const [],
     this.deleting = false,
@@ -75,6 +78,10 @@ class AdminBookingDetailState {
 
   /// True while a status change is running: the choices are disabled.
   final bool saving;
+
+  /// True while the conflict check of a status change reads the bookings
+  /// of the car ("Checking…"). [saving] is true then too.
+  final bool checking;
 
   /// What to tell the admin about the last attempt to change the status.
   final AdminStatusChangeNotice? notice;
@@ -105,6 +112,7 @@ class AdminBookingDetailState {
     AdminCarLabel? car,
     bool? showOfflineNote,
     bool? saving,
+    bool? checking,
     AdminStatusChangeNotice? notice,
     List<String> noticeFields = const [],
     bool? deleting,
@@ -120,6 +128,7 @@ class AdminBookingDetailState {
       showOfflineNote: showOfflineNote ?? this.showOfflineNote,
       failure: failure,
       saving: saving ?? this.saving,
+      checking: checking ?? this.checking,
       notice: notice,
       noticeFields: noticeFields,
       deleting: deleting ?? this.deleting,
@@ -221,15 +230,21 @@ class AdminBookingDetailNotifier extends Notifier<AdminBookingDetailState> {
 
   /// Changes the status of the booking to [status].
   ///
-  /// It has two stages. Stage 1 checks whether the change should go ahead;
-  /// today nothing is checked. The conflict warning of Phase 5 belongs
-  /// there. Stage 2 writes and waits for the server.
+  /// It has two stages. Stage 1 is the conflict check of Phase 5: when the
+  /// booking becomes confirmed, the confirmed bookings of its car are read
+  /// ([AdminBookingDetailState.checking]) and [decide] (the screen's
+  /// dialog) answers a conflict or a check that could not be done; without
+  /// a screen the answer is "Cancel". Stage 2 writes and waits for the
+  /// server.
   ///
   /// While it runs, [AdminBookingDetailState.saving] is true and a second
   /// call does nothing. The status on screen is never set here: it changes
   /// only when the live read delivers the new one. Afterwards
   /// [AdminBookingDetailState.notice] says what happened.
-  Future<void> changeStatus(BookingStatus status) async {
+  Future<void> changeStatus(
+    BookingStatus status, {
+    ConflictDecision decide = cancelOnConflict,
+  }) async {
     final booking = state.booking;
     if (!_isAdmin || state.busy) return;
     if (state.status != AdminBookingDetailStatus.found || booking == null) {
@@ -240,10 +255,11 @@ class AdminBookingDetailNotifier extends Notifier<AdminBookingDetailState> {
     state = state.copyWith(saving: true);
 
     // Stage 1: check.
-    final mayChange = await _checkBeforeChange(booking, status);
+    final mayChange = await _checkBeforeChange(booking, status, decide);
     if (!ref.mounted || !_isAdmin) return;
     if (!mayChange) {
-      state = state.copyWith(saving: false);
+      // Cancel: nothing is written and the screen is as it was.
+      state = state.copyWith(saving: false, checking: false);
       return;
     }
 
@@ -271,6 +287,7 @@ class AdminBookingDetailNotifier extends Notifier<AdminBookingDetailState> {
     if (!ref.mounted || !_isAdmin) return;
     state = state.copyWith(
       saving: false,
+      checking: false,
       notice: notice,
       noticeFields: noticeFields,
     );
@@ -360,11 +377,23 @@ class AdminBookingDetailNotifier extends Notifier<AdminBookingDetailState> {
 
   /// Stage 1 of a status change. Returns true when the change may go ahead.
   ///
-  /// Nothing is checked yet. In Phase 5 a change to "confirmed" looks here
-  /// for other confirmed bookings of the same car and asks the admin
-  /// "Continue anyway?".
-  Future<bool> _checkBeforeChange(Booking booking, BookingStatus to) async {
-    return true;
+  /// A change to "confirmed" reads the other confirmed bookings of the car
+  /// and lets [decide] answer a conflict; every other change goes ahead
+  /// without a read (checkConflictsBeforeWrite and needsConflictCheck).
+  Future<bool> _checkBeforeChange(
+    Booking booking,
+    BookingStatus to,
+    ConflictDecision decide,
+  ) {
+    return checkConflictsBeforeWrite(
+      ref,
+      base: booking,
+      edited: bookingWithStatus(booking, to),
+      selfId: bookingId,
+      decide: decide,
+      setChecking: (checking) =>
+          state = state.copyWith(saving: state.saving, checking: checking),
+    );
   }
 
   void _listen() {
@@ -447,6 +476,7 @@ class AdminBookingDetailNotifier extends Notifier<AdminBookingDetailState> {
               : const AdminCarLabel(AdminCarState.notLoaded),
           showOfflineNote: showOfflineNote,
           saving: state.saving,
+          checking: state.checking,
           notice: justCreated ? AdminStatusChangeNotice.saved : state.notice,
           noticeFields: justCreated ? const [] : state.noticeFields,
           deleting: state.deleting,
