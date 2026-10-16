@@ -15,7 +15,8 @@ typedef RawBookingDocument = ({String id, Map<String, dynamic> data});
 class RawBookingsResult {
   const RawBookingsResult({required this.documents, required this.fromCache});
 
-  /// Newest first, as the query returned them.
+  /// In the order the query returned them: newest first for the bookings
+  /// list, in no particular order for the calendar.
   final List<RawBookingDocument> documents;
 
   /// True when this answer came from the copy saved on the device and not

@@ -71,6 +71,36 @@ class AdminBookingsRepository {
         });
   }
 
+  /// Every confirmed booking of every car, of all time, live: for the
+  /// calendar, which cuts its days out in Dart. One equality filter, so no
+  /// composite index is needed. The documents come in no particular order.
+  ///
+  /// Metadata changes are included, as in [watchNewestBookings];
+  /// [RawBookingsResult.fromCache] says whether an answer came from the
+  /// server. The dates are turned into UTC DateTime values here. An error
+  /// is reported as an [AdminBookingsException].
+  Stream<RawBookingsResult> watchConfirmedBookings() {
+    return _firestore
+        .collection('bookings')
+        .where('status', isEqualTo: BookingStatus.confirmed.storedName)
+        .snapshots(includeMetadataChanges: true)
+        .map(
+          (snapshot) => RawBookingsResult(
+            documents: [
+              for (final document in snapshot.docs)
+                (
+                  id: document.id,
+                  data: bookingMapFromFirestore(document.data()),
+                ),
+            ],
+            fromCache: snapshot.metadata.isFromCache,
+          ),
+        )
+        .handleError((Object error, StackTrace stackTrace) {
+          Error.throwWithStackTrace(mapAdminBookingsError(error), stackTrace);
+        });
+  }
+
   /// Every car once, also the hidden ones, so that a row can show the car
   /// of an old booking. A car document that cannot be read is skipped and
   /// logged, as in the catalog.

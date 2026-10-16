@@ -50,11 +50,46 @@ const adminNavBookings = 'Bookings';
 const adminNavCalendar = 'Calendar';
 const adminNavCars = 'Cars';
 
-/// The Calendar page (step 5.5a: the page only; the grid comes in 5.5b).
+/// The Calendar page (steps 5.5a and 5.5b).
 const adminCalendarTitle = 'Calendar';
-const adminCalendarNotReady =
-    'The calendar of confirmed bookings is not ready yet. It comes in the '
-    'next step.';
+const adminCalendarLoading = 'Loading the calendar…';
+const adminCalendarNoConnection =
+    'No connection. The calendar could not be loaded.';
+const adminCalendarNoAccess = 'You do not have access to the calendar.';
+const adminCalendarLoadError = 'The calendar could not be loaded.';
+const adminCalendarNoBookings = 'No confirmed bookings in these 14 days.';
+const adminCalendarNoCars = 'There are no cars yet.';
+const adminCalendarHiddenCar = 'Hidden';
+const adminCalendarUnknownCar = 'Unknown car';
+const adminCalendarPrevious = 'Previous 7 days';
+const adminCalendarNext = 'Next 7 days';
+const adminCalendarToday = 'Today';
+const adminCalendarCarColumn = 'Car';
+
+/// The line about confirmed booking documents the calendar could not read.
+String adminCalendarUnreadable(int count) => count == 1
+    ? '1 confirmed booking could not be read and is not shown.'
+    : '$count confirmed bookings could not be read and are not shown.';
+
+/// The label of a header cell for a screen reader: "Friday 16 Oct 2026",
+/// and ", today" for today.
+String adminCalendarDayLabel(String fullDate, {required bool today}) =>
+    today ? '$fullDate, today' : fullDate;
+
+/// The tooltip and screen-reader label of a booking on the calendar: the
+/// times only, never a name or another detail of the customer.
+String adminCalendarBarLabel(
+  DateTime pickupUtc,
+  DateTime dropoffUtc, {
+  required bool tooClose,
+}) {
+  final times =
+      'Confirmed booking, ${formatAdminUtc(pickupUtc)} to '
+      '${formatAdminUtc(dropoffUtc)} (Tbilisi time).';
+  return tooClose
+      ? '$times Too close to another booking of this car. Opens the booking.'
+      : '$times Opens the booking.';
+}
 
 /// The fleet list (step 4.4b).
 const adminCarsTitle = 'Cars';
@@ -842,6 +877,18 @@ String adminCarsFailureText(FleetLoadFailure failure) {
       return adminCarsNoConnection;
     case FleetLoadFailure.other:
       return adminCarsLoadError;
+  }
+}
+
+/// The text shown when the calendar could not be loaded.
+String adminCalendarFailureText(AdminBookingsFailure failure) {
+  switch (failure) {
+    case AdminBookingsFailure.permissionDenied:
+      return adminCalendarNoAccess;
+    case AdminBookingsFailure.noConnection:
+      return adminCalendarNoConnection;
+    case AdminBookingsFailure.other:
+      return adminCalendarLoadError;
   }
 }
 

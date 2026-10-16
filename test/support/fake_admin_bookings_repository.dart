@@ -55,6 +55,40 @@ class FakeAdminBookingsRepository implements AdminBookingsRepository {
     return controller.stream;
   }
 
+  /// How many queries of all confirmed bookings were started.
+  var confirmedWatches = 0;
+
+  /// How many queries of all confirmed bookings are listened to right now.
+  var activeConfirmedListeners = 0;
+
+  final _confirmedControllers = <StreamController<RawBookingsResult>>[];
+
+  /// Makes the newest query of all confirmed bookings answer with
+  /// [documents].
+  void emitConfirmed(
+    List<RawBookingDocument> documents, {
+    bool fromCache = false,
+  }) {
+    _confirmedControllers.last.add(
+      RawBookingsResult(documents: documents, fromCache: fromCache),
+    );
+  }
+
+  /// Makes the newest query of all confirmed bookings fail with [error].
+  void failConfirmed(Object error) =>
+      _confirmedControllers.last.addError(error);
+
+  @override
+  Stream<RawBookingsResult> watchConfirmedBookings() {
+    confirmedWatches += 1;
+    final controller = StreamController<RawBookingsResult>(
+      onListen: () => activeConfirmedListeners += 1,
+      onCancel: () => activeConfirmedListeners -= 1,
+    );
+    _confirmedControllers.add(controller);
+    return controller.stream;
+  }
+
   @override
   Future<List<Car>> readAllCars() async {
     carReads += 1;

@@ -676,6 +676,32 @@ signedIn('public read refused: the confirmed bookings of one car', 403, () =>
   confirmedOfCar(undefined),
 );
 
+// All confirmed bookings of every car (step 5.5b): one equality filter, as
+// the calendar listens to it.
+function allConfirmed(headers) {
+  return send('POST', `${DOCUMENTS}:runQuery`, {
+    headers,
+    body: {
+      structuredQuery: {
+        from: [{ collectionId: 'bookings' }],
+        where: {
+          fieldFilter: {
+            field: { fieldPath: 'status' },
+            op: 'EQUAL',
+            value: { stringValue: 'confirmed' },
+          },
+        },
+      },
+    },
+  });
+}
+signedIn('admin read: the confirmed bookings of all cars', 200, () =>
+  allConfirmed(ADMIN),
+);
+signedIn('public read refused: the confirmed bookings of all cars', 403, () =>
+  allConfirmed(undefined),
+);
+
 // B. Admin updates that must be accepted, sent both ways.
 for (const status of ['pending', 'confirmed', 'cancelled', 'new']) {
   const before = status === 'new' ? 'confirmed' : 'new';

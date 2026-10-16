@@ -1,6 +1,7 @@
 import 'package:tbilisi_car_rental/core/time/tbilisi_time.dart';
 
-const _months = [
+/// The short English month names of the admin area, January first.
+const adminMonthNames = [
   'Jan',
   'Feb',
   'Mar',
@@ -23,7 +24,7 @@ const _months = [
 /// converted here.
 String formatAdminDateTime(TbilisiDateTime value) {
   String two(int number) => number.toString().padLeft(2, '0');
-  return '${value.day} ${_months[value.month - 1]} ${value.year} '
+  return '${value.day} ${adminMonthNames[value.month - 1]} ${value.year} '
       '${two(value.hour)}:${two(value.minute)}';
 }
 
