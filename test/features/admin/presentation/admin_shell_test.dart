@@ -170,7 +170,7 @@ void main() {
         await tapEntry(tester, adminNavCars);
         expect(address(tester), '/admin/cars');
         expect(find.byType(AdminCarsScreen), findsOneWidget);
-        expect(selectedIndex(tester), 1);
+        expect(selectedIndex(tester), 2);
 
         await tapEntry(tester, adminNavBookings);
         expect(address(tester), '/admin');
@@ -214,7 +214,7 @@ void main() {
       await open(tester, '/admin/cars');
 
       expect(find.byType(AdminCarsScreen), findsOneWidget);
-      expect(selectedIndex(tester), 1);
+      expect(selectedIndex(tester), 2);
       expect(bookings.limits, isEmpty);
     });
   });

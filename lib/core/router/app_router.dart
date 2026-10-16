@@ -15,6 +15,7 @@ import 'package:tbilisi_car_rental/features/admin/presentation/admin_session_pro
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_shell.dart';
 import 'package:tbilisi_car_rental/features/booking/presentation/booking_form_screen.dart';
 import 'package:tbilisi_car_rental/features/booking/presentation/booking_sent_screen.dart';
+import 'package:tbilisi_car_rental/features/calendar/presentation/admin_calendar_screen.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/car_detail_screen.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_screen.dart';
 import 'package:tbilisi_car_rental/features/fleet/presentation/admin_car_edit_screen.dart';
@@ -73,6 +74,9 @@ abstract final class AppRoutes {
   /// "/admin/bookings/abc123/edit".
   static String adminBookingEdit(String bookingId) =>
       '${adminBooking(bookingId)}/$adminBookingEditPattern';
+
+  /// The Calendar section of the admin area.
+  static const adminCalendar = adminCalendarPath;
 
   /// The Cars section of the admin area.
   static const adminCars = adminCarsPath;
@@ -205,6 +209,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                         ],
                       ),
                     ],
+                  ),
+                ],
+              ),
+              // AdminSection.calendar
+              StatefulShellBranch(
+                routes: [
+                  GoRoute(
+                    path: _below(AppRoutes.adminCalendar),
+                    builder: (context, state) => const AdminCalendarScreen(),
                   ),
                 ],
               ),

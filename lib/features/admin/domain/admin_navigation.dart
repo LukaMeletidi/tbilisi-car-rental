@@ -7,7 +7,10 @@ import 'package:tbilisi_car_rental/features/admin/domain/admin_redirect.dart';
 
 /// The sections of the admin area, in the order of the navigation. The
 /// index of a section is the index of its branch in the router.
-enum AdminSection { bookings, cars }
+enum AdminSection { bookings, calendar, cars }
+
+/// The first page of the Calendar section.
+const adminCalendarPath = '$adminHomePath/calendar';
 
 /// The first page of the Cars section.
 const adminCarsPath = '$adminHomePath/cars';
@@ -31,6 +34,9 @@ String _withoutTrailingSlash(String path) =>
 /// address outside the two sections (those pages have no navigation).
 AdminSection? adminSectionOf(String path) {
   final p = _withoutTrailingSlash(path);
+  if (p == adminCalendarPath || p.startsWith('$adminCalendarPath/')) {
+    return AdminSection.calendar;
+  }
   if (p == adminCarsPath || p.startsWith('$adminCarsPath/')) {
     return AdminSection.cars;
   }
@@ -45,6 +51,8 @@ String adminSectionPath(AdminSection section) {
   switch (section) {
     case AdminSection.bookings:
       return adminHomePath;
+    case AdminSection.calendar:
+      return adminCalendarPath;
     case AdminSection.cars:
       return adminCarsPath;
   }
@@ -53,7 +61,7 @@ String adminSectionPath(AdminSection section) {
 /// Whether [path] is the first page of a section.
 bool isAdminSectionRoot(String path) {
   final p = _withoutTrailingSlash(path);
-  return p == adminHomePath || p == adminCarsPath;
+  return p == adminHomePath || p == adminCalendarPath || p == adminCarsPath;
 }
 
 final _bookingDetail = RegExp(r'^/admin/bookings/[^/]+$');
@@ -64,10 +72,10 @@ final _bookingDetail = RegExp(r'^/admin/bookings/[^/]+$');
 /// (and later the car forms). A click on the rail or the bar is not a Back,
 /// so it would not ask "Discard your changes?" and typed data would be lost.
 ///
-/// - Phone (bottom bar): only on the first page of a section, the bookings
-///   list and Cars.
-/// - Wide (rail): on the bookings list, on the detail of a booking and on
-///   Cars.
+/// - Phone (bottom bar): only on the first page of a section: the bookings
+///   list, Calendar and Cars.
+/// - Wide (rail): on the bookings list, on the detail of a booking, on
+///   Calendar and on Cars.
 /// - Never on a gate page, on the "not found" page or outside the admin area.
 bool adminShowsNavigation(String path, AdminNavigationKind kind) {
   final p = _withoutTrailingSlash(path);

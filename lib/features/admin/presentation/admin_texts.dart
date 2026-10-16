@@ -47,7 +47,14 @@ const adminOfflineNote = 'Offline: showing saved data';
 
 /// The entries of the admin navigation.
 const adminNavBookings = 'Bookings';
+const adminNavCalendar = 'Calendar';
 const adminNavCars = 'Cars';
+
+/// The Calendar page (step 5.5a: the page only; the grid comes in 5.5b).
+const adminCalendarTitle = 'Calendar';
+const adminCalendarNotReady =
+    'The calendar of confirmed bookings is not ready yet. It comes in the '
+    'next step.';
 
 /// The fleet list (step 4.4b).
 const adminCarsTitle = 'Cars';

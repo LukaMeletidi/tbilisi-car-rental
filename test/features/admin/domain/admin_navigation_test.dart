@@ -35,7 +35,11 @@ const table = [
 
 void main() {
   test('the sections, in the order of the router branches', () {
-    expect(AdminSection.values, [AdminSection.bookings, AdminSection.cars]);
+    expect(AdminSection.values, [
+      AdminSection.bookings,
+      AdminSection.calendar,
+      AdminSection.cars,
+    ]);
     expect(adminSectionPath(AdminSection.bookings), '/admin');
     expect(adminSectionPath(AdminSection.cars), '/admin/cars');
     expect(adminCarsPath, '/admin/cars');
@@ -93,6 +97,47 @@ void main() {
     expect(adminNavigationKind(599.9), bar);
     expect(adminNavigationKind(600), rail);
     expect(adminNavigationKind(1200), rail);
+  });
+
+  group('the Calendar section (step 5.5a)', () {
+    test('its first page, with and without the last slash', () {
+      expect(adminCalendarPath, '/admin/calendar');
+      expect(adminSectionPath(AdminSection.calendar), '/admin/calendar');
+      for (final path in ['/admin/calendar', '/admin/calendar/']) {
+        expect(adminSectionOf(path), AdminSection.calendar, reason: path);
+        expect(isAdminSectionRoot(path), true, reason: path);
+        expect(adminShowsNavigation(path, rail), true, reason: path);
+        expect(adminShowsNavigation(path, bar), true, reason: path);
+      }
+    });
+
+    test('a page below it is Calendar, not a first page, no navigation', () {
+      expect(adminSectionOf('/admin/calendar/x'), AdminSection.calendar);
+      expect(isAdminSectionRoot('/admin/calendar/x'), false);
+      for (final kind in AdminNavigationKind.values) {
+        expect(adminShowsNavigation('/admin/calendar/x', kind), false);
+      }
+    });
+
+    test('a look-alike address is no section', () {
+      expect(adminSectionOf('/admin/calendarx'), isNull);
+      expect(isAdminSectionRoot('/admin/calendarx'), false);
+    });
+
+    test('Android Back on Calendar goes to Bookings; never on the web', () {
+      expect(
+        adminSystemBackTarget(isWeb: false, path: '/admin/calendar'),
+        AdminSection.bookings,
+      );
+      expect(
+        adminSystemBackTarget(isWeb: true, path: '/admin/calendar'),
+        isNull,
+      );
+      expect(
+        adminSystemBackTarget(isWeb: false, path: '/admin/calendar/x'),
+        isNull,
+      );
+    });
   });
 
   group('adminSystemBackTarget', () {
