@@ -999,3 +999,17 @@ String adminConflictUnreadable(int count) => count == 1
     ? '1 booking of this car could not be read and was not compared.'
     : '$count bookings of this car could not be read and were not '
           'compared.';
+
+/// The bookings ahead in the "Hide this car?" dialog (step 5.4). Times
+/// only, never a customer name.
+const adminHideAheadIntro =
+    'This car has confirmed bookings that are not over yet:';
+const adminHideUnchecked =
+    'The confirmed bookings of this car could not be read, so bookings '
+    'that are not over yet cannot be ruled out.';
+
+/// "1 booking of this car could not be read and is not listed." /
+/// "3 bookings of this car could not be read and are not listed."
+String adminHideUnreadable(int count) => count == 1
+    ? '1 booking of this car could not be read and is not listed.'
+    : '$count bookings of this car could not be read and are not listed.';

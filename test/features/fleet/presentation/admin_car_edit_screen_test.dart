@@ -12,6 +12,7 @@ import 'package:tbilisi_car_rental/core/time/clock_provider.dart';
 import 'package:tbilisi_car_rental/features/admin/data/admin_auth_repository.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_session.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_texts.dart';
+import 'package:tbilisi_car_rental/features/admin/data/admin_bookings_repository.dart';
 import 'package:tbilisi_car_rental/features/fleet/data/fleet_repository.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/car_edit.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/car_limits.dart';
@@ -21,6 +22,7 @@ import 'package:tbilisi_car_rental/features/fleet/presentation/admin_car_edit_sc
 import 'package:tbilisi_car_rental/l10n/generated/app_localizations.dart';
 
 import '../../../support/fake_admin_auth_repository.dart';
+import '../../../support/fake_admin_bookings_repository.dart';
 import '../../../support/fake_fleet_repository.dart';
 
 const carId = 'car-1';
@@ -48,6 +50,10 @@ Future<void> pumpEdit(
       overrides: [
         adminAuthRepositoryProvider.overrideWithValue(auth),
         fleetRepositoryProvider.overrideWithValue(fleet),
+        // The hide check reads the bookings; nothing ahead by default.
+        adminBookingsRepositoryProvider.overrideWithValue(
+          FakeAdminBookingsRepository(),
+        ),
         clockProvider.overrideWithValue(() => now),
       ],
       child: MaterialApp.router(

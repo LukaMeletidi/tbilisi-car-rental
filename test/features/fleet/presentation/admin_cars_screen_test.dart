@@ -15,6 +15,7 @@ import 'package:tbilisi_car_rental/features/admin/domain/admin_session.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_texts.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_layout.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/widgets/car_photo.dart';
+import 'package:tbilisi_car_rental/features/admin/data/admin_bookings_repository.dart';
 import 'package:tbilisi_car_rental/features/fleet/data/fleet_repository.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/car_edit.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/car_write.dart';
@@ -24,6 +25,7 @@ import 'package:tbilisi_car_rental/features/fleet/presentation/widgets/admin_car
 import 'package:tbilisi_car_rental/l10n/generated/app_localizations.dart';
 
 import '../../../support/fake_admin_auth_repository.dart';
+import '../../../support/fake_admin_bookings_repository.dart';
 import '../../../support/fake_fleet_repository.dart';
 
 late FakeAdminAuthRepository auth;
@@ -48,6 +50,10 @@ Future<void> pumpScreen(
       overrides: [
         adminAuthRepositoryProvider.overrideWithValue(auth),
         fleetRepositoryProvider.overrideWithValue(fleet),
+        // The hide check reads the bookings; nothing ahead by default.
+        adminBookingsRepositoryProvider.overrideWithValue(
+          FakeAdminBookingsRepository(),
+        ),
         clockProvider.overrideWithValue(() => now),
       ],
       // A small router: the list, and a stand-in for the edit form at its

@@ -20,6 +20,7 @@ class AdminCarCard extends StatelessWidget {
     this.onOpen,
     this.onToggleActive,
     this.busy = false,
+    this.checking = false,
   });
 
   final FleetEntry entry;
@@ -33,6 +34,10 @@ class AdminCarCard extends StatelessWidget {
   /// True while a hide or show of this car runs.
   final bool busy;
 
+  /// True while the bookings of this car are read before hiding: the
+  /// spinner says "Checking…".
+  final bool checking;
+
   @override
   Widget build(BuildContext context) {
     return switch (entry) {
@@ -42,6 +47,7 @@ class AdminCarCard extends StatelessWidget {
           entry: car,
           onToggleActive: busy ? null : onToggleActive,
           busy: busy,
+          checking: checking,
         ),
       ),
       final FleetUnreadableEntry unreadable => AppCard(
@@ -57,11 +63,13 @@ class _CarContent extends StatelessWidget {
     required this.entry,
     required this.onToggleActive,
     required this.busy,
+    required this.checking,
   });
 
   final FleetCarEntry entry;
   final VoidCallback? onToggleActive;
   final bool busy;
+  final bool checking;
 
   @override
   Widget build(BuildContext context) {
@@ -113,11 +121,20 @@ class _CarContent extends StatelessWidget {
               Align(
                 alignment: AlignmentDirectional.centerEnd,
                 child: busy
-                    ? const Padding(
-                        padding: EdgeInsets.all(12),
-                        child: SizedBox.square(
-                          dimension: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                    ? Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const SizedBox.square(
+                              dimension: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                            if (checking) ...[
+                              const SizedBox(width: 8),
+                              const Text(adminChecking),
+                            ],
+                          ],
                         ),
                       )
                     : TextButton(

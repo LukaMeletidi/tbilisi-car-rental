@@ -48,14 +48,17 @@ class AdminCarForm extends ConsumerWidget {
     }
 
     /// Save, or "Save again" after "No answer". A save that hides the car
-    /// asks first; "Save again" does not ask again.
+    /// asks first, after the check of the bookings ahead (in the notifier);
+    /// "Save again" does not ask again: the fields are locked then, so the
+    /// notifier does not ask.
     Future<void> save({bool again = false}) async {
       FocusManager.instance.primaryFocus?.unfocus();
-      if (!again && ref.read(provider).asksHideConfirmation) {
-        if (!await confirmHideCar(context)) return;
-        if (!context.mounted) return;
-      }
-      await notifier.save();
+      await notifier.save(
+        // The dialog; "Cancel" when the form is gone.
+        decideHide: (outcome) => context.mounted
+            ? confirmHideCar(context, outcome)
+            : Future.value(false),
+      );
     }
 
     Widget noticeView(CarSaveNotice notice) {
@@ -163,7 +166,12 @@ class AdminCarForm extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (state.saving) ...[const AdminCarSaving(), gap],
+                    if (state.saving) ...[
+                      AdminCarSaving(
+                        text: state.checking ? adminChecking : adminSaving,
+                      ),
+                      gap,
+                    ],
                     if (notice != null && !state.saving) ...[
                       noticeView(notice),
                       gap,

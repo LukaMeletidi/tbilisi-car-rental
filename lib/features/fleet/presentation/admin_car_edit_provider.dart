@@ -7,6 +7,7 @@ import 'package:tbilisi_car_rental/core/models/car.dart';
 import 'package:tbilisi_car_rental/core/time/clock_provider.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_session.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_session_provider.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/hide_check.dart';
 import 'package:tbilisi_car_rental/features/fleet/data/fleet_repository.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/car_draft.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/car_edit.dart';
@@ -48,6 +49,7 @@ class AdminCarEditState {
     this.needsRepair = false,
     this.showErrors = false,
     this.saving = false,
+    this.checking = false,
     this.notice,
     this.attempted,
     this.failure,
@@ -83,6 +85,10 @@ class AdminCarEditState {
 
   /// True while a save is running: the form is locked.
   final bool saving;
+
+  /// True while the confirmed bookings of the car are read before the save
+  /// hides it ("Checking…"). [saving] is true then too.
+  final bool checking;
 
   /// What to tell the admin about the last attempt to save.
   final CarSaveNotice? notice;
@@ -146,6 +152,7 @@ class AdminCarEditState {
     bool? needsRepair,
     bool? showErrors,
     bool? saving,
+    bool? checking,
     CarSaveNotice? notice,
     bool clearNotice = false,
     Car? attempted,
@@ -163,6 +170,7 @@ class AdminCarEditState {
       needsRepair: needsRepair ?? this.needsRepair,
       showErrors: showErrors ?? this.showErrors,
       saving: saving ?? this.saving,
+      checking: checking ?? this.checking,
       notice: nextNotice,
       // The attempted car belongs to "No answer" and goes with it.
       attempted: nextNotice == CarSaveNotice.noAnswer
@@ -246,12 +254,16 @@ class AdminCarEditNotifier extends Notifier<AdminCarEditState> {
   /// Saves the form: replaces the whole stored car.
   ///
   /// Stage 1 checks: there must be a change or a needed repair, and no
-  /// error; otherwise nothing is sent and the form shows its errors. Stage
-  /// 2 writes and waits for the server. "Save again" after "No answer"
-  /// comes here too, with the locked fields: if the first write arrived,
-  /// the stored car already equals the car to write, and the save counts as
-  /// done without a second write.
-  Future<void> save() async {
+  /// error; otherwise nothing is sent and the form shows its errors. When
+  /// the save hides a visible car ([AdminCarEditState.asksHideConfirmation]),
+  /// the confirmed bookings of the car that are not over yet are read
+  /// ([AdminCarEditState.checking]) and [decideHide] (the screen's "Hide
+  /// this car?") answers; without a screen the answer is "Cancel". Stage 2
+  /// writes and waits for the server. "Save again" after "No answer" comes
+  /// here too, with the locked fields and without a new question: if the
+  /// first write arrived, the stored car already equals the car to write,
+  /// and the save counts as done without a second write.
+  Future<void> save({HideDecision decideHide = cancelHide}) async {
     final base = state.base;
     final draft = state.draft;
     if (!_isAdmin || state.saving) return;
@@ -266,8 +278,25 @@ class AdminCarEditNotifier extends Notifier<AdminCarEditState> {
       return;
     }
     final target = carFromDraft(carId, draft, now: now);
+    final asksHide = state.asksHideConfirmation;
 
-    state = state._copy(saving: true, showErrors: true);
+    state = state._copy(saving: true);
+    if (asksHide) {
+      final hide = await askBeforeHide(
+        ref,
+        carId: carId,
+        decide: decideHide,
+        setChecking: (checking) => state = state._copy(checking: checking),
+      );
+      if (!ref.mounted || !_isAdmin) return;
+      if (!hide) {
+        // Cancel: nothing is written and the form is as it was.
+        state = state._copy(saving: false, checking: false);
+        return;
+      }
+    }
+    state = state._copy(showErrors: true);
+
     CarSaveNotice notice;
     try {
       await ref.read(fleetRepositoryProvider).replaceCar(target, base: base);
@@ -283,7 +312,12 @@ class AdminCarEditNotifier extends Notifier<AdminCarEditState> {
       notice = CarSaveNotice.unknown;
     }
     if (!ref.mounted || !_isAdmin) return;
-    state = state._copy(saving: false, notice: notice, attempted: target);
+    state = state._copy(
+      saving: false,
+      checking: false,
+      notice: notice,
+      attempted: target,
+    );
   }
 
   void _listen() {

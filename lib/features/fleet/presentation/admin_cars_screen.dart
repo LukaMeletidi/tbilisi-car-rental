@@ -96,23 +96,31 @@ class _CarsList extends ConsumerWidget {
 
   final AdminCarsState state;
 
-  /// Hides after "Hide this car?"; shows at once.
+  /// Hides after the check and "Hide this car?"; shows at once.
   Future<void> _toggle(
     BuildContext context,
     WidgetRef ref,
     FleetCarEntry entry,
   ) async {
-    final hide = entry.car.active;
-    if (hide && !await confirmHideCar(context)) return;
-    await ref
-        .read(adminCarVisibilityProvider.notifier)
-        .setActive(entry.id, active: !hide);
+    final notifier = ref.read(adminCarVisibilityProvider.notifier);
+    if (!entry.car.active) {
+      await notifier.setActive(entry.id, active: true);
+      return;
+    }
+    await notifier.hide(
+      entry.id,
+      // The dialog; "Cancel" when this list is gone.
+      decide: (outcome) => context.mounted
+          ? confirmHideCar(context, outcome)
+          : Future.value(false),
+    );
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
-    final busy = ref.watch(adminCarVisibilityProvider).busy;
+    final visibility = ref.watch(adminCarVisibilityProvider);
+    final busy = visibility.busy;
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: carDetailMaxWidth),
@@ -144,6 +152,7 @@ class _CarsList extends ConsumerWidget {
                 final FleetCarEntry car => AdminCarCard(
                   entry: car,
                   busy: busy.contains(car.id),
+                  checking: visibility.checking.contains(car.id),
                   onOpen: () => context.go(AppRoutes.adminCarEdit(car.id)),
                   onToggleActive: () => _toggle(context, ref, car),
                 ),
