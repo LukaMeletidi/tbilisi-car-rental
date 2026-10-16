@@ -2460,7 +2460,23 @@ in Section 3.4. The tiers are those of Section 19.
   - In Chrome debug, a car photo from an external image host is blocked by CORS
     and shows two Console errors; photos move to Storage in Phase 7.
 - 5.4 The future confirmed bookings in the "Hide this car?" dialog (card and
-  form switch). Tier 1 — not started.
+  form switch). Tier 1 — DONE. Commit 2be161d.
+  - 1873 Flutter tests pass (45 new) and analyze is clean; the 47 tests of the
+    secrets scan pass. No existing expectation changed; two test setups got the
+    fake bookings repository (harness only).
+  - Checked by hand in Chrome by the owner, 8 steps, all passed: the dialog
+    listed a rental in progress and a future booking in Tbilisi time and skipped
+    a finished and a pending one, no names; Cancel, Hide and Show; the form path;
+    the old dialog for a car with nothing ahead; offline the "could not be read"
+    line with Hide still possible. The test bookings were cancelled and deleted.
+  - The new files (hide_warning.dart, hide_check.dart) are in the admin feature.
+    Fleet presentation already imported admin; no import from fleet domain or
+    fleet data into admin was added.
+  - In the car edit form, showErrors is now set only once the save really
+    writes, so Cancel leaves the form as it was.
+  - setActive(active: false) stays for its existing tests; the card hides with
+    hide().
+  - Hiding offline fails with the old text, as before.
 - 5.5a The Calendar entry of the navigation, with an empty page. Tier 1 — not
   started.
 - 5.5b The calendar grid. Tier 2 — not started.
