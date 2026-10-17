@@ -117,11 +117,134 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Settings (extras prices, locations, later company info): anyone can
-    // read; nobody can write from an app. Admin writes are added in Phase 6.
+    // ---- Settings limits. They must stay equal to the constants in
+    // lib/features/settings/domain/settings_limits.dart. A unit test
+    // compares them (test/rules/settings_rules_limits_test.dart).
+    function extraMaxPricePerDay() { return 100; }
+    function companyNameMaxLength() { return 100; }
+    function companyTextMaxLength() { return 300; }
+    function companyLinkMaxLength() { return 500; }
+
+    // The price of one extra: a number (whole or decimal) from 0 to the
+    // limit. 0 is "Free". The rules cannot check the number of decimals;
+    // the form allows at most two. NaN fails "p >= 0".
+    function isExtraPrice(p) {
+      return p is number
+        && p >= 0
+        && p <= extraMaxPricePerDay();
+    }
+
+    // settings/extras: exactly { pricesPerDay: { the four extras } }.
+    // No other key, no extra missing, no unknown extra.
+    function isValidExtrasSettings(s) {
+      return s.keys().hasOnly(['pricesPerDay'])
+        && s.keys().hasAll(['pricesPerDay'])
+        && s.pricesPerDay is map
+        && s.pricesPerDay.keys().hasOnly(
+             ['snowChains', 'childSeat', 'infantSeat', 'boosterSeat'])
+        && s.pricesPerDay.keys().hasAll(
+             ['snowChains', 'childSeat', 'infantSeat', 'boosterSeat'])
+        && isExtraPrice(s.pricesPerDay.snowChains)
+        && isExtraPrice(s.pricesPerDay.childSeat)
+        && isExtraPrice(s.pricesPerDay.infantSeat)
+        && isExtraPrice(s.pricesPerDay.boosterSeat);
+    }
+
+    // The company phone: the same pattern as the booking phone in
+    // isValidCustomer ("+", a first digit 1-9, 8 to 15 digits in total).
+    // A unit test checks that both patterns are the same text.
+    function isCompanyPhone(p) {
+      return p is string
+        && p.matches('^\\+[1-9][0-9]{7,14}$');
+    }
+
+    // The company e-mail: the same length limit and pattern as the booking
+    // e-mail in isValidCustomer. A unit test checks that both are the same.
+    function isCompanyEmail(e) {
+      return e is string
+        && e.size() <= emailMaxLength()
+        && e.matches('^[^@\\s]+@[^@\\s.]+(\\.[^@\\s.]+)+$');
+    }
+
+    // A translated company text (address, working hours): all three of
+    // ka, ru and en, each 1 to the limit with no space at either end; line
+    // breaks inside are fine. A text that is not set is left out as a
+    // whole, so "all three or none".
+    function isCompanyText(t) {
+      return t is map
+        && t.keys().hasOnly(['ka', 'ru', 'en'])
+        && t.keys().hasAll(['ka', 'ru', 'en'])
+        && isTrimmedText(t.ka, 1, companyTextMaxLength())
+        && isTrimmedText(t.ru, 1, companyTextMaxLength())
+        && isTrimmedText(t.en, 1, companyTextMaxLength());
+    }
+
+    // A company link (the map, a social page): https only, no space, a dot
+    // after the scheme, at most the limit. The shape of a car photo address.
+    function isCompanyLink(l) {
+      return l is string
+        && l.size() <= companyLinkMaxLength()
+        && l.matches('^https://[^\\s]+\\.[^\\s]+$');
+    }
+
+    // The social links: any of the four, each a company link. An empty map
+    // is refused: social pages that are not set are left out as a whole.
+    function isCompanySocial(s) {
+      return s is map
+        && s.size() > 0
+        && s.keys().hasOnly(['facebook', 'instagram', 'whatsapp', 'telegram'])
+        && (!('facebook' in s) || isCompanyLink(s.facebook))
+        && (!('instagram' in s) || isCompanyLink(s.instagram))
+        && (!('whatsapp' in s) || isCompanyLink(s.whatsapp))
+        && (!('telegram' in s) || isCompanyLink(s.telegram));
+    }
+
+    // settings/company: every field is optional. A field that is not set
+    // is ABSENT (never an empty text, never null). An empty document {}
+    // is allowed: it means "nothing filled in", and About Us shows its
+    // empty state. A field that is present must be valid.
+    // (The parameter is "company", not "c": the booking limits test looks
+    // up the first "c.keys()" in this file, which is the customer's.)
+    function isValidCompanySettings(company) {
+      return company.keys().hasOnly([
+               'name', 'phone', 'email', 'address', 'workingHours',
+               'mapUrl', 'social'])
+        && (!('name' in company)
+             || isTrimmedText(company.name, 1, companyNameMaxLength()))
+        && (!('phone' in company) || isCompanyPhone(company.phone))
+        && (!('email' in company) || isCompanyEmail(company.email))
+        && (!('address' in company) || isCompanyText(company.address))
+        && (!('workingHours' in company)
+             || isCompanyText(company.workingHours))
+        && (!('mapUrl' in company) || isCompanyLink(company.mapUrl))
+        && (!('social' in company) || isCompanySocial(company.social));
+    }
+
+    // Settings: anyone can read every settings document. No app may write
+    // one, except the two blocks below. This covers settings/locations
+    // (changed in the Firebase console only) and any other document.
     match /settings/{settingId} {
       allow read: if true;
       allow write: if false;
+    }
+
+    // settings/extras: an admin may create it and change it; every write
+    // is checked as the whole document after the write (an update is
+    // checked on the merged document). Nobody may delete it, an admin
+    // neither. Rules are OR-ed: this block adds create and update for an
+    // admin; the "write: if false" above does not take them away, and no
+    // block allows a delete.
+    match /settings/extras {
+      allow create, update: if isAdmin()
+        && isValidExtrasSettings(request.resource.data);
+      allow delete: if false;
+    }
+
+    // settings/company: the same pattern as settings/extras.
+    match /settings/company {
+      allow create, update: if isAdmin()
+        && isValidCompanySettings(request.resource.data);
+      allow delete: if false;
     }
 
     // ---- Booking limits. They must stay equal to the constants in

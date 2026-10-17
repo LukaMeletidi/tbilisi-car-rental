@@ -1343,16 +1343,22 @@ signedIn('admin delete: a booking that does not exist (no error)', 200, () =>
 deleteRefused('signed in without the claim', NO_CLAIM);
 deleteRefused('no sign-in', {});
 
-// F. Admin and the other collections: settings and unknown collections may
-// not be written, a car may not be deleted, and "mail" may not even be read.
-// (Since step 4.1 an admin may add and change cars; see section I.)
+// F. Admin and the other collections: settings/extras may not get an
+// unknown field, unknown collections may not be written, a car may not be
+// deleted, and "mail" may not even be read. (Since step 4.1 an admin may
+// add and change cars; see section I. Since step 6.2 an admin may write
+// settings/extras and settings/company in their exact shape; see section
+// J.)
 const mark = { body: { fields: encodeFields({ ruleCheck: true }) } };
-signedIn('admin refused: write settings', 403, () =>
-  send(
-    'PATCH',
-    `${DOCUMENTS}/settings/extras?updateMask.fieldPaths=ruleCheck`,
-    { ...mark, headers: ADMIN },
-  ),
+signedIn(
+  'admin refused: settings/extras with an unknown field (ruleCheck)',
+  403,
+  () =>
+    send(
+      'PATCH',
+      `${DOCUMENTS}/settings/extras?updateMask.fieldPaths=ruleCheck`,
+      { ...mark, headers: ADMIN },
+    ),
 );
 signedIn('admin refused: create a car with only two fields', 403, () =>
   send('PATCH', `${DOCUMENTS}/cars/newCar`, {
@@ -1995,6 +2001,341 @@ signedIn('car, public booking: accepted for an active car the admin created',
   200, () => create(booking((b) => (b.carId = ADMIN_MADE_ACTIVE))));
 signedIn('car, public booking: refused for a hidden car the admin created',
   403, () => create(booking((b) => (b.carId = ADMIN_MADE_HIDDEN))));
+
+// J. Settings (step 6.2): an admin may create and change settings/extras
+// and settings/company in their exact shape; nobody may delete a settings
+// document; settings/locations and every other settings document stay
+// closed for writes. Every write case first sets its own starting state
+// with the admin bypass, so the cases do not depend on their order. All
+// values are made up.
+
+const EXTRAS = 'settings/extras';
+const COMPANY = 'settings/company';
+const LOCATIONS = 'settings/locations';
+const UNKNOWN_SETTINGS = 'settings/banner';
+
+// settings/extras as the app saves it. [change] gets pricesPerDay and the
+// whole document.
+function validExtras(change = () => {}) {
+  const extras = {
+    pricesPerDay: { snowChains: 5, childSeat: 5, infantSeat: 5, boosterSeat: 5 },
+  };
+  change(extras.pricesPerDay, extras);
+  return extras;
+}
+
+const link = (path) => `https://www.example.com/${path}`;
+// An https link of exactly [count] characters.
+const linkOfLength = (count) =>
+  link(letters(count - link('').length));
+
+// settings/company with every field set.
+function validCompany(change = () => {}) {
+  const company = {
+    name: 'Example Car Rental',
+    phone: '+995555000000',
+    email: 'info@example.com',
+    address: {
+      ka: 'თბილისი, სანიმუშო ქუჩა 1',
+      ru: 'Тбилиси, Примерная улица 1',
+      en: 'Tbilisi, 1 Example Street',
+    },
+    workingHours: {
+      ka: 'ყოველდღე 09:00–20:00',
+      ru: 'Ежедневно 09:00–20:00',
+      en: 'Every day 09:00–20:00',
+    },
+    mapUrl: 'https://maps.example.com/tbilisi',
+    social: {
+      facebook: link('facebook'),
+      instagram: link('instagram'),
+      whatsapp: link('whatsapp'),
+      telegram: link('telegram'),
+    },
+  };
+  change(company);
+  return company;
+}
+
+// Sets the starting state of [path] with the admin bypass: [data], or no
+// document when [data] is null.
+async function resetSettings(path, data) {
+  if (data !== null) {
+    await seed(path, data);
+    return;
+  }
+  const result = await send('DELETE', `${DOCUMENTS}/${path}`, {
+    headers: OWNER,
+  });
+  if (result.status !== 200) {
+    throw new Error(`Removing ${path} failed: ${result.status}`);
+  }
+}
+
+// One whole-document write of [path] (like set()), which must find the
+// document ([exists] true) or must not ([exists] false).
+function commitSettings(path, data, exists, headers) {
+  return send('POST', `${DOCUMENTS}:commit`, {
+    body: {
+      writes: [
+        {
+          update: {
+            name: `${DATABASE}/documents/${path}`,
+            fields: encodeFields(data),
+          },
+          currentDocument: { exists },
+        },
+      ],
+    },
+    headers,
+  });
+}
+
+// A first save: [path] does not exist before.
+function settingsCreate(name, expected, path, data, headers = ADMIN) {
+  signedIn(name, expected, async () => {
+    await resetSettings(path, null);
+    return commitSettings(path, data, false, headers);
+  });
+}
+
+// A whole replacement of [path], which holds [start] before.
+function settingsReplace(name, expected, path, start, data, headers = ADMIN) {
+  signedIn(name, expected, async () => {
+    await resetSettings(path, start);
+    return commitSettings(path, data, true, headers);
+  });
+}
+
+// A partial write of [path], which holds [start] before: only the [mask]
+// field paths change. A path in [mask] that is not in [fields] is REMOVED.
+function settingsPatch(name, expected, path, start, fields, mask) {
+  signedIn(name, expected, async () => {
+    await resetSettings(path, start);
+    const query = mask
+      .map((field) => `updateMask.fieldPaths=${encodeURIComponent(field)}`)
+      .join('&');
+    return send('PATCH', `${DOCUMENTS}/${path}?${query}`, {
+      body: { fields: encodeFields(fields) },
+      headers: ADMIN,
+    });
+  });
+}
+
+// A delete of [path], which holds [start] before.
+function settingsDelete(name, path, start, headers) {
+  signedIn(name, 403, async () => {
+    await resetSettings(path, start);
+    return send('DELETE', `${DOCUMENTS}/${path}`, { headers });
+  });
+}
+
+// Whether [path] holds a document that passes [isRight], read with the
+// admin bypass; 200 when it does.
+async function storedSettings(path, isRight) {
+  const result = await send('GET', `${DOCUMENTS}/${path}`, {
+    headers: OWNER,
+  });
+  const right =
+    result.status === 200 && isRight(JSON.parse(result.text).fields ?? {});
+  return { status: right ? 200 : 500, text: result.text };
+}
+
+// J.1 settings/extras.
+const extrasCase = (name, expected, change) =>
+  settingsReplace(
+    `settings/extras, admin: ${name}`,
+    expected,
+    EXTRAS,
+    validExtras(),
+    validExtras(change),
+  );
+settingsCreate('settings/extras, admin create: valid', 200, EXTRAS,
+  validExtras());
+extrasCase('replace, valid', 200, (p) => (p.childSeat = 7));
+settingsPatch('settings/extras, admin partial: only snowChains changed', 200,
+  EXTRAS, validExtras(), { pricesPerDay: { snowChains: 8 } },
+  ['pricesPerDay.snowChains']);
+extrasCase('all four prices 0', 200, (p) => {
+  for (const key of Object.keys(p)) p[key] = 0;
+});
+extrasCase('a price of 100 (whole number)', 200, (p) => (p.snowChains = 100));
+extrasCase('a price of 100.0 (double)', 200,
+  (p) => (p.snowChains = AS_DOUBLE(100)));
+extrasCase('a price of 99.99', 200, (p) => (p.snowChains = 99.99));
+extrasCase('a price of 100.01', 403, (p) => (p.snowChains = 100.01));
+extrasCase('a negative price (-0.01)', 403, (p) => (p.snowChains = -0.01));
+extrasCase('a price as text "5"', 403, (p) => (p.snowChains = '5'));
+extrasCase('a price null', 403, (p) => (p.snowChains = null));
+extrasCase('a price true', 403, (p) => (p.snowChains = true));
+extrasCase('boosterSeat missing', 403, (p) => delete p.boosterSeat);
+extrasCase('an unknown extra (roofBox)', 403, (p) => (p.roofBox = 5));
+extrasCase('an unknown key next to pricesPerDay', 403,
+  (p, extras) => (extras.note = 'x'));
+extrasCase('pricesPerDay is a list', 403,
+  (p, extras) => (extras.pricesPerDay = [5, 5, 5, 5]));
+extrasCase('an empty document', 403, (p, extras) => delete extras.pricesPerDay);
+settingsPatch('settings/extras, admin partial: boosterSeat removed', 403,
+  EXTRAS, validExtras(), {}, ['pricesPerDay.boosterSeat']);
+settingsDelete('settings/extras: admin delete', EXTRAS, validExtras(), ADMIN);
+settingsDelete('settings/extras: no claim delete', EXTRAS, validExtras(),
+  NO_CLAIM);
+settingsDelete('settings/extras: public delete', EXTRAS, validExtras(), {});
+signedIn('stored: settings/extras still exists after the refused deletes',
+  200, () => storedSettings(EXTRAS, (fields) => 'pricesPerDay' in fields));
+settingsReplace('settings/extras, no claim: valid replace', 403, EXTRAS,
+  validExtras(), validExtras((p) => (p.childSeat = 7)), NO_CLAIM);
+settingsReplace('settings/extras, public: valid replace', 403, EXTRAS,
+  validExtras(), validExtras((p) => (p.childSeat = 7)), {});
+
+// J.2 settings/company.
+const companyCase = (name, expected, change) =>
+  settingsReplace(
+    `settings/company, admin: ${name}`,
+    expected,
+    COMPANY,
+    validCompany(),
+    validCompany(change),
+  );
+settingsCreate('settings/company, admin create: every field valid', 200,
+  COMPANY, validCompany());
+settingsCreate('settings/company, admin create: an empty document', 200,
+  COMPANY, {});
+settingsReplace('settings/company, admin replace: only the name', 200,
+  COMPANY, validCompany(), { name: 'Example Car Rental' });
+settingsPatch('settings/company, admin partial: only the phone', 200,
+  COMPANY, validCompany(), { phone: '+995555000001' }, ['phone']);
+settingsPatch('settings/company, admin partial: the phone removed', 200,
+  COMPANY, validCompany(), {}, ['phone']);
+
+companyCase('a name of 100 characters', 200, (c) => (c.name = letters(100)));
+companyCase('a name of 101 characters', 403, (c) => (c.name = letters(101)));
+companyCase('an empty name', 403, (c) => (c.name = ''));
+companyCase('a name with a space at the end', 403,
+  (c) => (c.name = 'Example Car Rental '));
+companyCase('a name that is a number', 403, (c) => (c.name = 5));
+
+companyCase('a phone of 8 digits', 200, (c) => (c.phone = '+99555500'));
+companyCase('a phone of 15 digits', 200,
+  (c) => (c.phone = '+995555000000000'));
+companyCase('a phone of 7 digits', 403, (c) => (c.phone = '+9955550'));
+companyCase('a phone of 16 digits', 403,
+  (c) => (c.phone = '+9955550000000000'));
+companyCase('a phone with spaces', 403, (c) => (c.phone = '+995 555 000 000'));
+companyCase('a phone that starts with +0', 403,
+  (c) => (c.phone = '+0555000000'));
+companyCase('a phone that is a number', 403, (c) => (c.phone = 995555000000));
+
+companyCase('an e-mail of 254 characters', 200,
+  (c) => (c.email = emailOfLength(254)));
+companyCase('an e-mail of 255 characters', 403,
+  (c) => (c.email = emailOfLength(255)));
+companyCase('an e-mail without a dot in the domain', 403,
+  (c) => (c.email = 'info@example'));
+companyCase('an e-mail with a space', 403,
+  (c) => (c.email = 'info @example.com'));
+companyCase('an e-mail with two "@"', 403,
+  (c) => (c.email = 'info@@example.com'));
+
+companyCase('an address of 300 characters in each language', 200, (c) => {
+  c.address = { ka: letters(300), ru: letters(300), en: letters(300) };
+});
+companyCase('an address with 301 characters in en', 403,
+  (c) => (c.address.en = letters(301)));
+companyCase('an address in en only', 403,
+  (c) => (c.address = { en: 'Tbilisi, 1 Example Street' }));
+companyCase('an address with a fourth language (de)', 403,
+  (c) => (c.address.de = 'Tiflis, Beispielstraße 1'));
+companyCase('an address with an empty ka text', 403,
+  (c) => (c.address.ka = ''));
+companyCase('an address that is a plain text', 403,
+  (c) => (c.address = 'Tbilisi, 1 Example Street'));
+companyCase('working hours with a line break inside', 200, (c) => {
+  c.workingHours = {
+    ka: 'ორშ–პარ 09:00–20:00\nშაბ 10:00–18:00',
+    ru: 'Пн–Пт 09:00–20:00\nСб 10:00–18:00',
+    en: 'Mon–Fri 09:00–20:00\nSat 10:00–18:00',
+  };
+});
+companyCase('working hours without ru', 403,
+  (c) => delete c.workingHours.ru);
+
+companyCase('a map link of 500 characters', 200,
+  (c) => (c.mapUrl = linkOfLength(500)));
+companyCase('a map link of 501 characters', 403,
+  (c) => (c.mapUrl = linkOfLength(501)));
+companyCase('a map link with http', 403,
+  (c) => (c.mapUrl = 'http://maps.example.com/tbilisi'));
+companyCase('a map link with a space', 403,
+  (c) => (c.mapUrl = 'https://maps.example.com/tbilisi office'));
+companyCase('a map link without a dot', 403,
+  (c) => (c.mapUrl = 'https://localhost'));
+
+companyCase('social with all four links', 200, () => {});
+companyCase('social with telegram only', 200,
+  (c) => (c.social = { telegram: link('telegram') }));
+companyCase('social as an empty map', 403, (c) => (c.social = {}));
+companyCase('social with an unknown key (tiktok)', 403,
+  (c) => (c.social.tiktok = link('tiktok')));
+companyCase('a social link with http', 403,
+  (c) => (c.social.facebook = 'http://www.example.com/facebook'));
+companyCase('a social link with a space', 403,
+  (c) => (c.social.facebook = 'https://www.example.com/face book'));
+companyCase('a social link of 501 characters', 403,
+  (c) => (c.social.facebook = linkOfLength(501)));
+companyCase('social as a list', 403,
+  (c) => (c.social = [link('facebook')]));
+companyCase('a social link that is a number', 403,
+  (c) => (c.social.facebook = 5));
+companyCase('a social link that is null', 403,
+  (c) => (c.social.facebook = null));
+
+companyCase('an unknown key (vatNumber)', 403,
+  (c) => (c.vatNumber = '000000000'));
+for (const field of [
+  'name', 'phone', 'email', 'address', 'workingHours', 'mapUrl', 'social',
+]) {
+  companyCase(`${field} null`, 403, (c) => (c[field] = null));
+}
+
+settingsDelete('settings/company: admin delete', COMPANY, validCompany(),
+  ADMIN);
+settingsDelete('settings/company: no claim delete', COMPANY, validCompany(),
+  NO_CLAIM);
+settingsDelete('settings/company: public delete', COMPANY, validCompany(), {});
+settingsCreate('settings/company, no claim: valid create', 403, COMPANY,
+  validCompany(), NO_CLAIM);
+settingsCreate('settings/company, public: valid create', 403, COMPANY,
+  validCompany(), {});
+signedIn('settings/company, public: read', 200, async () => {
+  await resetSettings(COMPANY, validCompany());
+  return send('GET', `${DOCUMENTS}/${COMPANY}`);
+});
+
+// J.3 settings/locations and any other settings document: no writes.
+const validLocations = {
+  items: [
+    { id: 'tbilisiAirport', name: { en: 'Tbilisi Airport' } },
+    { id: 'tbilisiOffice', name: { en: 'Tbilisi Office' } },
+    { id: 'batumiAirport', name: { en: 'Batumi Airport' } },
+  ],
+};
+signedIn('settings/locations, admin: replace refused', 403, () =>
+  commitSettings(LOCATIONS, validLocations, true, ADMIN));
+signedIn('settings/locations, admin: delete refused', 403, () =>
+  send('DELETE', `${DOCUMENTS}/${LOCATIONS}`, { headers: ADMIN }));
+signedIn('settings/locations, no claim: replace refused', 403, () =>
+  commitSettings(LOCATIONS, validLocations, true, NO_CLAIM));
+signedIn('settings, admin: create an unknown document refused', 403, () =>
+  commitSettings(UNKNOWN_SETTINGS, { text: 'x' }, false, ADMIN));
+signedIn('settings, admin: delete an unknown document refused', 403, () =>
+  send('DELETE', `${DOCUMENTS}/${UNKNOWN_SETTINGS}`, { headers: ADMIN }));
+signedIn('stored: settings/locations is unchanged after the refused writes',
+  200, () =>
+    storedSettings(
+      LOCATIONS,
+      (fields) => fields.items?.arrayValue?.values?.length === 2,
+    ));
 
 // ---- Run -----------------------------------------------------------------
 
