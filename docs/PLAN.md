@@ -1442,10 +1442,12 @@ Implementation decisions (step 2.2):
   - settings/locations and any other settings document: no writes from an app.
   - The limits live in a constants file that a unit test compares with the
     rules, as for cars and bookings.
-  - The emulator case "admin refused: write settings" changes in step 6.2: a
-    valid admin write of settings/extras is then allowed. Refused cases are
-    added for settings/locations, an unknown settings document, every delete,
-    the public, and invalid shapes.
+  - The emulator case "admin refused: write settings" stays refused: it adds
+    an unknown field (ruleCheck) to settings/extras. Step 6.2 only renamed it
+    to "admin refused: settings/extras with an unknown field (ruleCheck)".
+    Accepted cases are added for valid admin writes, and refused cases for
+    settings/locations, an unknown settings document, every delete, the
+    public, and invalid shapes.
 - bookings: public `create` only, with strict validation in rules: allowed field set
   only, status == 'new', createdAt == request.time, notes <= 500 chars, string length
   limits, `expireAt` NOT accepted from the client. No public get/list/update/delete.
@@ -2711,9 +2713,20 @@ packages or the indexes needs the owner's separate approval; such steps say so.
 - 6.1 The Phase 6 decisions in this file. Tier 3 — DONE (in the commit "Record
   the Phase 6 decisions"). Only this file changed.
 - 6.2 The settings rules in the local file, the limits constants file with its
-  unit test, and the emulator cases. Tier 1 — not started. Needs approval: the
-  change of firestore.rules and the changed emulator case "admin refused: write
-  settings".
+  unit test, and the emulator cases. Tier 1 — DONE. Commit f32d9bb.
+  - 2011 Flutter tests pass (10 new) and analyze is clean; the 47 tests of the
+    secrets scan pass; the emulator script passes with 104 of 104 public and
+    491 of 491 admin and signed-in checks (402 + 89 new).
+  - The rules are in the local file only; the live rules are unchanged until
+    step 6.3.
+  - New files: lib/features/settings/domain/settings_limits.dart and
+    test/rules/settings_rules_limits_test.dart. The test also checks that the
+    company phone and e-mail patterns are the same text as the booking ones,
+    and that 365 × (2000 + 4 × 100) stays within the total limit.
+  - The parameter of isValidCompanySettings is "company", not "c", so that the
+    existing booking limits test still finds the customer's "c.keys()".
+  - The secrets scan has 7 warnings now: the new one is the intentionally
+    invalid made-up phone "+0555000000" of an emulator case.
 - 6.3 Deploy the rules, with the check of the live text as in step 4.2. Tier 1 —
   not started. Needs approval: the deploy.
 - 6.4 The company model and parser, and the write methods of the settings
