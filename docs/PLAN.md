@@ -1029,7 +1029,8 @@ Phase 4 decisions (made before step 4.1; the steps are in Section 19):
 - Hiding a car that has confirmed bookings in the future is allowed without a
   warning in Phase 4. The form says: "A hidden car disappears from the public
   catalog. Existing bookings are not changed." A warning comes in Phase 5, with the
-  conflict warning.
+  conflict warning. Added in step 5.4: the "Hide this car?" dialog names the
+  confirmed bookings ahead.
 - Hiding and showing a car must ALWAYS work, also for a car that was entered by hand
   before these rules and would not pass them. The rules therefore accept an update
   that changes only "active" (to true or false) without checking the rest.
@@ -1094,7 +1095,7 @@ save is never silently blocked.
 
 Note for Phase 5 (decided before step 4.1): add a warning, also non-blocking, when an
 admin hides a car that has confirmed bookings in the future. In Phase 4 hiding is
-allowed without any warning.
+allowed without any warning. Done in step 5.4.
 
 Phase 5 decisions (made before step 5.1; the steps are in Section 20):
 - A conflict is exactly the rule of Section 7: the same car, the other booking
@@ -1491,7 +1492,7 @@ Implementation decisions (step 2.2):
 3. Admin auth (custom claim script) + bookings list and editing — DONE (Section 18).
 4. Fleet management — DONE (Section 19). The photo upload moved to Phase 7
    (Section 15).
-5. Calendar + conflict warning — in progress (Section 20).
+5. Calendar + conflict warning — DONE (Section 20).
 6. Settings screens (Extras & Prices, Company Info) + About Us page — open.
 7. Cloud Functions + compliance + polish (App Check step 2.9b, consent banner, Privacy
    Policy, TTL, email, README with screenshots, launcher icon). The launcher icon is
@@ -1565,10 +1566,8 @@ Phase 0 is complete.
 
 ## 15. Open reminders
 
-- BEFORE PHASE 5 (start here): some cars in the live catalog still need repair
-  (5 of 7 at the end of Phase 4); the admin list shows them with "Needs repair".
-  The owner completes them in the admin app: Cars, open the car, fill in what
-  is marked, Save. Until then they stay incomplete in the catalog.
+- Still open after Phase 5: 4 of 7 cars need repair (the owner fills them in
+  the admin app; not a gate).
 - CLOSED before step 4.1: the Cloud Storage question. It needs the Blaze plan, so
   Phase 4 has no upload; photos are https addresses (Section 3.3, Phase 4 decisions).
 - For Phase 7, not decided: car photos by a real upload to Cloud Storage. It needs
@@ -1824,6 +1823,7 @@ Phase 0 is complete.
   - One booking: status, edit, create, delete
     - No conflict warning yet: an admin can confirm two bookings of one car for the
       same days without any warning. It comes in Phase 5 (Phase 3 decisions).
+      Done in step 5.3 (Section 3.4).
     - Who changed a booking and when is not stored; the rules have no field for it
       (3.8). createdBy is the fixed word "admin" and the rules do not tie it to who
       created the booking (3.10a).
@@ -1887,6 +1887,7 @@ Phase 0 is complete.
     in the form, and nothing checks that an address really leads to an image
     (Phase 4 decisions; upload: Phase 7).
   - Hiding a car with confirmed future bookings gives no warning yet (Phase 5).
+    Done in step 5.4.
   - A car is never deleted from the app; a document is removed only in the
     Firebase console (Phase 4 decisions).
   - A car document that the app cannot read is shown by its short ID only; it
@@ -1908,13 +1909,28 @@ Phase 0 is complete.
   - The diagnosis line of an unknown car write error appears only in debug
     builds (4.6b).
 
-- Known limit of the calendar (5.5b): it listens to every confirmed booking
-  of all time (status == confirmed, no date filter) and cuts the 14 days in
-  Dart, so it needs no composite index. Each opening reads all of them once.
-  Fine up to about 1,000 confirmed bookings (about 1,000 reads and 1-2 MB per
-  opening; the free level allows 50,000 reads a day). Before that, switch to
-  a query on status and dropoff with a composite index in
-  firestore.indexes.json, deployed with approval.
+- Known limits of the calendar and the conflict warnings after Phase 5
+  (gathered in step 5.6; the step in brackets has the details in Section 20):
+  - Known limit of the calendar (5.5b): it listens to every confirmed booking
+    of all time (status == confirmed, no date filter) and cuts the 14 days in
+    Dart, so it needs no composite index. Each opening reads all of them once.
+    Fine up to about 1,000 confirmed bookings (about 1,000 reads and 1-2 MB
+    per opening; the free level allows 50,000 reads a day). Before that,
+    switch to a query on status and dropoff with a composite index in
+    firestore.indexes.json, deployed with approval.
+  - Two admins confirming at the same moment can both pass the check: it runs
+    before the write, not inside it (Phase 5 decisions, Section 3.4).
+  - Offline, the conflict check says "Conflicts could not be checked". After
+    "Continue anyway" the write fails with the old generic text "Not saved.
+    Please try again." (5.3; Phase 7).
+  - Hiding a car offline fails with the old text (5.4).
+  - "Check again" on the new-booking form re-sends the same booking and runs
+    no conflict check, by decision (5.3).
+  - The calendar shows confirmed bookings only. Offline on its first opening
+    it says "No connection", even when memory holds some bookings (5.5b).
+  - The days of the calendar and "today" come from the device clock (5.5b).
+  - The Phase 5 screens were checked in Chrome only, not on Android. Android's
+    system Back on Calendar is covered by tests only (5.5a).
 
 ## 16. Phase 1 status
 
@@ -2163,9 +2179,9 @@ Phase 3 totals (written in step 3.12c):
   and in Chrome. No separate regression pass was made at the end of the phase.
 - The known limits are in one list in Section 15, "Known limits of the admin area
   after Phase 3". Still open for later phases (Section 15): the conflict warning
-  (Phase 5); the App Check decision, the web sign-in check on a normal Chrome
-  profile, the web start without a connection, the ru and ka text review and the
-  README (Phase 7); the navigation shell (Phase 4).
+  (Phase 5; done in step 5.3); the App Check decision, the web sign-in check on a
+  normal Chrome profile, the web start without a connection, the ru and ka text
+  review and the README (Phase 7); the navigation shell (Phase 4).
 
 ## 19. Phase 4 status
 
@@ -2317,7 +2333,8 @@ of behaviour): tests and one short look, no emulator checklist.
   - Hide or show: a button on each readable card (setCarActive, works for every
     stored car, also one that needs repair); hiding asks "Hide this car?" first.
     The Visible switch of the form is saved with the whole car and asks the same
-    question at Save. The Phase 5 warning about future bookings is not here.
+    question at Save. The Phase 5 warning about future bookings is not here
+    (added in step 5.4).
   - "Discard your changes?" on the back arrow and the Android Back, as on the
     booking edit page.
   - An unreadable car has no button and cannot be opened; it is repaired in the
@@ -2416,7 +2433,8 @@ Phase 4 totals (written in step 4.8):
   confirmed future bookings is hidden. Phase 6: nothing from Phase 4. Phase 7:
   the photo upload (Blaze), the offline error of car writes on the web, the
   Android check of the admin navigation and the car screens, App Check
-  enforcement (decision 2.9b).
+  enforcement (decision 2.9b). Both Phase 5 items were done in Phase 5 (steps
+  5.3 and 5.4).
 - The known limits are in Section 15, "Known limits of fleet management after
   Phase 4".
 
@@ -2516,7 +2534,59 @@ in Section 3.4. The tiers are those of Section 19.
     warning icon marks a booking too close to another of the same car; a tap
     opens the booking detail. Bars show times only, never a customer detail.
   - The grid is drawn only after the server has answered both reads; before
-    that, "loading" and after 3 seconds "No connection", never "no bookings".
+    that, "loading", and "No connection" when the server has not answered 3
+    seconds (serverAnswerWait) after the first answer from memory; never "no
+    bookings".
   - The old 5.5a screen test was replaced; no other existing test changed.
   - The query limit is in Section 15, "Known limit of the calendar (5.5b)".
-- 5.6 Verify Phase 5 and close it. Tier 3 — not started.
+- 5.6 Verify Phase 5 and close it. Tier 3 — DONE (in the commit "Close Phase
+  5"). Only this file changed; nothing in the app, tool/, the rules, the ARB
+  files, the packages or the indexes. The results are in "Phase 5 totals".
+
+Phase 5 totals (written in step 5.6):
+- Steps 5.1 to 5.5b are done, in the 12 commits after 7022099 ("Close Phase
+  4"). The admin area now has: the pure conflict rules (5-hour buffer); a
+  server-only read of the confirmed bookings of one car; the conflict warning
+  in the status change, the edit form and the new booking ("Checking…",
+  "Continue anyway", "could not be checked"); the confirmed bookings ahead in
+  the "Hide this car?" dialog; the Calendar entry of the navigation (Bookings,
+  Calendar, Cars) and the 14-day calendar of confirmed bookings in Tbilisi
+  time.
+- Tests: 2001 Flutter tests pass and "flutter analyze" is clean. The tests of the
+  secrets scan: 47 pass. (At the end of Phase 4 there were 1719 Flutter tests.)
+- Rules: run again in step 5.6 on the local emulator (project
+  demo-tbilisi-car-rental; Java from "Android Studio1\jbr", set for that one
+  command only): 104 of 104 public checks and 402 of 402 admin and signed-in
+  checks (398 at the end of Phase 4; two new cases in 5.2 and two in 5.5b).
+  firestore.rules was last changed in commit 4e5fb1d (step 4.1) and deployed in
+  step 4.2; "git diff 4e5fb1d" is empty for it. No firebase command was run
+  against the real project in step 5.6.
+- By the git history of Phase 5 (the 12 commits after 7022099): no package was
+  added (pubspec.yaml and pubspec.lock last changed in step 3.4); the ARB files
+  are unchanged since step 2.8; firestore.indexes.json since Phase 0.
+- Secrets scan of the repository: 0 errors, 6 warnings, all intentionally
+  invalid phone values in tests (booking_form_validation_test.dart and
+  tool/check_booking_rules.mjs), the same as at the end of Phase 4.
+- The Phase 5 history: every file version changed in the 12 commits (74
+  versions) and every commit message, read with the scan's own code by a
+  temporary helper outside the repository (deleted afterwards; no snapshot
+  files): 0 errors, 6 warnings (the same three lines of check_booking_rules.mjs,
+  in two commits). An extra search of the added lines found no e-mail address
+  other than @example.com and the Co-Authored-By address, and nothing shaped
+  like a JWT token.
+- Checked by hand by the owner, step by step, in Chrome: 5.3 to 5.5b (5.1 and
+  5.2 have no screen), with four made-up test bookings in 5.5b, deleted
+  afterwards. The Phase 5 screens were NOT checked on Android. No separate
+  regression pass was made at the end of the phase.
+- The live data at the end of Phase 5 (counts only, read by the owner in the
+  admin app): 7 cars, 7 visible, 0 hidden; 4 still need repair (see the first
+  item of Section 15).
+- Moved on to Phase 7: a public "not found" page for unknown addresses
+  (go_router's raw error page, 5.5a); the offline error texts of the booking
+  and hide writes (5.3, 5.4); the Android check of the admin screens, Calendar
+  included; car photos from external hosts blocked by CORS in Chrome debug,
+  which goes away with Storage (5.3).
+- The known limits are in Section 15, "Known limits of the calendar and the
+  conflict warnings after Phase 5".
+
+Phase 5 is complete.
