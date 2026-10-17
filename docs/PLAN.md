@@ -260,6 +260,30 @@ this comes from the `settings` collection (Section 5). Company info starts EMPTY
 this page needs a friendly empty state. The map is an external Google Maps link, not an
 embedded map.
 
+Phase 6 decisions (made before step 6.1; the steps are in Section 21):
+- Address: /about, below the catalog. The catalog app bar has an info icon next
+  to the language menu that opens it. The page has the back arrow and the logo,
+  like the car screen.
+- The page reads settings/company live, like the other settings documents (its
+  fields are in Section 4). It needs the answer of the server: before it the
+  spinner, and when there is none 3 seconds (serverAnswerWait) after an answer
+  from memory, the error text with "Try again". Never the empty state without
+  the answer of the server.
+- A settings/company that the SERVER says does not exist, or one with no field
+  set, shows the friendly empty state. This is the one exception to "a missing
+  settings document is an error" (Section 4).
+- Only the fields that are set are shown. The address and the working hours are
+  shown in the current language; the name, phone, e-mail and links as stored.
+- Step 6.8 shows the contacts as plain selectable text. Step 6.9 makes them
+  tappable with url_launcher (a package that needs its own approval). Only
+  addresses the app builds itself are opened: tel: from the stored phone,
+  mailto: from the stored e-mail, and the stored https links after the app has
+  checked that they start with https://. Nothing else. A failed launch shows a
+  short message and never crashes.
+- The static texts of the page (title, labels, empty state, error) are in the
+  ARB files (ka, ru, en). Claude writes the ka and ru drafts; the owner reviews
+  them (see the ru and ka reminder in Section 15).
+
 ### 2.6 Localization
 
 - Public UI in three languages: Georgian (ka), Russian (ru), English (en), via
@@ -1144,10 +1168,52 @@ Phase 5 decisions (made before step 5.1; the steps are in Section 20):
 
 Separate admin screen where admin edits the global per-day prices of the four extras.
 
+Phase 6 decisions for 3.5 and 3.6 (made before step 6.1; the steps are in
+Section 21):
+- Admin navigation: a fourth entry, Settings (Bookings, Calendar, Cars,
+  Settings). Its page links to Extras & Prices and to Company Info.
+- Extras & Prices edits ONLY the four prices of settings/extras. The English
+  names and age ranges of the extras are shown read-only (admin texts); no
+  extra can be added or removed. The prices and ages are final decisions
+  (Section 2.3); the screen only lets the admin change a price later.
+- Money, checked in the code before step 6.1: a car price may have decimals.
+  The car form takes at most two (parseDecimalInput: "45", "45.5", "45.50"; a
+  comma counts as the point); the rules check only number, above 0, at most
+  2000, because they cannot check decimals. Every total is calculated in whole
+  cents (each price is rounded to cents once, then days × cents per day), so a
+  total always has at most two decimals and no rounding noise. The booking
+  rules check only that the total is a number from 0 to 1,000,000.
+- An extra's price follows the same rule as the car price: a number from 0 to
+  100 USD per day (a named limit), at most two decimals, checked by the form
+  with the same parser; the rules check number, 0 or more, at most 100. 0 is
+  allowed and shows "Free" in the public app. Why 100: the longest rental is
+  365 days, so the highest possible total is 365 × (2000 + 4 × 100) = 876,000,
+  below the 1,000,000 limit of the booking rules.
+- settings/extras is saved as a whole document (set), in exactly the shape of
+  Section 4 and of the emulator seed: { pricesPerDay: { snowChains, childSeat,
+  infantSeat, boosterSeat } }, nothing else.
+- Company Info edits settings/company (the fields are in Section 4). Every
+  field is optional. Text is trimmed; an empty text means "not set" and the key
+  is left out, never stored empty. A translated field (address, working hours)
+  that is set needs all three languages, as a car description does. The phone
+  and the e-mail use the validators of the booking form.
+- Both saves run in a transaction that checks that the document is still what
+  the form loaded; otherwise "changed elsewhere", and the form reloads only on
+  request (as the car edit form does). For settings/company the first save
+  runs while the document does not exist yet: then "does not exist" is the
+  expected state of the check.
+- Both forms need the answer of the server to open: "No connection" when there
+  is none 3 seconds after an answer from memory, with "Try again". A save
+  without a connection fails and is never queued.
+- A new extra price changes the live total of an open booking form and the
+  recalculation in the admin forms; stored totals never change (Section 6).
+- The admin texts are English only, in admin_texts.dart; no ARB change.
+
 ### 3.6 Company Info screen
 
 Separate admin screen to fill in company info (name, phone, email, address, working
-hours, social links, map location). Starts empty.
+hours, social links, map location). Starts empty. The Phase 6 decisions are under
+3.5.
 
 ### 3.7 New booking email notifications
 
@@ -1211,15 +1277,33 @@ settings (document and field names agreed in step 2.3)
 - settings/locations: items, an array of maps in dropdown order; each has id (stable
   text stored in bookings) and name { ka, ru, en }. The English name is required.
   "Other" is not stored; it is a fixed option of the form.
-- company info (name, phone, email, address, working hours, social links, map): its
-  own document, defined in Phase 6.
+- settings/company (decided before step 6.1): every field optional, a field that
+  is not set is left out.
+  - name: text, 1 to 100 characters, not translated.
+  - phone: "+" and 8 to 15 digits, the booking format (spaces, hyphens, dots and
+    brackets removed before storing), for example +995555000000.
+  - email: at most 254 characters, the booking check, for example
+    info@example.com.
+  - address, workingHours: each a map { ka, ru, en }; when set, all three, each
+    1 to 300 characters.
+  - mapUrl: an https address (a Google Maps link), at most 500 characters.
+  - social: a map with any of facebook, instagram, whatsapp and telegram, each
+    an https address of at most 500 characters.
+  - No other field. Texts are trimmed.
 - A missing or invalid settings document is an error. The app never uses default
-  prices or default locations.
+  prices or default locations. The one exception: a settings/company that the
+  server says does not exist means "not filled in yet" (About Us shows its empty
+  state, the admin form starts empty).
 
 ## 5. Settings collection
 
 Public read, admin write. Company info starts empty; the public About Us page must
 handle that with an empty state.
+
+From Phase 6 (rules in step 6.2, deployed in step 6.3): an admin may create and
+update settings/extras and settings/company; nobody may delete any settings
+document; settings/locations and every other settings document stay closed for
+writes (changed in the Firebase console only). Details in Section 8.
 
 ## 6. Pricing rules
 
@@ -1342,6 +1426,26 @@ Implementation decisions (step 2.2):
 - settings: public read; writes admin only.
 - The settings collection is publicly readable. Never put anything private in it
   (admin e-mails, keys, internal notes).
+- Settings writes, decided before step 6.1 (written in step 6.2, deployed in step
+  6.3 with the check of the live text, as in step 4.2):
+  - settings/extras: an admin may create and update it. The document has exactly
+    the key pricesPerDay, a map with exactly snowChains, childSeat, infantSeat
+    and boosterSeat, each a number from 0 to 100. The rules cannot check
+    decimals; the form does (Section 3.5).
+  - settings/company: an admin may create and update it. Only the keys of
+    Section 4, each optional, with its limits: name 1 to 100 characters; phone
+    "+" and 8 to 15 digits; email at most 254 characters with one "@" and a dot
+    in the domain; address and workingHours with exactly ka, ru and en, each 1
+    to 300 characters; mapUrl and each social link https only, no spaces, at
+    most 500 characters; social only facebook, instagram, whatsapp, telegram.
+  - Nobody may delete any settings document, an admin neither.
+  - settings/locations and any other settings document: no writes from an app.
+  - The limits live in a constants file that a unit test compares with the
+    rules, as for cars and bookings.
+  - The emulator case "admin refused: write settings" changes in step 6.2: a
+    valid admin write of settings/extras is then allowed. Refused cases are
+    added for settings/locations, an unknown settings document, every delete,
+    the public, and invalid shapes.
 - bookings: public `create` only, with strict validation in rules: allowed field set
   only, status == 'new', createdAt == request.time, notes <= 500 chars, string length
   limits, `expireAt` NOT accepted from the client. No public get/list/update/delete.
@@ -1493,7 +1597,8 @@ Implementation decisions (step 2.2):
 4. Fleet management — DONE (Section 19). The photo upload moved to Phase 7
    (Section 15).
 5. Calendar + conflict warning — DONE (Section 20).
-6. Settings screens (Extras & Prices, Company Info) + About Us page — open.
+6. Settings screens (Extras & Prices, Company Info) + About Us page — open (the
+   steps are in Section 21).
 7. Cloud Functions + compliance + polish (App Check step 2.9b, consent banner, Privacy
    Policy, TTL, email, README with screenshots, launcher icon). The launcher icon is
    still open; it needs the package flutter_launcher_icons, which needs the owner's
@@ -1683,6 +1788,9 @@ Phase 0 is complete.
   - The admin area is web-first; Android admin is secondary and was checked less.
 - Russian and Georgian texts: I have not yet read the ru and ka texts of the booking
   form and the thank-you summary (65 keys). Check them before Phase 7.
+- The Phase 6 company data (settings/company) is public by design: anyone can read
+  it. Real company values are typed only by the owner in the admin app, never
+  into a file, a test or a commit.
 - Language choice is not remembered yet (shared_preferences comes later).
 - Rules tests run on the local Firebase emulator, never against the real project, with
   this command (one line):
@@ -1703,7 +1811,9 @@ Phase 0 is complete.
   admin panel uses a responsive shell (a bottom navigation bar on phones, a side
   navigation rail on wide screens) with go_router's ShellRoute. The admin part is
   DECIDED before step 4.1: the responsive shell, built in step 4.4a (Section 3.3,
-  Phase 4 decisions). The public part is still open (Phase 6).
+  Phase 4 decisions). The public part is DECIDED before step 6.1: an info icon
+  in the catalog app bar, next to the language menu, opens About Us (/about,
+  Section 2.5). Privacy Policy joins it in Phase 7.
 - App bar on other screens: the car detail screen reuses AppBarLogo next to the back
   arrow, with the same toolbar height (decided in step 2.4); the booking form and the
   thank-you screen do the same (step 2.7). Decide again for each new screen.
@@ -2590,3 +2700,34 @@ Phase 5 totals (written in step 5.6):
   conflict warnings after Phase 5".
 
 Phase 5 is complete.
+
+## 21. Phase 6 status
+
+Phase 6: the settings screens (Extras & Prices, Company Info) and the About Us
+page (Section 11). The decisions are in Sections 2.5, 3.5, 3.6, 4, 5 and 8. The
+tiers are those of Section 19. A change of firestore.rules, the ARB files, the
+packages or the indexes needs the owner's separate approval; such steps say so.
+
+- 6.1 The Phase 6 decisions in this file. Tier 3 — DONE (in the commit "Record
+  the Phase 6 decisions"). Only this file changed.
+- 6.2 The settings rules in the local file, the limits constants file with its
+  unit test, and the emulator cases. Tier 1 — not started. Needs approval: the
+  change of firestore.rules and the changed emulator case "admin refused: write
+  settings".
+- 6.3 Deploy the rules, with the check of the live text as in step 4.2. Tier 1 —
+  not started. Needs approval: the deploy.
+- 6.4 The company model and parser, and the write methods of the settings
+  repository (extras prices, company) with error mapping and "no answer". No
+  screen. Tier 1 — not started.
+- 6.5 The Settings entry of the admin navigation, with a page of two links.
+  Tier 1 — not started.
+- 6.6 The Extras & Prices screen. Tier 1 (money) — not started.
+- 6.7 The Company Info screen. Tier 1 (writes) — not started.
+- 6.8 The public About Us page: /about, the info icon, the empty state, the
+  three languages, the contacts as plain selectable text. Tier 2 — not started.
+  Needs approval: the ARB files.
+- 6.9 Tappable contacts with url_launcher: only tel:, mailto: and https
+  addresses built by the app; a failed launch shows a short message. Tier 2 —
+  not started. Needs approval: the package and pubspec.lock; the plan lists any
+  Android or iOS platform file it changes.
+- 6.10 Verify Phase 6 and close it. Tier 3 — not started.
