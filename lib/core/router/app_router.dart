@@ -21,6 +21,9 @@ import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_screen.
 import 'package:tbilisi_car_rental/features/fleet/presentation/admin_car_edit_screen.dart';
 import 'package:tbilisi_car_rental/features/fleet/presentation/admin_car_new_screen.dart';
 import 'package:tbilisi_car_rental/features/fleet/presentation/admin_cars_screen.dart';
+import 'package:tbilisi_car_rental/features/settings/presentation/admin_company_info_screen.dart';
+import 'package:tbilisi_car_rental/features/settings/presentation/admin_extras_prices_screen.dart';
+import 'package:tbilisi_car_rental/features/settings/presentation/admin_settings_screen.dart';
 
 /// Route paths in one place, so screens never hard-code URL strings.
 abstract final class AppRoutes {
@@ -94,6 +97,23 @@ abstract final class AppRoutes {
   /// The address of the edit form of one car: "/admin/cars/abc123/edit".
   static String adminCarEdit(String carId) =>
       '$adminCars/${Uri.encodeComponent(carId)}/edit';
+
+  /// The Settings section of the admin area.
+  static const adminSettings = adminSettingsPath;
+
+  /// Path pattern of the Extras & Prices page, below [adminSettings].
+  static const adminSettingsExtrasPattern = 'extras';
+
+  /// The address of the Extras & Prices page: "/admin/settings/extras".
+  static const adminSettingsExtras =
+      '$adminSettings/$adminSettingsExtrasPattern';
+
+  /// Path pattern of the Company Info page, below [adminSettings].
+  static const adminSettingsCompanyPattern = 'company';
+
+  /// The address of the Company Info page: "/admin/settings/company".
+  static const adminSettingsCompany =
+      '$adminSettings/$adminSettingsCompanyPattern';
 }
 
 /// Tells the router to run its redirect again. The router listens to it;
@@ -239,6 +259,31 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                         builder: (context, state) => AdminCarEditScreen(
                           carId: state.pathParameters['carId']!,
                         ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              // AdminSection.settings
+              StatefulShellBranch(
+                routes: [
+                  GoRoute(
+                    path: _below(AppRoutes.adminSettings),
+                    builder: (context, state) => const AdminSettingsScreen(),
+                    routes: [
+                      // Below Settings, so Back returns to Settings. Forms
+                      // from steps 6.6 and 6.7: adminShowsNavigation hides
+                      // the navigation here. Any other address below
+                      // Settings is the admin "not found" page.
+                      GoRoute(
+                        path: AppRoutes.adminSettingsExtrasPattern,
+                        builder: (context, state) =>
+                            const AdminExtrasPricesScreen(),
+                      ),
+                      GoRoute(
+                        path: AppRoutes.adminSettingsCompanyPattern,
+                        builder: (context, state) =>
+                            const AdminCompanyInfoScreen(),
                       ),
                     ],
                   ),

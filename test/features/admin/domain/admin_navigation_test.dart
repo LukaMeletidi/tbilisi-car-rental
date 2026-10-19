@@ -39,6 +39,7 @@ void main() {
       AdminSection.bookings,
       AdminSection.calendar,
       AdminSection.cars,
+      AdminSection.settings,
     ]);
     expect(adminSectionPath(AdminSection.bookings), '/admin');
     expect(adminSectionPath(AdminSection.cars), '/admin/cars');
@@ -135,6 +136,60 @@ void main() {
       );
       expect(
         adminSystemBackTarget(isWeb: false, path: '/admin/calendar/x'),
+        isNull,
+      );
+    });
+  });
+
+  group('the Settings section (step 6.5)', () {
+    test('its first page, with and without the last slash', () {
+      expect(adminSettingsPath, '/admin/settings');
+      expect(adminSectionPath(AdminSection.settings), '/admin/settings');
+      expect(AdminSection.settings.index, 3);
+      for (final path in ['/admin/settings', '/admin/settings/']) {
+        expect(adminSectionOf(path), AdminSection.settings, reason: path);
+        expect(isAdminSectionRoot(path), true, reason: path);
+        expect(adminShowsNavigation(path, rail), true, reason: path);
+        expect(adminShowsNavigation(path, bar), true, reason: path);
+      }
+    });
+
+    test('its two pages: Settings, not a first page, no navigation', () {
+      for (final path in [
+        '/admin/settings/extras',
+        '/admin/settings/company',
+        '/admin/settings/company/',
+      ]) {
+        expect(adminSectionOf(path), AdminSection.settings, reason: path);
+        expect(isAdminSectionRoot(path), false, reason: path);
+        for (final kind in AdminNavigationKind.values) {
+          expect(adminShowsNavigation(path, kind), false, reason: path);
+        }
+      }
+    });
+
+    test('an unknown page below it: Settings, not a first page', () {
+      expect(adminSectionOf('/admin/settings/x'), AdminSection.settings);
+      expect(isAdminSectionRoot('/admin/settings/x'), false);
+    });
+
+    test('a look-alike address is no section', () {
+      expect(adminSectionOf('/admin/settingsx'), isNull);
+      expect(isAdminSectionRoot('/admin/settingsx'), false);
+      expect(adminSectionOf('/admin/setting'), isNull);
+    });
+
+    test('Android Back on Settings goes to Bookings; never on the web', () {
+      expect(
+        adminSystemBackTarget(isWeb: false, path: '/admin/settings'),
+        AdminSection.bookings,
+      );
+      expect(
+        adminSystemBackTarget(isWeb: true, path: '/admin/settings'),
+        isNull,
+      );
+      expect(
+        adminSystemBackTarget(isWeb: false, path: '/admin/settings/extras'),
         isNull,
       );
     });

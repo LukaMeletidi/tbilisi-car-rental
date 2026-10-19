@@ -49,6 +49,20 @@ const adminOfflineNote = 'Offline: showing saved data';
 const adminNavBookings = 'Bookings';
 const adminNavCalendar = 'Calendar';
 const adminNavCars = 'Cars';
+const adminNavSettings = 'Settings';
+
+/// The Settings page and its two pages (step 6.5; the two pages are filled
+/// in steps 6.6 and 6.7).
+const adminSettingsTitle = 'Settings';
+const adminSettingsExtrasTitle = 'Extras & Prices';
+const adminSettingsExtrasDescription =
+    'The price per day of each extra, in USD.';
+const adminSettingsCompanyTitle = 'Company Info';
+const adminSettingsCompanyDescription =
+    'Name, contacts, address, working hours and links for the About Us '
+    'page.';
+const adminSettingsNotReady =
+    'This page is not ready yet. Nothing can be changed here.';
 
 /// The Calendar page (steps 5.5a and 5.5b).
 const adminCalendarTitle = 'Calendar';

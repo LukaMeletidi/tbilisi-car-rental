@@ -7,13 +7,16 @@ import 'package:tbilisi_car_rental/features/admin/domain/admin_redirect.dart';
 
 /// The sections of the admin area, in the order of the navigation. The
 /// index of a section is the index of its branch in the router.
-enum AdminSection { bookings, calendar, cars }
+enum AdminSection { bookings, calendar, cars, settings }
 
 /// The first page of the Calendar section.
 const adminCalendarPath = '$adminHomePath/calendar';
 
 /// The first page of the Cars section.
 const adminCarsPath = '$adminHomePath/cars';
+
+/// The first page of the Settings section.
+const adminSettingsPath = '$adminHomePath/settings';
 
 /// Below this width the navigation is a bottom bar, from it on a side rail.
 const adminRailMinWidth = 600.0;
@@ -31,7 +34,7 @@ String _withoutTrailingSlash(String path) =>
     : path;
 
 /// The section the address [path] belongs to, or null for a gate page or an
-/// address outside the two sections (those pages have no navigation).
+/// address outside the sections (those pages have no navigation).
 AdminSection? adminSectionOf(String path) {
   final p = _withoutTrailingSlash(path);
   if (p == adminCalendarPath || p.startsWith('$adminCalendarPath/')) {
@@ -39,6 +42,9 @@ AdminSection? adminSectionOf(String path) {
   }
   if (p == adminCarsPath || p.startsWith('$adminCarsPath/')) {
     return AdminSection.cars;
+  }
+  if (p == adminSettingsPath || p.startsWith('$adminSettingsPath/')) {
+    return AdminSection.settings;
   }
   if (p == adminHomePath || p.startsWith('$adminHomePath/bookings/')) {
     return AdminSection.bookings;
@@ -55,27 +61,33 @@ String adminSectionPath(AdminSection section) {
       return adminCalendarPath;
     case AdminSection.cars:
       return adminCarsPath;
+    case AdminSection.settings:
+      return adminSettingsPath;
   }
 }
 
 /// Whether [path] is the first page of a section.
 bool isAdminSectionRoot(String path) {
   final p = _withoutTrailingSlash(path);
-  return p == adminHomePath || p == adminCalendarPath || p == adminCarsPath;
+  return p == adminHomePath ||
+      p == adminCalendarPath ||
+      p == adminCarsPath ||
+      p == adminSettingsPath;
 }
 
 final _bookingDetail = RegExp(r'^/admin/bookings/[^/]+$');
 
 /// Whether the page at [path] shows the navigation of [kind].
 ///
-/// A FORM never shows it, on any width: the new-booking and the edit pages
-/// (and later the car forms). A click on the rail or the bar is not a Back,
-/// so it would not ask "Discard your changes?" and typed data would be lost.
+/// A FORM never shows it, on any width: the new-booking and the edit pages,
+/// the car forms, and the two pages below Settings (forms from steps 6.6
+/// and 6.7). A click on the rail or the bar is not a Back, so it would not
+/// ask "Discard your changes?" and typed data would be lost.
 ///
 /// - Phone (bottom bar): only on the first page of a section: the bookings
-///   list, Calendar and Cars.
+///   list, Calendar, Cars and Settings.
 /// - Wide (rail): on the bookings list, on the detail of a booking, on
-///   Calendar and on Cars.
+///   Calendar, on Cars and on Settings.
 /// - Never on a gate page, on the "not found" page or outside the admin area.
 bool adminShowsNavigation(String path, AdminNavigationKind kind) {
   final p = _withoutTrailingSlash(path);

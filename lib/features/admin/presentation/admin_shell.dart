@@ -26,11 +26,13 @@ class AdminShell extends StatelessWidget {
   /// The path of the current address.
   final String path;
 
-  /// One entry per AdminSection, in its order: Bookings, Calendar, Cars.
+  /// One entry per AdminSection, in its order: Bookings, Calendar, Cars,
+  /// Settings.
   static const _destinations = [
     (icon: Icons.event_note, label: adminNavBookings),
     (icon: Icons.calendar_month, label: adminNavCalendar),
     (icon: Icons.directions_car, label: adminNavCars),
+    (icon: Icons.settings, label: adminNavSettings),
   ];
 
   void _select(int index) {
