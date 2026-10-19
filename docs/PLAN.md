@@ -1378,11 +1378,11 @@ Implementation decisions (step 2.2):
   prints its contents and refuses to run when the key path is inside the repository
   or when the key's project is not exactly tbilisi-car-rental. After the claim is
   set, the admin signs out and in again: the claim is inside the sign-in token.
-- Live rules: since step 6.3 the live Firestore rules are those of commit f32d9bb
-  (deployed 2026-10-19); earlier: 0a7eb27 (3.3), 4e5fb1d (4.2). To go back to an
-  earlier version, use the Rules history in the Firebase console (Firestore
-  Database > Rules). A new ruleset reaches new requests within about a minute and
-  open listeners within about 10 minutes.
+- Live rules: since step 6b.4 the live Firestore rules are those of commit 2c7e2a9
+  (deployed 2026-10-19); earlier: 0a7eb27 (3.3), 4e5fb1d (4.2), f32d9bb (6.3). To
+  go back to an earlier version, use the Rules history in the Firebase console
+  (Firestore Database > Rules). A new ruleset reaches new requests within about a
+  minute and open listeners within about 10 minutes.
 - Admin rules (written in step 3.1; deployed in step 3.3):
   - isAdmin(): signed in AND the token has admin == true. A token without the claim,
     or with any other value, is treated exactly like the public.
@@ -2971,9 +2971,34 @@ Steps:
     popular unchanged.
   - An old incomplete car cannot be marked popular until it is repaired by
     one save of the edit form.
-  - The local firestore.rules is ahead of the live rules until step 6b.4.
+  - The local firestore.rules is ahead of the live rules until step 6b.4
+    (deployed in step 6b.4).
 - 6b.4 Deploy the rules, with the check of the live text as in step 6.3.
-  Tier 1 — not started. Needs approval: the deploy.
+  Tier 1 — DONE (no code change; this file only). The deployed file is
+  firestore.rules of commit 2c7e2a9 (431 lines).
+  - Deployed with "firebase deploy --only firestore:rules --project
+    tbilisi-car-rental", run once by Claude Code after my approval, on
+    2026-10-19 at about 17:43 Tbilisi time; exit code 0, no warning. The
+    console's Rules history shows the new version at 5:43 PM above the 6.3
+    one (9:14 AM).
+  - Before the deploy: the working tree was clean, HEAD equalled origin/main
+    (e88bb86), the rules tests passed (106), and the emulator script passed
+    (104 of 104 public, 518 of 518 admin and signed-in).
+  - I copied the live text from the console before the deploy into a file
+    outside the repository: it was identical to f32d9bb, and its only
+    difference from the local file was the 6b.3 change. After the deploy I
+    copied it again: it is identical to firestore.rules at HEAD. Both
+    comparisons ignore line endings and spaces at the ends of lines.
+  - Anonymous checks about two minutes after the release, no sign-in, all as
+    expected: settings/extras read 200, the active-cars query 200, all cars
+    without the filter 403, a booking get 403. One anonymous refused write: a
+    PATCH of a made-up car document with popular: true and the precondition
+    "the document exists" gave 403; nothing was stored.
+  - Checked by me in Chrome on the live app: the public catalog and a car
+    page; in the admin area a price +1 and back on one valid car (a full
+    replacement checked by isValidCar), all passed.
+  - No live data written by Claude Code; no other service touched (no
+    indexes, hosting, functions, storage or auth); App Check untouched.
 - 6b.5 The car model and the "Popular" checkbox of the admin car form.
   Tier 1 — not started.
 - 6b.6 The Home screen. Tier 2 (large) — not started. Needs approval: the ARB
