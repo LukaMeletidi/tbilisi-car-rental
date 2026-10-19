@@ -2002,6 +2002,148 @@ signedIn('car, public booking: accepted for an active car the admin created',
 signedIn('car, public booking: refused for a hidden car the admin created',
   403, () => create(booking((b) => (b.carId = ADMIN_MADE_HIDDEN))));
 
+// I.12 The optional field "popular" (step 6b.3): a bool, written by an admin
+// only; absent means "not popular". The rules cannot count the popular cars
+// (Home shows at most 3). Every update case first seeds its own car with the
+// admin bypass, so the cases do not depend on their order.
+let nextPopularCar = 0;
+
+// Seeds a new car with [data] and gives its ID.
+async function seededCar(data) {
+  nextPopularCar += 1;
+  const id = `popularCar${nextPopularCar}`;
+  await seed(`cars/${id}`, data);
+  return id;
+}
+
+const popularCar = () => validCar((c) => (c.popular = true));
+
+// I.12.1 Create.
+carAccepted('popular true', (c) => (c.popular = true));
+carAccepted('popular false', (c) => (c.popular = false));
+for (const [label, value] of [
+  ['the text "true"', 'true'],
+  ['the number 1', 1],
+  ['null', null],
+  ['a list', [true]],
+  ['a map', {}],
+]) {
+  carRefused(`popular as ${label}`, (c) => (c.popular = value));
+}
+carRefused('popular true and an unknown field', (c) => {
+  c.popular = true;
+  c.featured = true;
+});
+
+// I.12.2 Update.
+signedIn('car, admin update: add popular true (partial)', 200, async () => {
+  const id = await seededCar(validCar());
+  return andStoredCar(
+    await updateCar(id, { popular: true }, ADMIN),
+    id,
+    (f) => f.popular?.booleanValue === true,
+  );
+});
+signedIn('car, admin update: popular false (partial)', 200, async () => {
+  const id = await seededCar(popularCar());
+  return andStoredCar(
+    await updateCar(id, { popular: false }, ADMIN),
+    id,
+    (f) => f.popular?.booleanValue === false,
+  );
+});
+signedIn('car, admin update: remove popular (partial)', 200, async () => {
+  const id = await seededCar(popularCar());
+  return andStoredCar(
+    await updateCar(id, {}, ADMIN, ['popular']),
+    id,
+    (f) => f.popular === undefined && f.brand !== undefined,
+  );
+});
+signedIn('car, admin update: replace every field, with popular true', 200,
+  async () => {
+    const id = await seededCar(validCar());
+    return andStoredCar(
+      await replaceCar(id, popularCar(), ADMIN),
+      id,
+      (f) => f.popular?.booleanValue === true,
+    );
+  });
+signedIn('car, admin update: a full replacement without popular drops it',
+  200, async () => {
+    const id = await seededCar(popularCar());
+    return andStoredCar(
+      await replaceCar(id, validCar(), ADMIN),
+      id,
+      (f) => f.popular === undefined,
+    );
+  });
+for (const [label, value] of [['the text "yes"', 'yes'], ['null', null]]) {
+  signedIn(`car, admin update refused: popular as ${label} (partial)`, 403,
+    async () => {
+      const id = await seededCar(validCar());
+      return updateCar(id, { popular: value }, ADMIN);
+    });
+}
+signedIn('car, admin update refused: add popular to an old incomplete car',
+  403, async () => {
+    const id = await seededCar({ brand: 'Lada', active: true });
+    return updateCar(id, { popular: true }, ADMIN);
+  });
+signedIn('car, admin update: hiding a popular car keeps popular', 200,
+  async () => {
+    const id = await seededCar(popularCar());
+    return andStoredCar(
+      await updateCar(id, { active: false }, ADMIN),
+      id,
+      (f) =>
+        f.active.booleanValue === false && f.popular?.booleanValue === true,
+    );
+  });
+signedIn('car, admin refused: delete a popular car', 403, async () => {
+  const id = await seededCar(popularCar());
+  return send('DELETE', `${DOCUMENTS}/cars/${id}`, { headers: ADMIN });
+});
+
+// I.12.3 Nobody else may set it.
+signedIn('car, no claim: create a car with popular', 403, () => {
+  nextPopularCar += 1;
+  return createCar(`popularCar${nextPopularCar}`, popularCar(), NO_CLAIM);
+});
+signedIn('car, no claim: set popular (partial)', 403, async () => {
+  const id = await seededCar(validCar());
+  return updateCar(id, { popular: true }, NO_CLAIM);
+});
+signedIn('car, public: create a car with popular', 403, () => {
+  nextPopularCar += 1;
+  return createCar(`popularCar${nextPopularCar}`, popularCar());
+});
+signedIn('car, public: set popular (partial)', 403, async () => {
+  const id = await seededCar(validCar());
+  return updateCar(id, { popular: true });
+});
+signedIn('car, public: delete a popular car', 403, async () => {
+  const id = await seededCar(popularCar());
+  return send('DELETE', `${DOCUMENTS}/cars/${id}`);
+});
+
+// I.12.4 Reading is unchanged; the public sees the field.
+signedIn('car, public: read an active popular car, with the field', 200,
+  async () => {
+    const id = await seededCar(popularCar());
+    const result = await send('GET', `${DOCUMENTS}/cars/${id}`);
+    if (result.status !== 200) return result;
+    const fields = JSON.parse(result.text).fields;
+    return fields.popular?.booleanValue === true
+      ? result
+      : { status: 0, text: 'read, but without the popular field' };
+  });
+signedIn('car, public: the active-cars query with a popular car', 200,
+  async () => {
+    await seededCar(popularCar());
+    return send('POST', `${DOCUMENTS}:runQuery`, { body: activeCarsQuery });
+  });
+
 // J. Settings (step 6.2): an admin may create and change settings/extras
 // and settings/company in their exact shape; nobody may delete a settings
 // document; settings/locations and every other settings document stay

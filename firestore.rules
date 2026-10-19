@@ -58,12 +58,15 @@ service cloud.firestore {
         && (p.size() < 10 || isCarPhoto(p[9]));
     }
 
-    // The whole car document. engineSize is the only optional field.
+    // The whole car document. engineSize and popular are optional: without
+    // them a car has no engine size and is not popular (Phase 6b). The app
+    // writes popular only as true, when a car is marked; an unmarked car
+    // has no popular key.
     function isValidCar(car) {
       return car.keys().hasOnly([
                'brand', 'model', 'year', 'drivetrain', 'transmission',
                'fuelType', 'seats', 'engineSize', 'pricePerDay',
-               'description', 'photos', 'active'])
+               'description', 'photos', 'active', 'popular'])
         && car.keys().hasAll([
                'brand', 'model', 'year', 'drivetrain', 'transmission',
                'fuelType', 'seats', 'pricePerDay', 'description', 'photos',
@@ -88,7 +91,9 @@ service cloud.firestore {
         && car.pricePerDay <= carMaxPricePerDay()
         && isValidCarDescription(car.description)
         && isValidCarPhotos(car.photos)
-        && car.active is bool;
+        && car.active is bool
+        // Home shows at most 3 popular cars; the rules cannot count them.
+        && (!('popular' in car) || car.popular is bool);
     }
 
     // Hiding or showing a car: "active" is the only field that changes, and

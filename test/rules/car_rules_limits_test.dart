@@ -86,7 +86,8 @@ void main() {
   });
 
   test('the fields the rules allow are the fields of the constants', () {
-    expect(ruleList('return car.keys().hasOnly(['), carFields);
+    // popular joins carFields in step 6b.5.
+    expect(ruleList('return car.keys().hasOnly(['), [...carFields, 'popular']);
     expect(ruleList('&& car.keys().hasAll(['), [
       for (final field in carFields)
         if (!carOptionalFields.contains(field)) field,
