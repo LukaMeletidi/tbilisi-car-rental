@@ -2954,7 +2954,24 @@ Steps:
   - Checked by the owner in Chrome with a narrow window, 11 steps, all passed.
   - Noted for Phase 7: see "For Phase 7 (noted in step 6b.2)" in Section 15.
 - 6b.3 The Popular flag: the rules in the local file and the emulator cases.
-  Tier 1 — not started. Needs approval: the change of firestore.rules.
+  Tier 1 — DONE (in the commit "Allow the optional popular flag on a car in
+  the rules").
+  - The rules allow an optional field "popular" on a car, only as a bool;
+    absent means false. It is in the hasOnly list of isValidCar but not in
+    hasAll. The "at most 3" limit cannot be enforced by the rules (they would
+    have to count other cars); it lives in the text of the admin form and in
+    Home, which shows at most 3.
+  - 25 new emulator cases (section I.12): 104 of 104 public and 518 of 518
+    admin and signed-in checks (was 493).
+  - 2338 Flutter tests pass and analyze is clean; the scan has 0 errors and 11
+    warnings. One Dart test expectation changed: the rules-text test now
+    expects [...carFields, 'popular']; popular joins carFields in step 6b.5.
+  - Decided: the app writes popular only as true, when a car is marked, and
+    leaves the key absent when it is not marked. Hiding and showing keep
+    popular unchanged.
+  - An old incomplete car cannot be marked popular until it is repaired by
+    one save of the edit form.
+  - The local firestore.rules is ahead of the live rules until step 6b.4.
 - 6b.4 Deploy the rules, with the check of the live text as in step 6.3.
   Tier 1 — not started. Needs approval: the deploy.
 - 6b.5 The car model and the "Popular" checkbox of the admin car form.
