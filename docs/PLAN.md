@@ -2779,7 +2779,23 @@ packages or the indexes needs the owner's separate approval; such steps say so.
     company fields to the answers of the emulator in step 6.2 (the same
     sample values); they agree on every sample.
 - 6.5 The Settings entry of the admin navigation, with a page of two links.
-  Tier 1 — not started.
+  Tier 1 — DONE. Commit 8d7d2cd.
+  - 2193 Flutter tests pass (26 new) and analyze is clean; the scan has 0
+    errors and 11 warnings, as before. No firebase command; no change to the
+    rules, the ARB files or the packages.
+  - Settings is the fourth admin section (AdminSection.settings, index 3),
+    with the pages /admin/settings, /admin/settings/extras and
+    /admin/settings/company. The two pages below Settings are placeholders
+    that read and write nothing (filled in steps 6.6 and 6.7) and show no
+    navigation, as forms do. An unknown page below Settings is the admin
+    "not found" page.
+  - Android's system Back on the first page of Settings goes to Bookings, as
+    for Calendar and Cars; on a page below Settings it returns to Settings.
+  - One existing expectation changed: the list of AdminSection values.
+  - Checked by me in Chrome. The first check found white text on the white
+    cards: the two new widgets read the text style outside the card, from the
+    purple page. Fixed as in the car cards (the text style is read inside the
+    card); a contrast test now checks every text on those cards.
 - 6.6 The Extras & Prices screen. Tier 1 (money) — not started.
 - 6.7 The Company Info screen. Tier 1 (writes) — not started.
 - 6.8 The public About Us page: /about, the info icon, the empty state, the
