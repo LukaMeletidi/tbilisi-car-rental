@@ -1202,9 +1202,11 @@ Section 21):
   request (as the car edit form does). For settings/company the first save
   runs while the document does not exist yet: then "does not exist" is the
   expected state of the check.
-- Both forms need the answer of the server to open: "No connection" when there
-  is none 3 seconds after an answer from memory, with "Try again". A save
-  without a connection fails and is never queued.
+- Both forms open from memory when it already holds the document, as the car
+  form does; only when memory has nothing they wait 3 seconds and show "No
+  connection" with "Try again". A stale form cannot overwrite anything: the
+  save transaction reads the server copy and refuses with "changed elsewhere".
+  A save without a connection fails and is never queued.
 - A new extra price changes the live total of an open booking form and the
   recalculation in the admin forms; stored totals never change (Section 6).
 - The admin texts are English only, in admin_texts.dart; no ARB change.
@@ -2796,7 +2798,30 @@ packages or the indexes needs the owner's separate approval; such steps say so.
     cards: the two new widgets read the text style outside the card, from the
     purple page. Fixed as in the car cards (the text style is read inside the
     card); a contrast test now checks every text on those cards.
-- 6.6 The Extras & Prices screen. Tier 1 (money) — not started.
+- 6.6 The Extras & Prices screen. Tier 1 (money) — DONE. Commit 03a79b6.
+  - 2247 Flutter tests pass and analyze is clean; the scan has 0 errors and 11
+    warnings, as before. No firebase command; no change to the rules, the ARB
+    files or the packages.
+  - The Extras & Prices page is now the real form: the four prices in USD per
+    day, 0 to 100 with at most two decimals; the names and age ranges are
+    read-only (a test compares the ages with app_en.arb). It is built like
+    the car edit form: Save, "Saved" and back to Settings; the discard
+    question; after "No answer" the fields are locked and "Save again" is
+    offered; the changed-elsewhere banner and refusal; the load-failure and
+    unreadable states.
+  - The form opens from memory when it already holds the prices, as the car
+    form does; only when memory has nothing it waits 3 seconds and shows "No
+    connection" with "Try again". A stale form cannot overwrite anything: the
+    save transaction reads the server copy and refuses with "changed
+    elsewhere". The wording of Section 3.5 was corrected to say so.
+  - Checked by me in Chrome with real writes through the app, the first live
+    writes of settings/extras: a save, changed elsewhere in two tabs, an
+    offline save and an offline open. The original prices were restored at
+    the end.
+  - For Phase 7: in Chrome an offline save shows the generic "Something went
+    wrong" notice (the raw NativeError is not mapped); the error for a
+    negative or malformed price says "at most two decimals" and should be
+    worded better together with the helper texts.
 - 6.7 The Company Info screen. Tier 1 (writes) — not started.
 - 6.8 The public About Us page: /about, the info icon, the empty state, the
   three languages, the contacts as plain selectable text. Tier 2 — not started.
