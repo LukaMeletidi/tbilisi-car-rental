@@ -261,28 +261,29 @@ this page needs a friendly empty state. The map is an external Google Maps link,
 embedded map.
 
 Phase 6 decisions (made before step 6.1; the steps are in Section 21):
-- Address: /about, below the catalog. The catalog app bar has an info icon next
-  to the language menu that opens it. The page has the back arrow and the logo,
-  like the car screen.
+- Address: /about. Since Phase 6b (Section 22) it is the About/Contact tab of
+  the public bottom navigation (step 6b.8); the info icon planned in step 6.1
+  is dropped. One screen: a static about text, the company data and tappable
+  contacts.
 - The page reads settings/company live, like the other settings documents (its
-  fields are in Section 4). It needs the answer of the server: before it the
-  spinner, and when there is none 3 seconds (serverAnswerWait) after an answer
-  from memory, the error text with "Try again". Never the empty state without
-  the answer of the server.
+  fields are in Section 4), with the mechanism of the admin forms: an answer
+  from memory that holds the document is shown; when memory has nothing, the
+  spinner, and after 3 seconds (serverAnswerWait) the error text with "Try
+  again". Never the empty state without the answer of the server.
 - A settings/company that the SERVER says does not exist, or one with no field
   set, shows the friendly empty state. This is the one exception to "a missing
   settings document is an error" (Section 4).
 - Only the fields that are set are shown. The address and the working hours are
   shown in the current language; the name, phone, e-mail and links as stored.
-- Step 6.8 shows the contacts as plain selectable text. Step 6.9 makes them
-  tappable with url_launcher (a package that needs its own approval). Only
-  addresses the app builds itself are opened: tel: from the stored phone,
-  mailto: from the stored e-mail, and the stored https links after the app has
-  checked that they start with https://. Nothing else. A failed launch shows a
-  short message and never crashes.
-- The static texts of the page (title, labels, empty state, error) are in the
-  ARB files (ka, ru, en). Claude writes the ka and ru drafts; the owner reviews
-  them (see the ru and ka reminder in Section 15).
+- The contacts are tappable with url_launcher (step 6b.8; the package needs
+  its own approval). Only addresses the app builds itself are opened: tel: from
+  the stored phone, mailto: from the stored e-mail, and the stored https links
+  after the app has checked that they start with https://. Nothing else. A
+  failed launch shows a short message and never crashes.
+- The static texts of the page (title, about text, labels, empty state, error)
+  are in the ARB files (ka, ru, en). Since Phase 6b the owner supplies them in
+  all three languages; Claude Code neither writes nor translates them (Section
+  22).
 
 ### 2.6 Localization
 
@@ -1238,6 +1239,8 @@ stored inside the document)
 - description: map { ka, ru, en } of strings
 - photos: array of strings (URLs)
 - active: boolean (soft delete)
+- popular: boolean, optional, absent means false (decided in Phase 6b, Section
+  22; added with its rules in steps 6b.3 to 6b.5)
 
 Photos are image addresses (https) stored in `photos`: for the demo cars, freely
 licensed photos picked by me; from Phase 4 on, addresses the admin types or pastes.
@@ -1603,7 +1606,8 @@ Implementation decisions (step 2.2):
    (Section 15).
 5. Calendar + conflict warning — DONE (Section 20).
 6. Settings screens (Extras & Prices, Company Info) + About Us page — open (the
-   steps are in Section 21).
+   steps are in Section 21). Phase 6b, a redesign of the public app (Home,
+   Cars, About/Contact, FAQ), is part of it: Section 22.
 7. Cloud Functions + compliance + polish (App Check step 2.9b, consent banner, Privacy
    Policy, TTL, email, README with screenshots, launcher icon). The launcher icon is
    still open; it needs the package flutter_launcher_icons, which needs the owner's
@@ -1816,9 +1820,10 @@ Phase 0 is complete.
   admin panel uses a responsive shell (a bottom navigation bar on phones, a side
   navigation rail on wide screens) with go_router's ShellRoute. The admin part is
   DECIDED before step 4.1: the responsive shell, built in step 4.4a (Section 3.3,
-  Phase 4 decisions). The public part is DECIDED before step 6.1: an info icon
-  in the catalog app bar, next to the language menu, opens About Us (/about,
-  Section 2.5). Privacy Policy joins it in Phase 7.
+  Phase 4 decisions). The public part is DECIDED in Phase 6b (Section 22): a
+  bottom navigation with four tabs at every width (Home, Cars, About/Contact,
+  FAQ); the info icon planned in step 6.1 is dropped. Where Privacy Policy
+  goes is decided in Phase 7.
 - App bar on other screens: the car detail screen reuses AppBarLogo next to the back
   arrow, with the same toolbar height (decided in step 2.4); the booking form and the
   thank-you screen do the same (step 2.7). Decide again for each new screen.
@@ -2848,11 +2853,95 @@ packages or the indexes needs the owner's separate approval; such steps say so.
     themselves are not written in any file.
   - For Phase 7: in Chrome an offline save shows the generic "Something went
     wrong" notice, as for 6.6.
-- 6.8 The public About Us page: /about, the info icon, the empty state, the
-  three languages, the contacts as plain selectable text. Tier 2 — not started.
-  Needs approval: the ARB files.
-- 6.9 Tappable contacts with url_launcher: only tel:, mailto: and https
-  addresses built by the app; a failed launch shows a short message. Tier 2 —
-  not started. Needs approval: the package and pubspec.lock; the plan lists any
-  Android or iOS platform file it changes.
-- 6.10 Verify Phase 6 and close it. Tier 3 — not started.
+- 6.8 The public About Us page. Replaced by step 6b.8 (Section 22): the
+  About/Contact tab of the new public shell.
+- 6.9 Tappable contacts with url_launcher. Replaced by step 6b.8 (Section 22).
+- 6.10 Verify Phase 6 and close it. Moved after Phase 6b: it is step 6b.9,
+  which closes Phase 6 and Phase 6b together (Section 22).
+
+## 22. Phase 6b status
+
+Phase 6b: a redesign of the public app, decided by the owner after step 6.7.
+It is part of Phase 6 (Section 11) and replaces steps 6.8 to 6.10. The tiers
+are those of Section 19. A change of firestore.rules, the ARB files, the
+packages, pubspec.yaml (also the assets) or the indexes needs the owner's
+separate approval; such steps say so.
+
+Phase 6b decisions (the owner's, made before step 6b.1):
+- The public app is mobile-first (Android phones). The web is used only for
+  the admin area. Public screens are checked in Chrome with a narrow window as
+  a stand-in for a phone.
+- Public shell: a bottom navigation with four tabs at every width, never a
+  rail: Home (/), Cars (/cars), About/Contact (/about) and FAQ (/faq).
+  - The catalog (search and filter, unchanged) moves from / to /cars.
+  - The car page /cars/:carId and the booking routes keep their addresses.
+  - Every place that returns to the catalog (after a booking, Back from a
+    car) goes to /cars; addresses come from the AppRoutes constants.
+  - The language menu stays in the app bar; there is no info icon.
+- Home, from top to bottom:
+  - a hero with a background photo, the title and the subtitle; a tap
+    anywhere on the title opens /cars;
+  - "Popular cars": up to 3 cards that show the car photo only; a tap opens
+    the car page; the block is hidden when no visible car is marked;
+  - the booking steps, one step per page, swiped sideways, with tappable dots;
+  - the conditions and benefits cards (for example the minimum age, the
+    deposit, 24/7 service, the insurance, the quality of the cars), swiped in
+    the same way;
+  - the traffic rules in Georgia, as cards, swiped in the same way.
+  Swiping works on every width; for the check in Chrome the swipe areas also
+  accept a mouse drag, and the dots can be tapped.
+- Popular cars, variant A:
+  - A new optional boolean field "popular" on a car; absent means false.
+  - The admin car form gets a "Popular" checkbox and says that Home shows at
+    most 3 cars.
+  - Home shows up to 3 visible cars that are marked, in a stable order.
+  - This needs a change of firestore.rules (the allowed fields of a car),
+    emulator cases and a deploy, each with its own approval as in steps 6.2
+    and 6.3. No index is expected (equality filters only); if one turns out
+    to be needed, it needs its own approval.
+  - Variant B, an automatic count of the most booked cars, is for Phase 7
+    with Cloud Functions on Blaze: the public app cannot read bookings.
+- Texts: all texts of Home, FAQ and About/Contact are static and live in the
+  ARB files (ka, ru, en).
+  - The owner supplies them in one UTF-8 file, C:\temp\home_texts.txt, with a
+    bracketed key and a ka, ru and en line per key. Claude Code reads that
+    file and never invents or translates a text. The texts are not repeated
+    in this file.
+  - The ARB change needs its own approval at the step that makes it.
+  - The FAQ is an expandable list: a tap opens the answer.
+  - About/Contact is one screen: a static about text, the company data from
+    settings/company (Section 2.5) and tappable contacts (url_launcher needs
+    its own package approval).
+- Images: the owner's own photos.
+  - JPG for photos, PNG only for logos and icons; about 1200 to 1600 pixels
+    wide and at most about 400 KB each; file names in lower-case ASCII.
+  - Delivered in C:\temp\home_images and bundled as assets (for example
+    assets/images/home/). Declaring them in pubspec.yaml needs its own
+    approval at that step.
+  - The owner confirmed that the photos and the texts are his own.
+- Phase 7 keeps the automatic popularity (variant B) and the earlier
+  reminders.
+
+Steps:
+- 6b.1 The Phase 6b decisions in this file. Tier 3 — DONE (in the commit
+  "Record the Phase 6b decisions in the plan"). Only this file changed.
+- 6b.2 The public shell (bottom navigation, four tabs) and the catalog moved to
+  /cars, with placeholder pages for About/Contact and FAQ. Tier 1: the routes
+  around the booking flow change — not started.
+- 6b.3 The Popular flag: the rules in the local file and the emulator cases.
+  Tier 1 — not started. Needs approval: the change of firestore.rules.
+- 6b.4 Deploy the rules, with the check of the live text as in step 6.3.
+  Tier 1 — not started. Needs approval: the deploy.
+- 6b.5 The car model and the "Popular" checkbox of the admin car form.
+  Tier 1 — not started.
+- 6b.6 The Home screen. Tier 2 (large) — not started. Needs approval: the ARB
+  files and the assets in pubspec.yaml.
+- 6b.7 The FAQ screen. Tier 2 — not started. Needs approval: the ARB files.
+- 6b.8 About/Contact: the about text, the company data and tappable contacts.
+  Tier 2 — not started. Needs approval: the ARB files and the package
+  url_launcher (with pubspec.lock); the plan lists any Android or iOS platform
+  file it changes.
+- 6b.9 Verify Phase 6 and Phase 6b and close them (replaces step 6.10). Tier 3
+  — not started. The totals in this file with the current count of scan
+  warnings; a check that the live extras prices are the original ones; the
+  notes refreshed.
