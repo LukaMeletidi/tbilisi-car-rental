@@ -15,6 +15,7 @@ import 'package:tbilisi_car_rental/features/admin/presentation/admin_login_scree
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_texts.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/cars_providers.dart';
 import 'package:tbilisi_car_rental/features/fleet/data/fleet_repository.dart';
+import 'package:tbilisi_car_rental/features/settings/data/settings_repository.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/admin_company_info_screen.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/admin_extras_prices_screen.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/admin_settings_screen.dart';
@@ -24,6 +25,7 @@ import 'package:tbilisi_car_rental/l10n/generated/app_localizations.dart';
 import '../../../support/fake_admin_auth_repository.dart';
 import '../../../support/fake_admin_bookings_repository.dart';
 import '../../../support/fake_fleet_repository.dart';
+import '../../../support/fake_settings_repository.dart';
 
 /// A made-up car for the public part of the router.
 const car = Car(
@@ -94,6 +96,8 @@ Future<void> pumpApp(
         carProvider.overrideWith((ref, id) => Stream.value(car)),
         pickupLocationsProvider.overrideWith((ref) => Stream.value(const [])),
         extrasPricesProvider.overrideWith((ref) => const Stream.empty()),
+        // The Extras & Prices form reads the repository (step 6.6).
+        settingsRepositoryProvider.overrideWithValue(FakeSettingsRepository()),
       ],
       child: const _App(),
     ),

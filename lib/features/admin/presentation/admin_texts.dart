@@ -23,6 +23,9 @@ import 'package:tbilisi_car_rental/features/fleet/domain/car_new.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/car_limits.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/car_validation.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/fleet_list.dart';
+import 'package:tbilisi_car_rental/features/settings/domain/extras_edit.dart';
+import 'package:tbilisi_car_rental/features/settings/domain/extras_price_input.dart';
+import 'package:tbilisi_car_rental/features/settings/domain/settings_limits.dart';
 
 const adminSignInTitle = 'Admin sign-in';
 const adminEmailLabel = 'E-mail';
@@ -63,6 +66,88 @@ const adminSettingsCompanyDescription =
     'page.';
 const adminSettingsNotReady =
     'This page is not ready yet. Nothing can be changed here.';
+const adminBackToSettings = 'Back to Settings';
+
+/// The Extras & Prices form (step 6.6).
+const adminExtrasNote =
+    'Prices in USD per day. 0 is shown as Free. New prices apply to new '
+    'totals; stored bookings keep their totals.';
+const adminExtrasPriceSuffix = 'USD per day';
+const adminExtrasSave = 'Save prices';
+const adminLoadCurrentPrices = 'Load the current prices';
+const adminExtrasSaved = 'Saved';
+const adminExtrasChangedElsewhereBanner =
+    'The prices were changed elsewhere. Saving will be refused.';
+const adminExtrasUnreadable =
+    'The stored prices cannot be read. They must be corrected in the '
+    'Firebase console.';
+
+/// The age range an extra is meant for, as in the public app (app_en.arb);
+/// null for an extra without one. A test compares them.
+String? adminExtraAgeRange(Extra extra) {
+  switch (extra) {
+    case Extra.snowChains:
+      return null;
+    case Extra.childSeat:
+      return '1–4 years';
+    case Extra.infantSeat:
+      return '0–12 months';
+    case Extra.boosterSeat:
+      return '3–16 years';
+  }
+}
+
+/// The label of the price field of an extra: "Child seat (1–4 years)".
+String adminExtraPriceLabel(Extra extra) {
+  final ages = adminExtraAgeRange(extra);
+  return ages == null
+      ? adminExtraName(extra)
+      : '${adminExtraName(extra)} ($ages)';
+}
+
+/// The error under a price field.
+String adminExtraPriceProblemText(ExtraPriceProblem problem) {
+  switch (problem) {
+    case ExtraPriceProblem.required:
+      return 'Enter a price (0 for free).';
+    case ExtraPriceProblem.invalid:
+      return 'Use a number with at most two decimals, for example 5 or 4.50.';
+    case ExtraPriceProblem.tooHigh:
+      return 'At most $extraMaxPricePerDay USD per day.';
+  }
+}
+
+/// The text shown when the prices could not be loaded.
+String adminExtrasFailureText(ExtrasLoadFailure failure) {
+  switch (failure) {
+    case ExtrasLoadFailure.noConnection:
+      return 'No connection. The prices could not be loaded.';
+    case ExtrasLoadFailure.other:
+      return 'The prices could not be loaded.';
+  }
+}
+
+/// What the form says after an attempt to save the prices.
+String adminExtrasSaveNoticeText(ExtrasSaveNotice notice) {
+  switch (notice) {
+    case ExtrasSaveNotice.saved:
+      return adminExtrasSaved;
+    case ExtrasSaveNotice.noAnswer:
+      return 'No answer from the server. The prices may or may not be saved. '
+          'Press "$adminSaveAgain" to check: if they were saved, nothing is '
+          'written twice. Or load the prices as they are stored now.';
+    case ExtrasSaveNotice.noConnection:
+      return 'Not saved. No connection. Check your internet and try again.';
+    case ExtrasSaveNotice.refused:
+      return 'Not saved. The server refused the change. Check that you are '
+          'still signed in as the admin.';
+    case ExtrasSaveNotice.changedElsewhere:
+      return 'Not saved. The prices were changed elsewhere. Load the current '
+          'prices to see what is stored.';
+    case ExtrasSaveNotice.unknown:
+      return 'Not saved. Something went wrong. Try again.';
+  }
+}
 
 /// The Calendar page (steps 5.5a and 5.5b).
 const adminCalendarTitle = 'Calendar';

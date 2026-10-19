@@ -5,15 +5,21 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:tbilisi_car_rental/core/models/extra.dart';
+import 'package:tbilisi_car_rental/core/models/extras_prices.dart';
 import 'package:tbilisi_car_rental/core/theme/app_theme.dart';
 import 'package:tbilisi_car_rental/features/admin/data/admin_auth_repository.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_session.dart';
+import 'package:tbilisi_car_rental/features/admin/presentation/admin_texts.dart';
+import 'package:tbilisi_car_rental/features/settings/data/settings_repository.dart';
+import 'package:tbilisi_car_rental/features/settings/domain/extras_price_input.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/admin_company_info_screen.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/admin_extras_prices_screen.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/admin_settings_screen.dart';
 import 'package:tbilisi_car_rental/l10n/generated/app_localizations.dart';
 
 import '../../../support/fake_admin_auth_repository.dart';
+import '../../../support/fake_settings_repository.dart';
 
 /// The contrast ratio of two colours (WCAG): 1 for the same colour, 21 for
 /// black on white.
@@ -29,9 +35,14 @@ Future<void> pumpScreen(WidgetTester tester, Widget screen) async {
   addTearDown(tester.view.reset);
   final auth = FakeAdminAuthRepository(initial: AdminSession.admin);
   addTearDown(auth.close);
+  // The Extras & Prices form reads the prices (step 6.6).
+  final settings = FakeSettingsRepository();
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [adminAuthRepositoryProvider.overrideWithValue(auth)],
+      overrides: [
+        adminAuthRepositoryProvider.overrideWithValue(auth),
+        settingsRepositoryProvider.overrideWithValue(settings),
+      ],
       child: MaterialApp(
         theme: buildAppTheme(),
         locale: const Locale('en'),
@@ -42,6 +53,21 @@ Future<void> pumpScreen(WidgetTester tester, Widget screen) async {
     ),
   );
   await tester.pump();
+  if (screen is AdminExtrasPricesScreen) {
+    // Made-up sample prices; not the real ones.
+    settings.emitExtras(
+      ExtrasPrices.fromMap({
+        'pricesPerDay': {
+          'snowChains': 7,
+          'childSeat': 4.5,
+          'infantSeat': 0,
+          'boosterSeat': 3,
+        },
+      }),
+    );
+    await tester.pump();
+    await tester.pump();
+  }
 }
 
 /// Every text drawn on a white card of the screen is readable: its colour,
@@ -88,6 +114,26 @@ void main() {
       expectReadableCards(tester);
     });
   }
+
+  testWidgets('Extras & Prices with every error shown: still readable', (
+    tester,
+  ) async {
+    await pumpScreen(tester, const AdminExtrasPricesScreen());
+    for (final extra in Extra.values) {
+      await tester.enterText(find.byKey(adminExtraPriceFieldKey(extra)), 'x');
+    }
+    await tester.pump();
+    final save = find.widgetWithText(FilledButton, adminExtrasSave);
+    await tester.ensureVisible(save);
+    await tester.pump();
+    await tester.tap(save);
+    await tester.pump();
+    expect(
+      find.text(adminExtraPriceProblemText(ExtraPriceProblem.invalid)),
+      findsNWidgets(Extra.values.length),
+    );
+    expectReadableCards(tester);
+  });
 
   testWidgets('a card that is pressed keeps its text readable', (tester) async {
     await pumpScreen(tester, const AdminSettingsScreen());

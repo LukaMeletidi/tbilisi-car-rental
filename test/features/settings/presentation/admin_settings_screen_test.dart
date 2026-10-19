@@ -7,7 +7,6 @@ import 'package:tbilisi_car_rental/features/admin/data/admin_auth_repository.dar
 import 'package:tbilisi_car_rental/features/admin/domain/admin_session.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_texts.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/admin_company_info_screen.dart';
-import 'package:tbilisi_car_rental/features/settings/presentation/admin_extras_prices_screen.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/admin_settings_screen.dart';
 import 'package:tbilisi_car_rental/l10n/generated/app_localizations.dart';
 
@@ -71,12 +70,9 @@ void main() {
     expect(find.byTooltip(adminSignOutButton), findsOneWidget);
   });
 
+  // Extras & Prices is a real form since step 6.6; its tests are in
+  // admin_extras_prices_screen_test.dart.
   for (final page in [
-    (
-      const AdminExtrasPricesScreen(),
-      adminSettingsExtrasTitle,
-      adminSettingsExtrasDescription,
-    ),
     (
       const AdminCompanyInfoScreen(),
       adminSettingsCompanyTitle,
@@ -102,7 +98,6 @@ void main() {
   testWidgets('320 px wide: nothing overflows', (tester) async {
     for (final screen in const [
       AdminSettingsScreen(),
-      AdminExtrasPricesScreen(),
       AdminCompanyInfoScreen(),
     ]) {
       await pumpScreen(tester, screen, size: const Size(320, 640));
