@@ -2971,8 +2971,8 @@ Steps:
     popular unchanged.
   - An old incomplete car cannot be marked popular until it is repaired by
     one save of the edit form.
-  - The local firestore.rules is ahead of the live rules until step 6b.4
-    (deployed in step 6b.4).
+  - The local firestore.rules was ahead of the live rules until step 6b.4,
+    which deployed it.
 - 6b.4 Deploy the rules, with the check of the live text as in step 6.3.
   Tier 1 — DONE (no code change; this file only). The deployed file is
   firestore.rules of commit 2c7e2a9 (431 lines).
@@ -3000,7 +3000,31 @@ Steps:
   - No live data written by Claude Code; no other service touched (no
     indexes, hosting, functions, storage or auth); App Check untouched.
 - 6b.5 The car model and the "Popular" checkbox of the admin car form.
-  Tier 1 — not started.
+  Tier 1 — DONE (in the commit "Add the Popular mark to cars and the admin
+  car form").
+  - The model and the draft carry popular. Both car forms have the checkbox
+    "Popular (shown on Home)" in the Visibility card, with a note; the admin
+    list shows a "Popular" badge.
+  - A soft warning, never blocking, appears when the box is ticked and 3
+    other visible cars are already marked. It is counted from the admin list
+    in memory: no query and no index. It does not show when the edit address
+    is opened directly without the list.
+  - The app writes popular only as true; an unmarked car has no key.
+  - A stored false is valid and is no repair reason (the next save drops the
+    key). A value that is not a bool reads as false and is a repair reason
+    ("popular is not true or false").
+  - homePopularMax = 3 (in car_limits.dart; the app only).
+  - 2371 Flutter tests pass (was 2338) and analyze is clean; the scan has 0
+    errors and 11 warnings.
+  - Changed existing tests: the rules-text expectation is back to carFields,
+    the sample car has popular, and the carDocument test sets it.
+  - Contrast fix: the small notes of the car form (price, photos, visibility,
+    too many photos) read their style outside the card and were white on
+    white (the 6.5 bug class). Found by the new contrast test.
+  - Checked by me in Chrome on the live app, all passed; every car was
+    restored to unmarked.
+  - No live data written by Claude Code; no rules, ARB, package or index
+    change.
 - 6b.6 The Home screen. Tier 2 (large) — not started. Needs approval: the ARB
   files and the assets in pubspec.yaml.
 - 6b.7 The FAQ screen. Tier 2 — not started. Needs approval: the ARB files.
@@ -3012,3 +3036,6 @@ Steps:
   — not started. The totals in this file with the current count of scan
   warnings; a check that the live extras prices are the original ones; the
   notes refreshed.
+  - Later (noted in step 6b.5): some older cars in the live catalog show
+    "Needs repair" in the admin list (missing text). The owner repairs them
+    with the edit form; no code change.
