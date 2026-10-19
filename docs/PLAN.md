@@ -2759,7 +2759,25 @@ packages or the indexes needs the owner's separate approval; such steps say so.
     live project: the admin write path is proven by hand in steps 6.6 and 6.7.
 - 6.4 The company model and parser, and the write methods of the settings
   repository (extras prices, company) with error mapping and "no answer". No
-  screen. Tier 1 — not started.
+  screen. Tier 1 — DONE. Commit d3269f0.
+  - 2167 Flutter tests pass (156 new) and analyze is clean; the 47 tests of the
+    secrets scan pass. The scan has 0 errors and 11 warnings: the four new ones
+    are the intentionally invalid made-up phone that starts with +0, in four
+    test files; this file has none.
+  - No change to the rules, the ARB files, the packages, the indexes or
+    ExtrasPrices (it already compares by value). No screen yet.
+  - The settings domain files import the booking and fleet domain (the phone
+    and e-mail validators and the decimal parser); no existing file moved.
+  - The 100 USD limit of an extra is enforced by the rules and by the form
+    validator, not by the ExtrasPrices reader. So a stored value above 100 (a
+    console edit) cannot break the public booking form, and the admin form
+    reports it as too high.
+  - The save transaction is tested through its pure decision
+    (decideSettingsSave) and the error mapping; the real save is proven by
+    hand in steps 6.6 and 6.7, as for the car writes.
+  - test/rules/settings_values_rules_test.dart ties the Dart checks of the
+    company fields to the answers of the emulator in step 6.2 (the same
+    sample values); they agree on every sample.
 - 6.5 The Settings entry of the admin navigation, with a page of two links.
   Tier 1 — not started.
 - 6.6 The Extras & Prices screen. Tier 1 (money) — not started.
