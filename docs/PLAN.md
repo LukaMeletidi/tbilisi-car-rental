@@ -1373,10 +1373,11 @@ Implementation decisions (step 2.2):
   prints its contents and refuses to run when the key path is inside the repository
   or when the key's project is not exactly tbilisi-car-rental. After the claim is
   set, the admin signs out and in again: the claim is inside the sign-in token.
-- Live rules: since step 3.3 the live Firestore rules are those of commit 0a7eb27
-  (deployed 2026-10-09, 13:34 UTC). To go back to an earlier version, use the Rules
-  history in the Firebase console (Firestore Database > Rules). A new ruleset reaches
-  new requests within about a minute and open listeners within about 10 minutes.
+- Live rules: since step 6.3 the live Firestore rules are those of commit f32d9bb
+  (deployed 2026-10-19); earlier: 0a7eb27 (3.3), 4e5fb1d (4.2). To go back to an
+  earlier version, use the Rules history in the Firebase console (Firestore
+  Database > Rules). A new ruleset reaches new requests within about a minute and
+  open listeners within about 10 minutes.
 - Admin rules (written in step 3.1; deployed in step 3.3):
   - isAdmin(): signed in AND the token has admin == true. A token without the claim,
     or with any other value, is treated exactly like the public.
@@ -1426,8 +1427,8 @@ Implementation decisions (step 2.2):
 - settings: public read; writes admin only.
 - The settings collection is publicly readable. Never put anything private in it
   (admin e-mails, keys, internal notes).
-- Settings writes, decided before step 6.1 (written in step 6.2, deployed in step
-  6.3 with the check of the live text, as in step 4.2):
+- Settings writes, decided before step 6.1: written in step 6.2, deployed in step
+  6.3 on 2026-10-19 from commit f32d9bb; the live text equals the local file.
   - settings/extras: an admin may create and update it. The document has exactly
     the key pricesPerDay, a map with exactly snowChains, childSeat, infantSeat
     and boosterSeat, each a number from 0 to 100. The rules cannot check
@@ -2726,9 +2727,36 @@ packages or the indexes needs the owner's separate approval; such steps say so.
   - The parameter of isValidCompanySettings is "company", not "c", so that the
     existing booking limits test still finds the customer's "c.keys()".
   - The secrets scan has 7 warnings now: the new one is the intentionally
-    invalid made-up phone "+0555000000" of an emulator case.
+    invalid phone of an emulator case, a made-up phone that starts with +0.
 - 6.3 Deploy the rules, with the check of the live text as in step 4.2. Tier 1 —
-  not started. Needs approval: the deploy.
+  DONE. The deployed file is firestore.rules of commit f32d9bb (426 lines).
+  - Deployed with "firebase deploy --only firestore:rules --project
+    tbilisi-car-rental", run once by Claude Code after my approval, on
+    2026-10-19 at about 09:14 Tbilisi time. The file compiled and only the
+    rules were released; no error and no warning. The console's Rules tab
+    shows the publish time Oct 19, 2026, about 9:14 AM.
+  - Before the deploy: the working tree was clean, HEAD equalled origin/main
+    (3c40b5a), "git diff f32d9bb" was empty for firestore.rules, the rules tests
+    passed, and the emulator script passed (104 of 104 public, 491 of 491 admin
+    and signed-in). The CLI listed tbilisi-car-rental; no account was printed.
+  - Backup: firestore.rules of f32d9bb^ (54b80c7) was saved outside the
+    repository; it equals that of 4e5fb1d (303 lines). I copied the live text
+    from the console before the deploy into a file outside the repository; it
+    equals 4e5fb1d (publish time Oct 13, 2026, 7:21 PM, the step 4.2 deploy).
+  - After the deploy I copied the live text again; it equals firestore.rules at
+    HEAD (426 lines). Both comparisons ignore line endings and spaces at the
+    ends of lines.
+  - Anonymous checks about two and a half minutes later, no sign-in, all as
+    expected: settings/extras 200, settings/locations 200, settings/company 404
+    (it does not exist yet; the read is allowed), active cars with the filter
+    200 (7 cars), all cars without the filter 403, a booking get 403.
+  - Two anonymous refused writes, each with the precondition "the document
+    exists", so nothing could be stored either way: settings/company with a
+    made-up body 403, settings/ruleCheck63 403. No other write.
+  - Checked by me in Chrome on the live app: the catalog loads, and a car's
+    booking form shows the extras with their prices.
+  - No live data written; App Check untouched. No admin write was made on the
+    live project: the admin write path is proven by hand in steps 6.6 and 6.7.
 - 6.4 The company model and parser, and the write methods of the settings
   repository (extras prices, company) with error mapping and "no answer". No
   screen. Tier 1 — not started.
