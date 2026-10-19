@@ -2822,7 +2822,32 @@ packages or the indexes needs the owner's separate approval; such steps say so.
     wrong" notice (the raw NativeError is not mapped); the error for a
     negative or malformed price says "at most two decimals" and should be
     worded better together with the helper texts.
-- 6.7 The Company Info screen. Tier 1 (writes) — not started.
+- 6.7 The Company Info screen. Tier 1 (writes) — DONE. Commit 8ca9a5d.
+  - 2301 Flutter tests pass and analyze is clean; the scan has 0 errors and 11
+    warnings, as before. No firebase command against the real project; no
+    change to the rules, the ARB files or the packages.
+  - The Company Info page is now the real form, in six cards: name, phone,
+    e-mail, address and working hours in ka, ru and en, a map link and four
+    social links. An empty field leaves its key out; a translated text is all
+    three languages or none. A note says that everything typed is public.
+  - It is built like the Extras & Prices form: the same states and notices,
+    the lock after "No answer", the changed-elsewhere banner and refusal, the
+    discard question, and it opens from memory when memory holds the
+    document. The first save creates settings/company and expects "does not
+    exist"; the empty first-time form opens only after the server confirmed
+    that the document does not exist.
+  - The placeholder widget of step 6.5 and its text were removed.
+  - Two emulator cases were added (an address of exactly 300 Georgian letters
+    accepted, 301 refused: the rules count characters, not bytes): 104 of 104
+    public and 493 of 493 admin and signed-in checks. No rules change.
+  - Checked by me in Chrome with real writes through the app, the first live
+    writes of settings/company, with made-up demo values only: a save, a
+    reopen, absent keys, a Georgian text of 301 letters refused, changed
+    elsewhere in two tabs, an offline save and an offline open. The company
+    document now exists on the live project with made-up values; the values
+    themselves are not written in any file.
+  - For Phase 7: in Chrome an offline save shows the generic "Something went
+    wrong" notice, as for 6.6.
 - 6.8 The public About Us page: /about, the info icon, the empty state, the
   three languages, the contacts as plain selectable text. Tier 2 — not started.
   Needs approval: the ARB files.
