@@ -2242,6 +2242,12 @@ companyCase('an address of 300 characters in each language', 200, (c) => {
 });
 companyCase('an address with 301 characters in en', 403,
   (c) => (c.address.en = letters(301)));
+// Counted in characters, not in bytes: a Georgian letter takes three bytes
+// (as for the car descriptions above).
+companyCase('an address with exactly 300 Georgian letters in ka', 200,
+  (c) => (c.address.ka = 'ა'.repeat(300)));
+companyCase('an address with 301 Georgian letters in ka', 403,
+  (c) => (c.address.ka = 'ა'.repeat(301)));
 companyCase('an address in en only', 403,
   (c) => (c.address = { en: 'Tbilisi, 1 Example Street' }));
 companyCase('an address with a fourth language (de)', 403,

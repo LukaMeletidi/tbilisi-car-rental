@@ -7,11 +7,13 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:tbilisi_car_rental/core/models/extra.dart';
 import 'package:tbilisi_car_rental/core/models/extras_prices.dart';
+import 'package:tbilisi_car_rental/core/models/localized_text.dart';
 import 'package:tbilisi_car_rental/core/theme/app_theme.dart';
 import 'package:tbilisi_car_rental/features/admin/data/admin_auth_repository.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_session.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_texts.dart';
 import 'package:tbilisi_car_rental/features/settings/data/settings_repository.dart';
+import 'package:tbilisi_car_rental/features/settings/domain/company_info.dart';
 import 'package:tbilisi_car_rental/features/settings/domain/extras_price_input.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/admin_company_info_screen.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/admin_extras_prices_screen.dart';
@@ -35,7 +37,7 @@ Future<void> pumpScreen(WidgetTester tester, Widget screen) async {
   addTearDown(tester.view.reset);
   final auth = FakeAdminAuthRepository(initial: AdminSession.admin);
   addTearDown(auth.close);
-  // The Extras & Prices form reads the prices (step 6.6).
+  // The two forms read the settings (steps 6.6 and 6.7).
   final settings = FakeSettingsRepository();
   await tester.pumpWidget(
     ProviderScope(
@@ -64,6 +66,23 @@ Future<void> pumpScreen(WidgetTester tester, Widget screen) async {
           'boosterSeat': 3,
         },
       }),
+    );
+    await tester.pump();
+    await tester.pump();
+  }
+  if (screen is AdminCompanyInfoScreen) {
+    // A made-up company.
+    settings.emitCompany(
+      CompanyInfo(
+        name: 'Example Car Rental',
+        phone: '+995555000000',
+        email: 'info@example.com',
+        address: const LocalizedText(
+          ka: 'თბილისი, სანიმუშო ქუჩა 1',
+          ru: 'Тбилиси, Примерная улица 1',
+          en: 'Tbilisi, 1 Example Street',
+        ),
+      ),
     );
     await tester.pump();
     await tester.pump();
@@ -132,6 +151,29 @@ void main() {
       find.text(adminExtraPriceProblemText(ExtraPriceProblem.invalid)),
       findsNWidgets(Extra.values.length),
     );
+    expectReadableCards(tester);
+  });
+
+  testWidgets('Company Info with every error shown: still readable', (
+    tester,
+  ) async {
+    await pumpScreen(tester, const AdminCompanyInfoScreen());
+    for (final field in [
+      CompanyFormField.phone,
+      CompanyFormField.email,
+      CompanyFormField.hoursKa,
+      CompanyFormField.mapUrl,
+      CompanyFormField.facebook,
+    ]) {
+      await tester.enterText(find.byKey(adminCompanyFieldKey(field)), 'x');
+    }
+    await tester.pump();
+    final save = find.widgetWithText(FilledButton, adminCompanySave);
+    await tester.ensureVisible(save);
+    await tester.pump();
+    await tester.tap(save);
+    await tester.pump();
+    expect(find.text(adminCorrectFields), findsOneWidget);
     expectReadableCards(tester);
   });
 

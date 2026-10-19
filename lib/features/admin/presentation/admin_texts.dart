@@ -23,6 +23,8 @@ import 'package:tbilisi_car_rental/features/fleet/domain/car_new.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/car_limits.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/car_validation.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/fleet_list.dart';
+import 'package:tbilisi_car_rental/features/settings/domain/company_edit.dart';
+import 'package:tbilisi_car_rental/features/settings/domain/company_input.dart';
 import 'package:tbilisi_car_rental/features/settings/domain/extras_edit.dart';
 import 'package:tbilisi_car_rental/features/settings/domain/extras_price_input.dart';
 import 'package:tbilisi_car_rental/features/settings/domain/settings_limits.dart';
@@ -54,8 +56,7 @@ const adminNavCalendar = 'Calendar';
 const adminNavCars = 'Cars';
 const adminNavSettings = 'Settings';
 
-/// The Settings page and its two pages (step 6.5; the two pages are filled
-/// in steps 6.6 and 6.7).
+/// The Settings page and its two pages (steps 6.5 to 6.7).
 const adminSettingsTitle = 'Settings';
 const adminSettingsExtrasTitle = 'Extras & Prices';
 const adminSettingsExtrasDescription =
@@ -64,8 +65,6 @@ const adminSettingsCompanyTitle = 'Company Info';
 const adminSettingsCompanyDescription =
     'Name, contacts, address, working hours and links for the About Us '
     'page.';
-const adminSettingsNotReady =
-    'This page is not ready yet. Nothing can be changed here.';
 const adminBackToSettings = 'Back to Settings';
 
 /// The Extras & Prices form (step 6.6).
@@ -145,6 +144,113 @@ String adminExtrasSaveNoticeText(ExtrasSaveNotice notice) {
       return 'Not saved. The prices were changed elsewhere. Load the current '
           'prices to see what is stored.';
     case ExtrasSaveNotice.unknown:
+      return 'Not saved. Something went wrong. Try again.';
+  }
+}
+
+/// The Company Info form (step 6.7).
+const adminCompanyNote =
+    'Everything here is public: it is shown on the About Us page. Leave a '
+    'field empty to hide it.';
+const adminCompanyCardCompany = 'Company';
+const adminCompanyCardContacts = 'Contacts';
+const adminCompanyCardAddress = 'Address';
+const adminCompanyCardHours = 'Working hours';
+const adminCompanyCardMap = 'Map';
+const adminCompanyCardSocial = 'Social links';
+const adminCompanyLabelName = 'Name';
+const adminCompanyLabelPhone = 'Phone';
+const adminCompanyLabelEmail = 'E-mail';
+const adminCompanyLabelKa = 'Georgian (ka)';
+const adminCompanyLabelRu = 'Russian (ru)';
+const adminCompanyLabelEn = 'English (en)';
+const adminCompanyLabelMap = 'Google Maps link';
+const adminCompanyLabelFacebook = 'Facebook';
+const adminCompanyLabelInstagram = 'Instagram';
+const adminCompanyLabelWhatsapp = 'WhatsApp';
+const adminCompanyLabelTelegram = 'Telegram';
+const adminCompanySave = 'Save company info';
+const adminLoadCurrentInfo = 'Load the current info';
+const adminCompanySaved = 'Saved';
+const adminCompanyChangedElsewhereBanner =
+    'The company information was changed elsewhere. Saving will be refused.';
+const adminCompanyUnreadable =
+    'The stored company information cannot be read. It must be corrected in '
+    'the Firebase console.';
+
+/// The error under a field of the Company Info form.
+String adminCompanyProblemText(CompanyField field, CompanyProblem problem) {
+  switch (problem) {
+    case CompanyProblem.tooLong:
+      switch (field) {
+        case CompanyField.name:
+          return 'At most $companyNameMaxLength characters.';
+        case CompanyField.address:
+        case CompanyField.workingHours:
+          return 'At most $companyTextMaxLength characters per language.';
+        case CompanyField.phone:
+        case CompanyField.email:
+        case CompanyField.mapUrl:
+        case CompanyField.facebook:
+        case CompanyField.instagram:
+        case CompanyField.whatsapp:
+        case CompanyField.telegram:
+          return 'At most $companyLinkMaxLength characters.';
+      }
+    case CompanyProblem.incomplete:
+      return 'Fill in all three languages, or leave all three empty.';
+    case CompanyProblem.notHttps:
+      return 'Use an address that starts with https://.';
+    case CompanyProblem.invalid:
+      switch (field) {
+        case CompanyField.phone:
+          return 'Use the international format, for example '
+              '+995 555 00 00 00.';
+        case CompanyField.email:
+          return 'Use an address like name@example.com.';
+        case CompanyField.name:
+        case CompanyField.address:
+        case CompanyField.workingHours:
+        case CompanyField.mapUrl:
+        case CompanyField.facebook:
+        case CompanyField.instagram:
+        case CompanyField.whatsapp:
+        case CompanyField.telegram:
+          return 'Use a full web address without spaces, for example '
+              'https://www.example.com/page.';
+      }
+  }
+}
+
+/// The text shown when the company information could not be loaded.
+String adminCompanyFailureText(CompanyLoadFailure failure) {
+  switch (failure) {
+    case CompanyLoadFailure.noConnection:
+      return 'No connection. The company information could not be loaded.';
+    case CompanyLoadFailure.other:
+      return 'The company information could not be loaded.';
+  }
+}
+
+/// What the form says after an attempt to save the company information.
+String adminCompanySaveNoticeText(CompanySaveNotice notice) {
+  switch (notice) {
+    case CompanySaveNotice.saved:
+      return adminCompanySaved;
+    case CompanySaveNotice.noAnswer:
+      return 'No answer from the server. The company information may or may '
+          'not be saved. Press "$adminSaveAgain" to check: if it was saved, '
+          'nothing is written twice. Or load the information as it is '
+          'stored now.';
+    case CompanySaveNotice.noConnection:
+      return 'Not saved. No connection. Check your internet and try again.';
+    case CompanySaveNotice.refused:
+      return 'Not saved. The server refused the change. Check that you are '
+          'still signed in as the admin.';
+    case CompanySaveNotice.changedElsewhere:
+      return 'Not saved. The company information was changed elsewhere. '
+          'Load the current info to see what is stored.';
+    case CompanySaveNotice.unknown:
       return 'Not saved. Something went wrong. Try again.';
   }
 }

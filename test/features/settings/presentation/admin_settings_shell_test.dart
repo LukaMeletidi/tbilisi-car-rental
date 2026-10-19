@@ -264,13 +264,16 @@ void main() {
       });
     }
 
-    testWidgets('opened directly, a page shows its placeholder and its '
-        'back arrow leads to Settings', (tester) async {
+    testWidgets('opened directly, a page shows its form (a spinner until '
+        'the server answers) and its back arrow leads to Settings', (
+      tester,
+    ) async {
       await pumpApp(tester);
       await open(tester, '/admin/settings/company');
 
       expect(find.byType(AdminCompanyInfoScreen), findsOneWidget);
-      expect(find.text(adminSettingsNotReady), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(rail, findsNothing);
 
       await tester.tap(find.byType(BackButton));
       await settle(tester);

@@ -6,7 +6,6 @@ import 'package:tbilisi_car_rental/core/theme/app_theme.dart';
 import 'package:tbilisi_car_rental/features/admin/data/admin_auth_repository.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_session.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_texts.dart';
-import 'package:tbilisi_car_rental/features/settings/presentation/admin_company_info_screen.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/admin_settings_screen.dart';
 import 'package:tbilisi_car_rental/l10n/generated/app_localizations.dart';
 
@@ -70,38 +69,16 @@ void main() {
     expect(find.byTooltip(adminSignOutButton), findsOneWidget);
   });
 
-  // Extras & Prices is a real form since step 6.6; its tests are in
-  // admin_extras_prices_screen_test.dart.
-  for (final page in [
-    (
-      const AdminCompanyInfoScreen(),
-      adminSettingsCompanyTitle,
-      adminSettingsCompanyDescription,
-    ),
-  ]) {
-    testWidgets('${page.$2}: a placeholder with nothing to change', (
-      tester,
-    ) async {
-      await pumpScreen(tester, page.$1);
-
-      expect(find.text(page.$2), findsOneWidget);
-      expect(find.text(page.$3), findsOneWidget);
-      expect(find.text(adminSettingsNotReady), findsOneWidget);
-      expect(find.byType(TextField), findsNothing);
-      expect(find.byType(FilledButton), findsNothing);
-      expect(find.byType(OutlinedButton), findsNothing);
-      expect(find.byType(TextButton), findsNothing);
-      expect(find.byType(BackButton), findsOneWidget);
-    });
-  }
+  // The two pages below Settings are real forms since steps 6.6 and 6.7;
+  // their tests are in admin_extras_prices_screen_test.dart and
+  // admin_company_info_screen_test.dart.
 
   testWidgets('320 px wide: nothing overflows', (tester) async {
-    for (final screen in const [
-      AdminSettingsScreen(),
-      AdminCompanyInfoScreen(),
-    ]) {
-      await pumpScreen(tester, screen, size: const Size(320, 640));
-      expect(tester.takeException(), isNull);
-    }
+    await pumpScreen(
+      tester,
+      const AdminSettingsScreen(),
+      size: const Size(320, 640),
+    );
+    expect(tester.takeException(), isNull);
   });
 }
