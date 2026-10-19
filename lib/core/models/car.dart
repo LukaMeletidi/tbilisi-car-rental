@@ -23,6 +23,7 @@ class Car {
     required this.description,
     required this.photos,
     required this.active,
+    this.popular = false,
   });
 
   /// Builds a car from a Firestore document. Throws a [FormatException] when a
@@ -58,6 +59,10 @@ class Car {
       description: _description(map),
       photos: _photos(map),
       active: _require<bool>(map, 'active'),
+      // Optional; absent means false. A value that is not a bool (only
+      // possible by a console edit) reads as false: the car stays in the
+      // catalog, and the admin list shows "Needs repair" (fleet_list).
+      popular: map['popular'] == true,
     );
   }
 
@@ -86,6 +91,10 @@ class Car {
   /// false = hidden from the public catalog (soft delete).
   final bool active;
 
+  /// Marked by the admin to be shown on Home (at most 3 visible ones).
+  /// Stored only as true; an unmarked car has no "popular" key.
+  final bool popular;
+
   /// The engine size to show: hidden for electric cars and when not set.
   double? get visibleEngineSize =>
       fuelType == FuelType.electric ? null : engineSize;
@@ -105,6 +114,7 @@ class Car {
       'description': description.toMap(),
       'photos': photos,
       'active': active,
+      if (popular) 'popular': true,
     };
   }
 
@@ -123,7 +133,8 @@ class Car {
       other.pricePerDay == pricePerDay &&
       other.description == description &&
       _listEquals(other.photos, photos) &&
-      other.active == active;
+      other.active == active &&
+      other.popular == popular;
 
   @override
   int get hashCode => Object.hash(
@@ -140,6 +151,7 @@ class Car {
     description,
     Object.hashAll(photos),
     active,
+    popular,
   );
 }
 

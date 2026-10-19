@@ -10,7 +10,9 @@ import 'package:tbilisi_car_rental/features/admin/presentation/widgets/admin_not
 import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_layout.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/car_draft.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/car_new.dart';
+import 'package:tbilisi_car_rental/features/fleet/domain/fleet_list.dart';
 import 'package:tbilisi_car_rental/features/fleet/presentation/admin_car_new_provider.dart';
+import 'package:tbilisi_car_rental/features/fleet/presentation/admin_cars_provider.dart';
 import 'package:tbilisi_car_rental/features/fleet/presentation/widgets/admin_car_fields.dart';
 
 /// The "new car" form of the admin area. The router shows it only to an
@@ -97,6 +99,15 @@ class _NewCarForm extends ConsumerWidget {
     final textTheme = Theme.of(context).textTheme;
     final notice = state.notice;
     final locked = state.mayAlreadyExist || state.created;
+    // For the soft warning of "Popular": from the admin list already in
+    // memory (the form lies below it); never a read of its own.
+    final otherVisiblePopular = ref.exists(adminCarsProvider)
+        ? ref.watch(
+            adminCarsProvider.select(
+              (list) => otherVisiblePopularCount(list.entries),
+            ),
+          )
+        : 0;
 
     /// Applied to the newest draft of the notifier, so two changes in the
     /// same moment do not undo each other.
@@ -130,6 +141,7 @@ class _NewCarForm extends ConsumerWidget {
                 enabled: !state.saving && !locked,
                 onChanged: change,
                 visibilityNote: adminNewCarVisibilityNote,
+                otherVisiblePopular: otherVisiblePopular,
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(4, 12, 4, 12),

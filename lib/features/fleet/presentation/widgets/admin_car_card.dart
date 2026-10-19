@@ -111,6 +111,11 @@ class _CarContent extends StatelessWidget {
                           text: adminCarBadgeHidden,
                           color: Color(0xFF616161), // neutral grey
                         ),
+                  if (car.popular)
+                    const AdminCarBadge(
+                      text: adminCarBadgePopular,
+                      color: Color(0xFF673AB7), // the app's purple
+                    ),
                   if (entry.needsRepair)
                     const AdminCarBadge(
                       text: adminCarNeedsRepair,

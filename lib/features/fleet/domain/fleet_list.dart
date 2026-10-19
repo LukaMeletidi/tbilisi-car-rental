@@ -56,11 +56,16 @@ class FleetUnreadableEntry extends FleetEntry {
 /// - `unknown field: name`, `missing field: name` and `differs:
 ///   name`: the stored document is not exactly the document a save would
 ///   write (an unknown field, a year stored as a decimal, a text with a
-///   space at an end).
+///   space at an end);
+/// - `popular is not true or false`: a "popular" that is not a bool (only
+///   possible by a console edit; the car reads as not popular).
 ///
-/// The comparison is the one of the "already saved" check of a replace, so
-/// the badge and a save agree. The reasons are for tests and the developer;
-/// the screen shows only the badge.
+/// A stored `popular: false` is valid (the rules accept it) and is no
+/// reason, although a save writes no popular key for an unmarked car: the
+/// next save of the form drops it. Otherwise the comparison is the one of
+/// the "already saved" check of a replace, so the badge and a save agree.
+/// The reasons are for tests and the developer; the screen shows only the
+/// badge.
 List<String> carRepairReasons(
   Car car,
   Map<String, dynamic> stored, {
@@ -77,8 +82,11 @@ List<String> carRepairReasons(
   }
   final wanted = carDocument(carFromDraft(car.id, draft, now: now));
   return List.unmodifiable([
+    if (stored.containsKey('popular') && stored['popular'] is! bool)
+      'popular is not true or false',
     for (final key in stored.keys)
-      if (!wanted.containsKey(key)) 'unknown field: $key',
+      // "popular" is judged above: true is in [wanted]; false is valid.
+      if (key != 'popular' && !wanted.containsKey(key)) 'unknown field: $key',
     for (final key in wanted.keys)
       if (!stored.containsKey(key))
         'missing field: $key'
@@ -86,6 +94,19 @@ List<String> carRepairReasons(
         'differs: $key',
   ]);
 }
+
+/// How many visible cars other than [carId] are marked popular, among the
+/// readable entries of the admin list: for the soft warning of the car form
+/// (Home shows at most 3). [carId] is null for a new car. No query: the
+/// admin list is already in memory.
+int otherVisiblePopularCount(List<FleetEntry> entries, {String? carId}) => [
+  for (final entry in entries)
+    if (entry is FleetCarEntry &&
+        entry.car.id != carId &&
+        entry.car.active &&
+        entry.car.popular)
+      entry,
+].length;
 
 /// Whether the stored car needs repair: [carRepairReasons] is not empty.
 bool carNeedsRepair(

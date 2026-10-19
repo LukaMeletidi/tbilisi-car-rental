@@ -304,6 +304,7 @@ const adminCarsNoAccess = 'You do not have access to the cars.';
 const adminCarsLoadError = 'Could not load the cars.';
 const adminCarBadgeVisible = 'Visible';
 const adminCarBadgeHidden = 'Hidden';
+const adminCarBadgePopular = 'Popular';
 const adminCarNeedsRepair = 'Needs repair';
 const adminCarUnreadable = 'Unreadable car';
 
@@ -359,6 +360,17 @@ const adminCarMovePhotoUp = 'Move up';
 const adminCarMovePhotoDown = 'Move down';
 const adminCarRemovePhoto = 'Remove';
 const adminCarLabelVisible = 'Visible in the catalog';
+
+/// The "Popular" checkbox of the car forms (step 6b.5).
+const adminCarLabelPopular = 'Popular (shown on Home)';
+const adminCarPopularNote =
+    'Home shows at most $homePopularMax popular cars that are visible in the '
+    'catalog. A hidden car keeps its mark but is not shown.';
+
+/// The soft warning when [others] other visible cars are already marked.
+String adminCarPopularTooMany(int others) =>
+    '$others other visible cars are already marked popular. Home shows only '
+    '$homePopularMax.';
 
 /// The "new car" form (step 4.6).
 const adminAddCar = 'Add a car';

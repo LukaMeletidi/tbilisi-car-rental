@@ -7,7 +7,11 @@ import 'package:tbilisi_car_rental/features/fleet/domain/car_limits.dart';
 final now = DateTime.utc(2026, 10, 14, 12);
 
 /// A complete stored car. All values are made up.
-Car storedCar({double? engineSize = 1.8, double pricePerDay = 45.5}) => Car(
+Car storedCar({
+  double? engineSize = 1.8,
+  double pricePerDay = 45.5,
+  bool popular = false,
+}) => Car(
   id: 'car-1',
   brand: 'Honda',
   model: 'Civic',
@@ -21,6 +25,7 @@ Car storedCar({double? engineSize = 1.8, double pricePerDay = 45.5}) => Car(
   description: const LocalizedText(ka: 'ქართული', ru: 'Русский', en: 'English'),
   photos: const ['https://photos.example.com/car-1.jpg'],
   active: true,
+  popular: popular,
 );
 
 List<String> requiredFields() => [
@@ -161,7 +166,11 @@ void main() {
 
   group('carDocument', () {
     test('exactly the fields the rules allow', () {
-      expect(carDocument(storedCar()).keys, unorderedEquals(carFields));
+      // Every optional field set: an engine size and the popular mark.
+      expect(
+        carDocument(storedCar(popular: true)).keys,
+        unorderedEquals(carFields),
+      );
       expect(
         carDocument(storedCar(engineSize: null)).keys,
         unorderedEquals(requiredFields()),

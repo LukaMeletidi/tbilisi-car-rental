@@ -6,7 +6,9 @@ import 'package:tbilisi_car_rental/features/admin/presentation/widgets/admin_not
 import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_layout.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/car_draft.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/car_edit.dart';
+import 'package:tbilisi_car_rental/features/fleet/domain/fleet_list.dart';
 import 'package:tbilisi_car_rental/features/fleet/presentation/admin_car_edit_provider.dart';
+import 'package:tbilisi_car_rental/features/fleet/presentation/admin_cars_provider.dart';
 import 'package:tbilisi_car_rental/features/fleet/presentation/widgets/admin_car_fields.dart';
 import 'package:tbilisi_car_rental/features/fleet/presentation/widgets/admin_hide_car_dialog.dart';
 
@@ -39,6 +41,15 @@ class AdminCarForm extends ConsumerWidget {
         state.changedElsewhere &&
         notice != CarSaveNotice.changedElsewhere &&
         !state.locked;
+    // For the soft warning of "Popular": from the admin list already in
+    // memory (the form lies below it); never a read of its own.
+    final otherVisiblePopular = ref.exists(adminCarsProvider)
+        ? ref.watch(
+            adminCarsProvider.select(
+              (list) => otherVisiblePopularCount(list.entries, carId: carId),
+            ),
+          )
+        : 0;
 
     /// Changes the draft. The newest draft is read from the notifier, so
     /// two changes in the same moment do not undo each other.
@@ -159,6 +170,7 @@ class AdminCarForm extends ConsumerWidget {
                 enabled: enabled,
                 onChanged: change,
                 visibilityNote: adminHiddenCarNote,
+                otherVisiblePopular: otherVisiblePopular,
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(4, 12, 4, 12),

@@ -60,6 +60,7 @@ final car = Car(
   description: const LocalizedText(ka: 'ქართული', ru: 'Русский', en: 'English'),
   photos: const ['https://photos.example.com/car-1.jpg'],
   active: true,
+  popular: true,
 );
 
 void main() {
@@ -86,8 +87,7 @@ void main() {
   });
 
   test('the fields the rules allow are the fields of the constants', () {
-    // popular joins carFields in step 6b.5.
-    expect(ruleList('return car.keys().hasOnly(['), [...carFields, 'popular']);
+    expect(ruleList('return car.keys().hasOnly(['), carFields);
     expect(ruleList('&& car.keys().hasAll(['), [
       for (final field in carFields)
         if (!carOptionalFields.contains(field)) field,
@@ -96,12 +96,15 @@ void main() {
 
   test('a car written by the app has exactly the allowed fields', () {
     expect(car.toMap().keys, unorderedEquals(carFields));
-    final withoutEngine = Car.fromMap(
+    // Without the two optional fields: no engine size, not popular.
+    final withoutOptional = Car.fromMap(
       'car-2',
-      car.toMap()..remove('engineSize'),
+      car.toMap()
+        ..remove('engineSize')
+        ..remove('popular'),
     );
     expect(
-      withoutEngine.toMap().keys,
+      withoutOptional.toMap().keys,
       unorderedEquals([
         for (final field in carFields)
           if (!carOptionalFields.contains(field)) field,

@@ -16,6 +16,9 @@ import 'package:tbilisi_car_rental/features/fleet/domain/car_validation.dart';
 /// in the same moment do not undo each other.
 typedef CarDraftChange = void Function(CarDraft Function(CarDraft draft));
 
+/// The key of the "Popular" checkbox, for tests.
+const adminCarPopularKey = ValueKey('admin-car-popular');
+
 /// The fields of a car, shared by the edit form and the "new car" form:
 /// the cards The car, Price, Descriptions, Photos and Visibility.
 ///
@@ -36,6 +39,7 @@ class AdminCarFields extends StatefulWidget {
     required this.enabled,
     required this.onChanged,
     required this.visibilityNote,
+    this.otherVisiblePopular = 0,
   });
 
   final CarDraft draft;
@@ -51,6 +55,11 @@ class AdminCarFields extends StatefulWidget {
 
   /// The small text under the Visible switch.
   final String visibilityNote;
+
+  /// How many OTHER visible cars are marked popular (otherVisiblePopularCount
+  /// of the admin list; 0 when the list is not loaded). From 3 on, a ticked
+  /// "Popular" shows a soft warning; it never blocks a save.
+  final int otherVisiblePopular;
 
   @override
   State<AdminCarFields> createState() => _AdminCarFieldsState();
@@ -149,7 +158,6 @@ class _AdminCarFieldsState extends State<AdminCarFields> {
   Widget build(BuildContext context) {
     final draft = widget.draft;
     final enabled = widget.enabled;
-    final textTheme = Theme.of(context).textTheme;
 
     TextField text(
       TextEditingController controller,
@@ -294,7 +302,7 @@ class _AdminCarFieldsState extends State<AdminCarFields> {
                 keyboardType: decimal,
               ),
               const SizedBox(height: 8),
-              Text(adminCarPriceNote, style: textTheme.bodySmall),
+              const _SmallNote(adminCarPriceNote),
             ],
           ),
         ),
@@ -347,15 +355,10 @@ class _AdminCarFieldsState extends State<AdminCarFields> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(adminCarPhotosNote, style: textTheme.bodySmall),
+              const _SmallNote(adminCarPhotosNote),
               if (_error(const [CarError.tooManyPhotos]) case final error?) ...[
                 const SizedBox(height: 8),
-                Text(
-                  error,
-                  style: textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.error,
-                  ),
-                ),
+                _SmallNote(error, isError: true),
               ],
               gap,
               if (_photos.isEmpty) ...[const Text(adminCarNoPhotos), gap],
@@ -408,11 +411,52 @@ class _AdminCarFieldsState extends State<AdminCarFields> {
                 title: const Text(adminCarLabelVisible),
                 contentPadding: EdgeInsets.zero,
               ),
-              Text(widget.visibilityNote, style: textTheme.bodySmall),
+              _SmallNote(widget.visibilityNote),
+              const SizedBox(height: 8),
+              CheckboxListTile(
+                key: adminCarPopularKey,
+                value: draft.popular,
+                onChanged: enabled
+                    ? (value) =>
+                          _change((d) => d.copyWith(popular: value ?? false))
+                    : null,
+                title: const Text(adminCarLabelPopular),
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+              ),
+              const _SmallNote(adminCarPopularNote),
+              if (draft.popular &&
+                  widget.otherVisiblePopular >= homePopularMax) ...[
+                const SizedBox(height: 8),
+                AdminNote(
+                  icon: Icons.info_outline,
+                  text: adminCarPopularTooMany(widget.otherVisiblePopular),
+                ),
+              ],
             ],
           ),
         ),
       ],
+    );
+  }
+}
+
+/// A small note on a white card. Built inside the card, so its style comes
+/// from the dark-on-white theme there (the step 6.5 contrast fix).
+class _SmallNote extends StatelessWidget {
+  const _SmallNote(this.text, {this.isError = false});
+
+  final String text;
+  final bool isError;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Text(
+      text,
+      style: theme.textTheme.bodySmall?.copyWith(
+        color: isError ? theme.colorScheme.error : null,
+      ),
     );
   }
 }

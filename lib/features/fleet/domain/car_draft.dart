@@ -21,6 +21,7 @@ class CarDraft implements CarFormValues {
     this.descriptionEn = '',
     this.photos = const [],
     this.active = false,
+    this.popular = false,
   });
 
   /// The draft of a stored car, for the edit form.
@@ -46,6 +47,7 @@ class CarDraft implements CarFormValues {
       descriptionEn: car.description.en,
       photos: List.unmodifiable(car.photos),
       active: car.active,
+      popular: car.popular,
     );
   }
 
@@ -83,6 +85,10 @@ class CarDraft implements CarFormValues {
   /// A new car starts hidden (false); the form has a switch.
   final bool active;
 
+  /// Marked "Popular" (Home shows at most 3 visible marked cars). A new car
+  /// starts unmarked.
+  final bool popular;
+
   CarDraft copyWith({
     String? brand,
     String? model,
@@ -98,6 +104,7 @@ class CarDraft implements CarFormValues {
     String? descriptionEn,
     List<String>? photos,
     bool? active,
+    bool? popular,
   }) {
     return CarDraft(
       brand: brand ?? this.brand,
@@ -114,6 +121,7 @@ class CarDraft implements CarFormValues {
       descriptionEn: descriptionEn ?? this.descriptionEn,
       photos: photos == null ? this.photos : List.unmodifiable(photos),
       active: active ?? this.active,
+      popular: popular ?? this.popular,
     );
   }
 
@@ -133,7 +141,8 @@ class CarDraft implements CarFormValues {
       other.descriptionRu == descriptionRu &&
       other.descriptionEn == descriptionEn &&
       _sameList(other.photos, photos) &&
-      other.active == active;
+      other.active == active &&
+      other.popular == popular;
 
   @override
   int get hashCode => Object.hash(
@@ -151,6 +160,7 @@ class CarDraft implements CarFormValues {
     descriptionEn,
     Object.hashAll(photos),
     active,
+    popular,
   );
 }
 
@@ -191,11 +201,13 @@ Car carFromDraft(String id, CarDraft draft, {required DateTime now}) {
     ),
     photos: List.unmodifiable([for (final photo in draft.photos) photo.trim()]),
     active: draft.active,
+    popular: draft.popular,
   );
 }
 
 /// The Firestore fields of [car]: exactly the keys the rules allow. year and
 /// seats are Dart ints, so they are sent as integers on Android and on web;
 /// pricePerDay and engineSize are doubles, which the rules accept whole or
-/// not. No engineSize key when the car has none.
+/// not. No engineSize key when the car has none, and no popular key when the
+/// car is not marked (the rules: absent means not popular).
 Map<String, dynamic> carDocument(Car car) => car.toMap();

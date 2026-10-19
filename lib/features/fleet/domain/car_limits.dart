@@ -51,8 +51,13 @@ const carFields = [
   'description',
   'photos',
   'active',
+  'popular',
 ];
-const carOptionalFields = ['engineSize'];
+const carOptionalFields = ['engineSize', 'popular'];
+
+/// Home shows at most this many popular cars (the visible ones that are
+/// marked). The rules cannot count them; this limit is in the app only.
+const homePopularMax = 3;
 
 /// The languages every description must have.
 const carDescriptionLanguages = ['ka', 'ru', 'en'];
