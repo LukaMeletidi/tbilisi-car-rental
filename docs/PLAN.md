@@ -1692,6 +1692,19 @@ Phase 0 is complete.
   at that time. `photos` stays a list of addresses, so the catalog does not change.
 - Before Phase 7: switch to Blaze, set a Google Cloud budget alert; Cloud Functions use
   Node 22 (Node 20 is being shut down).
+- For Phase 7 (noted in step 6b.2):
+  - A live link: the Flutter web build on Firebase Hosting. Every firebase
+    command needs its own approval; App Check for the hosted domain; the
+    domain added to the authorized domains of Authentication.
+  - An Android APK: the release keystore is never committed and key.properties
+    is git-ignored; the SHA fingerprints go into the Firebase Android app; a
+    launcher icon; a test on a real phone. App Check is not enforced for a
+    sideloaded APK.
+  - A centered maximum width for the public pages on wide screens (a small
+    step at the end of Phase 6b).
+  - The README with the live link, the APK and screenshots.
+  - An unknown address such as /#/zzz shows go_router's own error page; it is
+    replaced by a public "not found" page.
 - firebase_core 4.15.0 still applies the Kotlin Gradle Plugin the old way (build
   warning). Do not run flutter upgrade mid-project; check for a newer FlutterFire
   release first.
@@ -2927,7 +2940,19 @@ Steps:
   "Record the Phase 6b decisions in the plan"). Only this file changed.
 - 6b.2 The public shell (bottom navigation, four tabs) and the catalog moved to
   /cars, with placeholder pages for About/Contact and FAQ. Tier 1: the routes
-  around the booking flow change — not started.
+  around the booking flow change — DONE (in the commit "Add the public bottom
+  navigation and move the catalog to /cars").
+  - 2338 Flutter tests pass and analyze is clean; the scan has 0 errors and 11
+    warnings. ARB: the 7 approved keys in en, ka and ru (the owner's texts).
+  - The public shell is a StatefulShellRoute with four branches. The car
+    page, the booking form, the thank-you page and the admin area lie on the
+    root navigator, so the bottom bar is hidden there.
+  - Android Back on Cars, Contact and FAQ goes to Home; on Home it leaves the
+    app; on the thank-you page it goes to /cars.
+  - The web hash addresses (/#/cars) are kept.
+  - The third tab is called Contact (key tabContact); its address is /about.
+  - Checked by the owner in Chrome with a narrow window, 11 steps, all passed.
+  - Noted for Phase 7: see "For Phase 7 (noted in step 6b.2)" in Section 15.
 - 6b.3 The Popular flag: the rules in the local file and the emulator cases.
   Tier 1 — not started. Needs approval: the change of firestore.rules.
 - 6b.4 Deploy the rules, with the check of the live text as in step 6.3.
