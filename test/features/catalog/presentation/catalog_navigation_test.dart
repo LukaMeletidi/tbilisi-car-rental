@@ -80,6 +80,11 @@ Future<void> pumpApp(WidgetTester tester) async {
     ),
   );
   await settle(tester);
+  // The catalog is the Cars tab since Phase 6b.
+  ProviderScope.containerOf(
+    tester.element(find.byType(_App)),
+  ).read(appRouterProvider).go(AppRoutes.cars);
+  await settle(tester);
 }
 
 /// The real router with the real screens.

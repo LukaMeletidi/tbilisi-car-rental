@@ -53,7 +53,7 @@ class CarDetailScreen extends ConsumerWidget {
                   icon: Icons.directions_car,
                   text: l10n.carNotAvailable,
                   action: FilledButton(
-                    onPressed: () => context.go(AppRoutes.home),
+                    onPressed: () => context.go(AppRoutes.cars),
                     child: Text(l10n.backToCars),
                   ),
                 )

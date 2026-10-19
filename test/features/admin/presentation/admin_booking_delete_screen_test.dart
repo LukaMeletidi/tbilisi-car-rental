@@ -19,8 +19,8 @@ import 'package:tbilisi_car_rental/features/admin/presentation/admin_bookings_sc
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_deleted_notice_provider.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_gate_screens.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_texts.dart';
-import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_screen.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/cars_providers.dart';
+import 'package:tbilisi_car_rental/features/home/presentation/home_screen.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/settings_providers.dart';
 import 'package:tbilisi_car_rental/l10n/generated/app_localizations.dart';
 
@@ -582,7 +582,7 @@ void main() {
       await deleteAndLand(tester);
 
       await open(tester, '/');
-      expect(find.byType(CatalogScreen), findsOneWidget);
+      expect(find.byType(HomeScreen), findsOneWidget);
       await open(tester, '/admin');
 
       expect(find.byType(AdminBookingsScreen), findsOneWidget);

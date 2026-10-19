@@ -337,4 +337,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bookingSentTelegram => 'Telegram';
+
+  @override
+  String get tabHome => 'Home';
+
+  @override
+  String get tabCars => 'Cars';
+
+  @override
+  String get tabContact => 'Contact';
+
+  @override
+  String get tabFaq => 'FAQ';
+
+  @override
+  String get aboutTitle => 'About us';
+
+  @override
+  String get faqTitle => 'Frequently asked questions';
+
+  @override
+  String get pageComingSoon => 'This page is coming soon.';
 }

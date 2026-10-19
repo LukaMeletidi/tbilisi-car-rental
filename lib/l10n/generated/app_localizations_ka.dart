@@ -338,4 +338,25 @@ class AppLocalizationsKa extends AppLocalizations {
 
   @override
   String get bookingSentTelegram => 'Telegram';
+
+  @override
+  String get tabHome => 'მთავარი';
+
+  @override
+  String get tabCars => 'მანქანები';
+
+  @override
+  String get tabContact => 'კონტაქტი';
+
+  @override
+  String get tabFaq => 'კითხვები';
+
+  @override
+  String get aboutTitle => 'ჩვენ შესახებ';
+
+  @override
+  String get faqTitle => 'ხშირად დასმული კითხვები';
+
+  @override
+  String get pageComingSoon => 'ეს გვერდი მალე დაემატება.';
 }

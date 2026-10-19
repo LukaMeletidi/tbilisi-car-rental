@@ -98,5 +98,12 @@
   "bookingSentNoExtras": "Нет",
   "bookingSentUnknownPlace": "Место из нашего списка",
   "bookingSentWhatsapp": "WhatsApp",
-  "bookingSentTelegram": "Telegram"
+  "bookingSentTelegram": "Telegram",
+  "tabHome": "Главная",
+  "tabCars": "Авто",
+  "tabContact": "Контакты",
+  "tabFaq": "Вопросы",
+  "aboutTitle": "О нас",
+  "faqTitle": "Часто задаваемые вопросы",
+  "pageComingSoon": "Эта страница скоро появится."
 }

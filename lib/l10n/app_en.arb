@@ -210,5 +210,33 @@
     "description": "Shown instead of a place name that cannot be looked up."
   },
   "bookingSentWhatsapp": "WhatsApp",
-  "bookingSentTelegram": "Telegram"
+  "bookingSentTelegram": "Telegram",
+  "tabHome": "Home",
+  "@tabHome": {
+    "description": "Bottom navigation: the Home tab."
+  },
+  "tabCars": "Cars",
+  "@tabCars": {
+    "description": "Bottom navigation: the tab with the list of cars."
+  },
+  "tabContact": "Contact",
+  "@tabContact": {
+    "description": "Bottom navigation: the tab with the About us and contact page."
+  },
+  "tabFaq": "FAQ",
+  "@tabFaq": {
+    "description": "Bottom navigation: the tab with the frequently asked questions."
+  },
+  "aboutTitle": "About us",
+  "@aboutTitle": {
+    "description": "Title of the About us and contact page."
+  },
+  "faqTitle": "Frequently asked questions",
+  "@faqTitle": {
+    "description": "Title of the FAQ page."
+  },
+  "pageComingSoon": "This page is coming soon.",
+  "@pageComingSoon": {
+    "description": "Shown on a page whose content is not ready yet."
+  }
 }

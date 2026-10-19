@@ -39,7 +39,7 @@ class _BookingSentScreenState extends ConsumerState<BookingSentScreen> {
     _sent = ref.read(sentBookingProvider);
     if (_sent == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) context.go(AppRoutes.home);
+        if (mounted) context.go(AppRoutes.cars);
       });
     }
   }
@@ -55,16 +55,24 @@ class _BookingSentScreenState extends ConsumerState<BookingSentScreen> {
   Widget build(BuildContext context) {
     final sent = _sent;
 
-    return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: appBarLogoToolbarHeight,
-        title: const AppBarLogo(),
-        actions: const [LanguageMenuButton()],
-      ),
-      body: SafeArea(
-        child: sent == null
-            ? const SizedBox.shrink()
-            : _SentBookingBody(sent: sent),
+    // Android's system Back leads to the catalog, never back into the
+    // form (Phase 6b). On the web the browser's Back follows its history.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) context.go(AppRoutes.cars);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          toolbarHeight: appBarLogoToolbarHeight,
+          title: const AppBarLogo(),
+          actions: const [LanguageMenuButton()],
+        ),
+        body: SafeArea(
+          child: sent == null
+              ? const SizedBox.shrink()
+              : _SentBookingBody(sent: sent),
+        ),
       ),
     );
   }
@@ -103,7 +111,7 @@ class _SentBookingBody extends StatelessWidget {
               SentBookingSummary(sent: sent),
               const SizedBox(height: 12),
               FilledButton(
-                onPressed: () => context.go(AppRoutes.home),
+                onPressed: () => context.go(AppRoutes.cars),
                 child: Text(l10n.backToCars),
               ),
               const SizedBox(height: 12),

@@ -731,8 +731,9 @@ void main() {
       repository.pending = Completer<String>();
       await tapSend(tester);
 
-      // What the browser's Back button does: the address changes at once.
-      containerOf(tester).read(appRouterProvider).go(AppRoutes.home);
+      // What the browser's Back button does: the address changes at once
+      // (to the catalog, the Cars tab since Phase 6b).
+      containerOf(tester).read(appRouterProvider).go(AppRoutes.cars);
       await settle(tester);
       expect(find.byType(BookingFormScreen), findsNothing);
 

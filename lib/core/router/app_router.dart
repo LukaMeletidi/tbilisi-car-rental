@@ -1,7 +1,8 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:tbilisi_car_rental/features/about/presentation/about_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_navigation.dart';
 import 'package:tbilisi_car_rental/features/admin/domain/admin_redirect.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_booking_detail_screen.dart';
@@ -20,20 +21,34 @@ import 'package:tbilisi_car_rental/features/catalog/presentation/car_detail_scre
 import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_screen.dart';
 import 'package:tbilisi_car_rental/features/fleet/presentation/admin_car_edit_screen.dart';
 import 'package:tbilisi_car_rental/features/fleet/presentation/admin_car_new_screen.dart';
+import 'package:tbilisi_car_rental/features/faq/presentation/faq_screen.dart';
 import 'package:tbilisi_car_rental/features/fleet/presentation/admin_cars_screen.dart';
+import 'package:tbilisi_car_rental/features/home/domain/public_navigation.dart';
+import 'package:tbilisi_car_rental/features/home/presentation/home_screen.dart';
+import 'package:tbilisi_car_rental/features/home/presentation/public_shell.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/admin_company_info_screen.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/admin_extras_prices_screen.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/admin_settings_screen.dart';
 
 /// Route paths in one place, so screens never hard-code URL strings.
 abstract final class AppRoutes {
-  static const home = '/';
+  /// The Home tab of the public app.
+  static const home = publicHomePath;
 
-  /// Path pattern of the car detail screen, below [home].
-  static const carPattern = 'cars/:carId';
+  /// The Cars tab: the catalog with its search and filter.
+  static const cars = publicCarsPath;
+
+  /// The Contact tab (About us and the contacts).
+  static const about = publicAboutPath;
+
+  /// The FAQ tab.
+  static const faq = publicFaqPath;
+
+  /// Path pattern of the car detail screen, below [cars].
+  static const carPattern = ':carId';
 
   /// The address of one car, for example "/cars/abc123".
-  static String car(String carId) => '/cars/${Uri.encodeComponent(carId)}';
+  static String car(String carId) => '$cars/${Uri.encodeComponent(carId)}';
 
   /// Path pattern of the booking form, below the car detail screen.
   static const bookingPattern = 'book';
@@ -139,7 +154,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     refresh.sessionChanged();
   });
 
+  // The navigator of the whole app. Pages that must not show the public
+  // bottom bar (the car, the booking form, the thank-you page and the
+  // admin area) are put on it, above the public shell.
+  final rootNavigatorKey = GlobalKey<NavigatorState>();
+
   final router = GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: AppRoutes.home,
     refreshListenable: refresh,
     // Decides for every address. It only ever moves a visitor of the admin
@@ -150,113 +171,54 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       location: state.uri,
     ),
     routes: [
-      GoRoute(
-        path: AppRoutes.home,
-        builder: (context, state) => const CatalogScreen(),
-        routes: [
-          GoRoute(
-            path: AppRoutes.carPattern,
-            builder: (context, state) =>
-                CarDetailScreen(carId: state.pathParameters['carId']!),
+      // The public app (Phase 6b): a frame with the bottom bar
+      // (PublicShell) and one branch per PublicTab, in its order. Each
+      // branch keeps its pages while another tab is shown (indexedStack),
+      // so the catalog keeps its search, filter and scroll position.
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            PublicShell(navigationShell: navigationShell, path: state.uri.path),
+        branches: [
+          // PublicTab.home
+          StatefulShellBranch(
             routes: [
-              // Below the car, so Back returns to the car.
               GoRoute(
-                path: AppRoutes.bookingPattern,
-                builder: (context, state) =>
-                    BookingFormScreen(carId: state.pathParameters['carId']!),
+                path: AppRoutes.home,
+                builder: (context, state) => const HomeScreen(),
+                routes: [
+                  // Above the shell, without the bottom bar. Its system
+                  // Back leads to the catalog (BookingSentScreen), never
+                  // back into the form.
+                  GoRoute(
+                    parentNavigatorKey: rootNavigatorKey,
+                    path: AppRoutes.bookingSentPattern,
+                    builder: (context, state) => const BookingSentScreen(),
+                  ),
+                  ..._adminRoutes(rootNavigatorKey),
+                ],
               ),
             ],
           ),
-          // Below the catalog, so Back leads to the catalog and never back
-          // into the form.
-          GoRoute(
-            path: AppRoutes.bookingSentPattern,
-            builder: (context, state) => const BookingSentScreen(),
-          ),
-          // The admin area: a frame with the navigation (AdminShell) and
-          // one branch per AdminSection, in its order. Each branch keeps
-          // its own pages while another one is shown (indexedStack), so
-          // the bookings list keeps its filter and search.
-          // The gate pages (login, no access, checking) are side by side
-          // with this frame, NOT inside it: a visitor who is not an admin
-          // must never see the navigation or have the bookings list built.
-          StatefulShellRoute.indexedStack(
-            builder: (context, state, navigationShell) => AdminShell(
-              navigationShell: navigationShell,
-              path: state.uri.path,
-            ),
-            branches: [
-              // AdminSection.bookings
-              StatefulShellBranch(
+          // PublicTab.cars
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.cars,
+                builder: (context, state) => const CatalogScreen(),
                 routes: [
+                  // Above the shell, without the bottom bar; below the
+                  // catalog, so Back returns to the catalog.
                   GoRoute(
-                    path: _below(AppRoutes.admin),
-                    builder: (context, state) => const AdminBookingsScreen(),
+                    parentNavigatorKey: rootNavigatorKey,
+                    path: AppRoutes.carPattern,
+                    builder: (context, state) =>
+                        CarDetailScreen(carId: state.pathParameters['carId']!),
                     routes: [
-                      // Admin content, so it IS below the list: Back returns to
-                      // the list. The redirect runs first, so only an admin ever
-                      // gets here. Opening this address directly also builds the
-                      // list underneath, which starts the list's listener.
-                      // The "new booking" form. It MUST stay before the detail:
-                      // "new" would match ":bookingId" too.
+                      // Below the car, so Back returns to the car.
                       GoRoute(
-                        path: AppRoutes.adminBookingNewPattern,
-                        builder: (context, state) =>
-                            const AdminBookingNewScreen(),
-                      ),
-                      GoRoute(
-                        path: AppRoutes.adminBookingPattern,
-                        builder: (context, state) => _isReservedId(state)
-                            ? const AdminNotFoundScreen()
-                            : AdminBookingDetailScreen(
-                                bookingId: state.pathParameters['bookingId']!,
-                              ),
-                        routes: [
-                          // Below the detail, so Back returns to the detail.
-                          // Opening this address directly builds the list and
-                          // the detail underneath, with their listeners.
-                          GoRoute(
-                            path: AppRoutes.adminBookingEditPattern,
-                            // "/admin/bookings/new/edit" would be the edit form
-                            // of a booking called "new"; there is none.
-                            builder: (context, state) => _isReservedId(state)
-                                ? const AdminNotFoundScreen()
-                                : AdminBookingEditScreen(
-                                    bookingId:
-                                        state.pathParameters['bookingId']!,
-                                  ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              // AdminSection.calendar
-              StatefulShellBranch(
-                routes: [
-                  GoRoute(
-                    path: _below(AppRoutes.adminCalendar),
-                    builder: (context, state) => const AdminCalendarScreen(),
-                  ),
-                ],
-              ),
-              // AdminSection.cars
-              StatefulShellBranch(
-                routes: [
-                  GoRoute(
-                    path: _below(AppRoutes.adminCars),
-                    builder: (context, state) => const AdminCarsScreen(),
-                    routes: [
-                      // Below the list, so Back returns to the list. Forms:
-                      // adminShowsNavigation hides the navigation here.
-                      GoRoute(
-                        path: AppRoutes.adminCarNewPattern,
-                        builder: (context, state) => const AdminCarNewScreen(),
-                      ),
-                      GoRoute(
-                        path: AppRoutes.adminCarEditPattern,
-                        builder: (context, state) => AdminCarEditScreen(
+                        parentNavigatorKey: rootNavigatorKey,
+                        path: AppRoutes.bookingPattern,
+                        builder: (context, state) => BookingFormScreen(
                           carId: state.pathParameters['carId']!,
                         ),
                       ),
@@ -264,53 +226,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   ),
                 ],
               ),
-              // AdminSection.settings
-              StatefulShellBranch(
-                routes: [
-                  GoRoute(
-                    path: _below(AppRoutes.adminSettings),
-                    builder: (context, state) => const AdminSettingsScreen(),
-                    routes: [
-                      // Below Settings, so Back returns to Settings. Forms
-                      // from steps 6.6 and 6.7: adminShowsNavigation hides
-                      // the navigation here. Any other address below
-                      // Settings is the admin "not found" page.
-                      GoRoute(
-                        path: AppRoutes.adminSettingsExtrasPattern,
-                        builder: (context, state) =>
-                            const AdminExtrasPricesScreen(),
-                      ),
-                      GoRoute(
-                        path: AppRoutes.adminSettingsCompanyPattern,
-                        builder: (context, state) =>
-                            const AdminCompanyInfoScreen(),
-                      ),
-                    ],
-                  ),
-                ],
+            ],
+          ),
+          // PublicTab.about
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.about,
+                builder: (context, state) => const AboutScreen(),
               ),
             ],
           ),
-          GoRoute(
-            path: _below(AppRoutes.adminLogin),
-            builder: (context, state) => const AdminLoginScreen(),
-          ),
-          GoRoute(
-            path: _below(AppRoutes.adminNoAccess),
-            builder: (context, state) => const AdminNoAccessScreen(),
-          ),
-          GoRoute(
-            path: _below(AppRoutes.adminChecking),
-            builder: (context, state) => const AdminCheckingScreen(),
-          ),
-          // Every other address under /admin: the admin "not found" page.
-          // It must stay the LAST admin route, because routes are tried in
-          // order. The redirect runs first, so only an admin ever sees it.
-          // An unknown public address does not match and keeps go_router's
-          // own "Page Not Found" screen.
-          GoRoute(
-            path: '${_below(AppRoutes.admin)}/:rest(.*)',
-            builder: (context, state) => const AdminNotFoundScreen(),
+          // PublicTab.faq
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.faq,
+                builder: (context, state) => const FaqScreen(),
+              ),
+            ],
           ),
         ],
       ),
@@ -322,3 +256,146 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   });
   return router;
 });
+
+/// The admin area, below Home as before Phase 6b (so the system Back from
+/// its first page still leads to the public start), but on the navigator
+/// [root], above the public shell: it never shows the public bottom bar.
+List<RouteBase> _adminRoutes(GlobalKey<NavigatorState> root) => [
+  // The admin area: a frame with the navigation (AdminShell) and
+  // one branch per AdminSection, in its order. Each branch keeps
+  // its own pages while another one is shown (indexedStack), so
+  // the bookings list keeps its filter and search.
+  // The gate pages (login, no access, checking) are side by side
+  // with this frame, NOT inside it: a visitor who is not an admin
+  // must never see the navigation or have the bookings list built.
+  StatefulShellRoute.indexedStack(
+    parentNavigatorKey: root,
+    builder: (context, state, navigationShell) =>
+        AdminShell(navigationShell: navigationShell, path: state.uri.path),
+    branches: [
+      // AdminSection.bookings
+      StatefulShellBranch(
+        routes: [
+          GoRoute(
+            path: _below(AppRoutes.admin),
+            builder: (context, state) => const AdminBookingsScreen(),
+            routes: [
+              // Admin content, so it IS below the list: Back returns to
+              // the list. The redirect runs first, so only an admin ever
+              // gets here. Opening this address directly also builds the
+              // list underneath, which starts the list's listener.
+              // The "new booking" form. It MUST stay before the detail:
+              // "new" would match ":bookingId" too.
+              GoRoute(
+                path: AppRoutes.adminBookingNewPattern,
+                builder: (context, state) => const AdminBookingNewScreen(),
+              ),
+              GoRoute(
+                path: AppRoutes.adminBookingPattern,
+                builder: (context, state) => _isReservedId(state)
+                    ? const AdminNotFoundScreen()
+                    : AdminBookingDetailScreen(
+                        bookingId: state.pathParameters['bookingId']!,
+                      ),
+                routes: [
+                  // Below the detail, so Back returns to the detail.
+                  // Opening this address directly builds the list and
+                  // the detail underneath, with their listeners.
+                  GoRoute(
+                    path: AppRoutes.adminBookingEditPattern,
+                    // "/admin/bookings/new/edit" would be the edit form
+                    // of a booking called "new"; there is none.
+                    builder: (context, state) => _isReservedId(state)
+                        ? const AdminNotFoundScreen()
+                        : AdminBookingEditScreen(
+                            bookingId: state.pathParameters['bookingId']!,
+                          ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+      // AdminSection.calendar
+      StatefulShellBranch(
+        routes: [
+          GoRoute(
+            path: _below(AppRoutes.adminCalendar),
+            builder: (context, state) => const AdminCalendarScreen(),
+          ),
+        ],
+      ),
+      // AdminSection.cars
+      StatefulShellBranch(
+        routes: [
+          GoRoute(
+            path: _below(AppRoutes.adminCars),
+            builder: (context, state) => const AdminCarsScreen(),
+            routes: [
+              // Below the list, so Back returns to the list. Forms:
+              // adminShowsNavigation hides the navigation here.
+              GoRoute(
+                path: AppRoutes.adminCarNewPattern,
+                builder: (context, state) => const AdminCarNewScreen(),
+              ),
+              GoRoute(
+                path: AppRoutes.adminCarEditPattern,
+                builder: (context, state) =>
+                    AdminCarEditScreen(carId: state.pathParameters['carId']!),
+              ),
+            ],
+          ),
+        ],
+      ),
+      // AdminSection.settings
+      StatefulShellBranch(
+        routes: [
+          GoRoute(
+            path: _below(AppRoutes.adminSettings),
+            builder: (context, state) => const AdminSettingsScreen(),
+            routes: [
+              // Below Settings, so Back returns to Settings. Forms
+              // from steps 6.6 and 6.7: adminShowsNavigation hides
+              // the navigation here. Any other address below
+              // Settings is the admin "not found" page.
+              GoRoute(
+                path: AppRoutes.adminSettingsExtrasPattern,
+                builder: (context, state) => const AdminExtrasPricesScreen(),
+              ),
+              GoRoute(
+                path: AppRoutes.adminSettingsCompanyPattern,
+                builder: (context, state) => const AdminCompanyInfoScreen(),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ],
+  ),
+  GoRoute(
+    parentNavigatorKey: root,
+    path: _below(AppRoutes.adminLogin),
+    builder: (context, state) => const AdminLoginScreen(),
+  ),
+  GoRoute(
+    parentNavigatorKey: root,
+    path: _below(AppRoutes.adminNoAccess),
+    builder: (context, state) => const AdminNoAccessScreen(),
+  ),
+  GoRoute(
+    parentNavigatorKey: root,
+    path: _below(AppRoutes.adminChecking),
+    builder: (context, state) => const AdminCheckingScreen(),
+  ),
+  // Every other address under /admin: the admin "not found" page.
+  // It must stay the LAST admin route, because routes are tried in
+  // order. The redirect runs first, so only an admin ever sees it.
+  // An unknown public address does not match and keeps go_router's
+  // own "Page Not Found" screen.
+  GoRoute(
+    parentNavigatorKey: root,
+    path: '${_below(AppRoutes.admin)}/:rest(.*)',
+    builder: (context, state) => const AdminNotFoundScreen(),
+  ),
+];

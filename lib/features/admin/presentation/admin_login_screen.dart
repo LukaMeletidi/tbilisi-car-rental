@@ -24,8 +24,8 @@ class AdminLoginScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: appBarLogoToolbarHeight,
-        // Always to the catalog: a typed web address has no page to go
-        // back to.
+        // Always to the public start (Home): a typed web address has no
+        // page to go back to.
         leading: IconButton(
           icon: const BackButtonIcon(),
           tooltip: MaterialLocalizations.of(context).backButtonTooltip,

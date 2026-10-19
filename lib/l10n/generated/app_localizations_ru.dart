@@ -341,4 +341,25 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get bookingSentTelegram => 'Telegram';
+
+  @override
+  String get tabHome => 'Главная';
+
+  @override
+  String get tabCars => 'Авто';
+
+  @override
+  String get tabContact => 'Контакты';
+
+  @override
+  String get tabFaq => 'Вопросы';
+
+  @override
+  String get aboutTitle => 'О нас';
+
+  @override
+  String get faqTitle => 'Часто задаваемые вопросы';
+
+  @override
+  String get pageComingSoon => 'Эта страница скоро появится.';
 }

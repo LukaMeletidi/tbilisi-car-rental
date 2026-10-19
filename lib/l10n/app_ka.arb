@@ -98,5 +98,12 @@
   "bookingSentNoExtras": "არ არის",
   "bookingSentUnknownPlace": "ადგილი ჩვენი სიიდან",
   "bookingSentWhatsapp": "WhatsApp",
-  "bookingSentTelegram": "Telegram"
+  "bookingSentTelegram": "Telegram",
+  "tabHome": "მთავარი",
+  "tabCars": "მანქანები",
+  "tabContact": "კონტაქტი",
+  "tabFaq": "კითხვები",
+  "aboutTitle": "ჩვენ შესახებ",
+  "faqTitle": "ხშირად დასმული კითხვები",
+  "pageComingSoon": "ეს გვერდი მალე დაემატება."
 }

@@ -17,11 +17,11 @@ import 'package:tbilisi_car_rental/features/admin/presentation/admin_gate_screen
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_login_screen.dart';
 import 'package:tbilisi_car_rental/features/admin/presentation/admin_texts.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/cars_providers.dart';
-import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_screen.dart';
 import 'package:tbilisi_car_rental/features/fleet/data/fleet_repository.dart';
 import 'package:tbilisi_car_rental/features/fleet/presentation/admin_car_edit_screen.dart';
 import 'package:tbilisi_car_rental/features/fleet/presentation/admin_car_new_screen.dart';
 import 'package:tbilisi_car_rental/features/fleet/presentation/admin_cars_screen.dart';
+import 'package:tbilisi_car_rental/features/home/presentation/home_screen.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/settings_providers.dart';
 import 'package:tbilisi_car_rental/l10n/generated/app_localizations.dart';
 
@@ -382,7 +382,9 @@ void main() {
   });
 
   group('the system Back (tests run as Android, not web)', () {
-    testWidgets('from Cars to Bookings, then to the catalog', (tester) async {
+    testWidgets('from Cars to Bookings, then to the public start (Home)', (
+      tester,
+    ) async {
       await pumpApp(tester);
       await open(tester, '/admin');
       await tapEntry(tester, adminNavCars);
@@ -396,7 +398,7 @@ void main() {
       await tester.binding.handlePopRoute();
       await settle(tester);
       expect(address(tester), '/');
-      expect(find.byType(CatalogScreen), findsOneWidget);
+      expect(find.byType(HomeScreen), findsOneWidget);
     });
 
     testWidgets('on a detail it goes back to the list as before', (

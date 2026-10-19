@@ -24,4 +24,13 @@ void main() {
   test('the thank-you screen is below the catalog', () {
     expect(AppRoutes.bookingSent, '/booking-sent');
   });
+
+  test('the four tabs of the public app (Phase 6b)', () {
+    expect(AppRoutes.home, '/');
+    expect(AppRoutes.cars, '/cars');
+    expect(AppRoutes.about, '/about');
+    expect(AppRoutes.faq, '/faq');
+    // The car page lies below the Cars tab.
+    expect(AppRoutes.car('abc'), '${AppRoutes.cars}/abc');
+  });
 }

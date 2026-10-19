@@ -693,6 +693,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Telegram'**
   String get bookingSentTelegram;
+
+  /// Bottom navigation: the Home tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get tabHome;
+
+  /// Bottom navigation: the tab with the list of cars.
+  ///
+  /// In en, this message translates to:
+  /// **'Cars'**
+  String get tabCars;
+
+  /// Bottom navigation: the tab with the About us and contact page.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
+  String get tabContact;
+
+  /// Bottom navigation: the tab with the frequently asked questions.
+  ///
+  /// In en, this message translates to:
+  /// **'FAQ'**
+  String get tabFaq;
+
+  /// Title of the About us and contact page.
+  ///
+  /// In en, this message translates to:
+  /// **'About us'**
+  String get aboutTitle;
+
+  /// Title of the FAQ page.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequently asked questions'**
+  String get faqTitle;
+
+  /// Shown on a page whose content is not ready yet.
+  ///
+  /// In en, this message translates to:
+  /// **'This page is coming soon.'**
+  String get pageComingSoon;
 }
 
 class _AppLocalizationsDelegate

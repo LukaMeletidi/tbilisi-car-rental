@@ -20,6 +20,7 @@ import 'package:tbilisi_car_rental/features/catalog/presentation/car_detail_scre
 import 'package:tbilisi_car_rental/features/catalog/presentation/cars_providers.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_screen.dart';
 import 'package:tbilisi_car_rental/features/fleet/data/fleet_repository.dart';
+import 'package:tbilisi_car_rental/features/home/presentation/home_screen.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/settings_providers.dart';
 import 'package:tbilisi_car_rental/l10n/generated/app_localizations.dart';
 
@@ -70,7 +71,7 @@ Future<void> settle(WidgetTester tester) async {
 ProviderContainer containerOf(WidgetTester tester) =>
     ProviderScope.containerOf(tester.element(find.byType(_App)));
 
-/// Starts the app on the catalog. With [initial] null the session stays
+/// Starts the app on Home. With [initial] null the session stays
 /// "unknown" until the test reports one.
 Future<void> pumpApp(
   WidgetTester tester, {
@@ -157,9 +158,8 @@ void main() {
       expectOnly(AdminLoginScreen);
     });
 
-    testWidgets('the back arrow of the login page opens the catalog', (
-      tester,
-    ) async {
+    testWidgets('the back arrow of the login page opens the public start '
+        '(Home)', (tester) async {
       await pumpApp(tester);
       await open(tester, '/admin/login');
 
@@ -167,7 +167,7 @@ void main() {
       await settle(tester);
 
       expectOnly(Null);
-      expect(find.byType(CatalogScreen), findsOneWidget);
+      expect(find.byType(HomeScreen), findsOneWidget);
       expect(address(tester), '/');
     });
   });
@@ -212,6 +212,8 @@ void main() {
       tester,
     ) async {
       await pumpApp(tester, initial: null);
+      // The catalog is the Cars tab since Phase 6b.
+      await open(tester, '/cars');
 
       expect(find.byType(CatalogScreen), findsOneWidget);
       await tester.tap(find.text('Toyota Prius, 2019'));
@@ -341,7 +343,7 @@ void main() {
           initial: session == AdminSession.unknown ? null : session,
         );
 
-        expect(find.byType(CatalogScreen), findsOneWidget);
+        expect(find.byType(HomeScreen), findsOneWidget);
         expect(address(tester), '/');
 
         await open(tester, '/cars/car-1');
@@ -370,7 +372,7 @@ void main() {
     });
   });
 
-  group('the logo of the catalog', () {
+  group('the logo of the public app bar', () {
     testWidgets('a long press opens the login page', (tester) async {
       await pumpApp(tester);
 
@@ -388,7 +390,7 @@ void main() {
       await settle(tester);
 
       expectOnly(Null);
-      expect(find.byType(CatalogScreen), findsOneWidget);
+      expect(find.byType(HomeScreen), findsOneWidget);
       expect(address(tester), '/');
     });
 

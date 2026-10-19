@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:tbilisi_car_rental/core/data/load_error_log.dart';
-import 'package:tbilisi_car_rental/core/router/app_router.dart';
-import 'package:tbilisi_car_rental/core/widgets/app_bar_logo.dart';
-import 'package:tbilisi_car_rental/core/widgets/language_menu_button.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/car_filter_provider.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/car_search_provider.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/cars_providers.dart';
@@ -13,6 +9,7 @@ import 'package:tbilisi_car_rental/features/catalog/presentation/widgets/car_gri
 import 'package:tbilisi_car_rental/features/catalog/presentation/widgets/catalog_message.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/widgets/catalog_search_field.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/widgets/filters_button.dart';
+import 'package:tbilisi_car_rental/features/home/presentation/widgets/public_tab_app_bar.dart';
 import 'package:tbilisi_car_rental/l10n/generated/app_localizations.dart';
 
 class CatalogScreen extends ConsumerWidget {
@@ -37,11 +34,7 @@ class CatalogScreen extends ConsumerWidget {
     );
 
     return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: appBarLogoToolbarHeight,
-        title: const _LogoWithAdminEntry(),
-        actions: const [LanguageMenuButton()],
-      ),
+      appBar: const PublicTabAppBar(),
       body: SafeArea(
         child: catalog.when(
           // Show the spinner again after "Try again" is pressed.
@@ -110,28 +103,6 @@ class CatalogScreen extends ConsumerWidget {
           },
         ),
       ),
-    );
-  }
-}
-
-/// The logo of the catalog app bar. A long press on it opens the admin
-/// sign-in page: the only way into the admin area on a phone, where no
-/// address can be typed.
-///
-/// It gives no hint to the public: no tooltip, no ripple, no hand cursor,
-/// and nothing extra for screen readers, which still read only the app
-/// name. A normal tap does nothing.
-class _LogoWithAdminEntry extends StatelessWidget {
-  const _LogoWithAdminEntry();
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      // Flutter's standard long press: about half a second.
-      onLongPress: () => context.go(AppRoutes.adminLogin),
-      // Without this, a screen reader would announce a long-press action.
-      excludeFromSemantics: true,
-      child: const AppBarLogo(),
     );
   }
 }
