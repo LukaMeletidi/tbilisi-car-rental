@@ -3191,14 +3191,22 @@ Phase 7 decisions (the owner's, 2026-10-20):
     commit).
 - 7.4 The Privacy Policy page /privacy and its links from the booking form
   (next to Send) and from the Contact tab; the texts come from the owner's
-  file in ka, ru and en. Decide whether the booking form needs a consent
-  line. Tier 2 — not started. Needs approval: the ARB files.
+  file in ka, ru and en. Tier 2 — DONE (in the commit "Add the Privacy
+  Policy page with links from the booking form and the Contact tab").
+  - The page /privacy is a top-level route above the catch-all, always
+    opened with push, so Back returns to the form (its values kept) or to
+    the Contact tab. A shared PrivacyLink sits under Send, after a consent
+    line, and at the end of the Contact tab; a button opens the Contact tab.
+  - 15 ARB keys. No reCAPTCHA mention yet: it is added in step 7.6. 2529
+    Flutter tests pass; the scan has 0 errors and 11 warnings.
 - 7.5 The web release build, a hosting block in firebase.json and a local
   check with a local web server, including the web admin offline-after-reload
   check of Section 15. Tier 1 — not started. Needs approval: firebase.json.
 - 7.6 App Check for the web: a reCAPTCHA key made by the owner in the
   console, the site key in the code, monitoring only. Tier 1 — not started.
   Needs: the owner's key; approval of the code change.
+  - Add the reCAPTCHA sentence to privacy section 5 (ka/ru/en) when App
+    Check is switched on.
 - 7.7 The first Hosting deploy, only after the owner's explicit "GO". The
   hosted domain must be in the authorized domains of Authentication; a smoke
   test on the live link (public tabs, the booking form, the admin sign-in,
