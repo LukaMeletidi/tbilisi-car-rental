@@ -1586,8 +1586,8 @@ Implementation decisions (step 2.2):
   3.4), url_launcher 6.3.3 (added in step 6b.8, with pubspec.lock).
 - Package approved for Phase 1: cloud_firestore.
 - Packages approved for later: shared_preferences, image_picker (Phase 4);
-  url_launcher was added in step 6b.8. Other Firebase packages are added in the phase that first uses them, with
-  approval.
+  url_launcher was added in step 6b.8. Other Firebase packages are added in
+  the phase that first uses them, with approval.
 - Not added for now: cached_network_image, flutter_launcher_icons.
 
 ## 11. Phased delivery plan
@@ -1605,9 +1605,9 @@ Implementation decisions (step 2.2):
 4. Fleet management — DONE (Section 19). The photo upload moved to Phase 7
    (Section 15).
 5. Calendar + conflict warning — DONE (Section 20).
-6. Settings screens (Extras & Prices, Company Info) + About Us page — open (the
-   steps are in Section 21). Phase 6b, a redesign of the public app (Home,
-   Cars, About/Contact, FAQ), is part of it: Section 22.
+6. Settings screens (Extras & Prices, Company Info) + About Us page — DONE
+   (Sections 21 and 22). Phase 6b, a redesign of the public app (Home, Cars,
+   About/Contact, FAQ), was part of it: Section 22.
 7. Cloud Functions + compliance + polish (App Check step 2.9b, consent banner, Privacy
    Policy, TTL, email, README with screenshots, launcher icon). The launcher icon is
    still open; it needs the package flutter_launcher_icons, which needs the owner's
@@ -1680,8 +1680,9 @@ Phase 0 is complete.
 
 ## 15. Open reminders
 
-- Still open after Phase 5: 4 of 7 cars need repair (the owner fills them in
-  the admin app; not a gate).
+- CLOSED in step 6b.9: the cars that needed repair. The owner repaired the old
+  cars in the admin app; no car shows "Needs repair". Car photos still need
+  the Storage upload of Phase 7 (below).
 - CLOSED before step 4.1: the Cloud Storage question. It needs the Blaze plan, so
   Phase 4 has no upload; photos are https addresses (Section 3.3, Phase 4 decisions).
 - For Phase 7, not decided: car photos by a real upload to Cloud Storage. It needs
@@ -1692,37 +1693,37 @@ Phase 0 is complete.
   at that time. `photos` stays a list of addresses, so the catalog does not change.
 - Before Phase 7: switch to Blaze, set a Google Cloud budget alert; Cloud Functions use
   Node 22 (Node 20 is being shut down).
-- For Phase 7 (noted in step 6b.2):
-  - A live link: the Flutter web build on Firebase Hosting. Every firebase
-    command needs its own approval; App Check for the hosted domain; the
-    domain added to the authorized domains of Authentication.
-  - An Android APK: the release keystore is never committed and key.properties
-    is git-ignored; the SHA fingerprints go into the Firebase Android app; a
-    launcher icon; a test on a real phone. App Check is not enforced for a
-    sideloaded APK.
-  - A centered maximum width for the public pages on wide screens (a small
-    step at the end of Phase 6b). Still open; Home has it since step 6b.6.
-  - The README with the live link, the APK and screenshots.
+- CLOSED in step 6b.9: a centered maximum width for the public pages. Home,
+  FAQ and Contact are centered at 720 px; the catalog has its own widths; the
+  owner checked a wide window.
+- For Phase 7 (from Phase 6b):
+  - A live link (6b.2): the Flutter web build on Firebase Hosting. Every
+    firebase command needs its own approval; App Check for the hosted domain;
+    the domain added to the authorized domains of Authentication.
+  - An Android APK (6b.2): the release keystore is never committed and
+    key.properties is git-ignored; the SHA fingerprints go into the Firebase
+    Android app; a launcher icon; a test on a real phone. App Check is not
+    enforced for a sideloaded APK.
+  - The README with the live link, the APK and screenshots (6b.2); a short
+    interim README exists since step 6b.9.
   - An unknown address such as /#/zzz shows go_router's own error page; it is
-    replaced by a public "not found" page.
-- For Phase 7 (noted in step 6b.6):
+    replaced by a public "not found" page (6b.2).
   - Check the licence of the Home photos, or replace them with own or
-    free-licence photos under the same file names.
+    free-licence photos under the same file names (6b.6).
   - After the booking form, Back goes to the catalog, not to Home: the car
-    page opens the form with context.go (known, unchanged).
+    page opens the form with context.go (known, unchanged; 6b.6).
   - A Home visit opens the active-cars listener: it reads every active car
-    document even if Cars is never opened.
+    document even if Cars is never opened (6b.6).
   - GoRouter.optionURLReflectsImperativeAPIs = true was set for the push from
-    Home to a car, so the browser address and Back follow it.
-- For Phase 7 (noted in step 6b.7): ExpansionTile gives screen readers only
-  the hint Collapsed or Expanded in this Flutter version; check the FAQ on a
-  real phone with TalkBack.
-- For Phase 7 (noted in step 6b.8):
+    Home to a car, so the browser address and Back follow it (6b.6).
+  - ExpansionTile gives screen readers only the hint Collapsed or Expanded in
+    this Flutter version; check the FAQ on a real phone with TalkBack (6b.7).
   - Test the phone and e-mail links on a real Android phone. On the web a
     failed tel: or mailto: cannot be detected; the copy button is the
-    fallback.
+    fallback (6b.8).
   - The Contact tab shows the live values of settings/company, which anyone
-    can read; the Privacy Policy should mention the contact details shown.
+    can read; the Privacy Policy should mention the contact details shown
+    (6b.8).
 - firebase_core 4.15.0 still applies the Kotlin Gradle Plugin the old way (build
   warning). Do not run flutter upgrade mid-project; check for a newer FlutterFire
   release first.
@@ -3071,14 +3072,48 @@ Steps:
   - 15 ARB keys. 2460 Flutter tests pass and analyze is clean; the scan has 0
     errors and 11 warnings.
 - 6b.9 Verify Phase 6 and Phase 6b and close them (replaces step 6.10). Tier 3
-  — not started. The totals in this file with the current count of scan
-  warnings; a check that the live extras prices are the original ones; the
-  notes refreshed.
-  - Later (noted in step 6b.5): some older cars in the live catalog show
-    "Needs repair" in the admin list (missing text). The owner repairs them
-    with the edit form; no code change.
-  - Later (noted in step 6b.7): the old ARB key faqTitle is unused now;
-    remove it in 6b.9, with its test, after approval.
-  - Later (noted in step 6b.8): remove PublicPlaceholder, the key
-    pageComingSoon and the key faqTitle (with its test) in 6b.9, after the
-    owner's approval.
+  — DONE (in the commits "Remove the unused placeholder page and texts" and
+  "Close Phase 6 and Phase 6b").
+  - The unused PublicPlaceholder widget and the keys pageComingSoon and
+    faqTitle were removed (ARB approval), with the tests that checked them.
+  - The results are in "Phase 6 and 6b totals"; Section 15 was refreshed and
+    a short interim README replaced Flutter's template.
+
+Phase 6 and 6b totals (written in step 6b.9):
+- Steps 6.1 to 6.7 (6.8 to 6.10 were replaced by 6b.8 and 6b.9) and 6b.1 to
+  6b.8 are done, in the 26 commits after a34b588 ("Close Phase 5"); step
+  6b.9 added the cleanup commit and this one. The app now has: the Settings
+  entry of the admin area with the Extras & Prices and Company Info forms;
+  the Popular mark of a car; the public shell with four tabs; Home, FAQ and
+  the Contact tab with tappable contacts.
+- Tests: 2459 Flutter tests pass and "flutter analyze" is clean. The tests of
+  the secrets scan: 47 of 47 pass. (At the end of Phase 5 there were 2001
+  Flutter tests.)
+- Secrets scan of the repository: 0 errors, 11 warnings, all intentional
+  made-up phone shapes in tests and in tool/check_booking_rules.mjs.
+- Rules: the emulator script, run again in step 6b.9 on the local emulator
+  (project demo-tbilisi-car-rental; Java from "Android Studio1\jbr", set for
+  that one command only): 104 of 104 public checks and 518 of 518 admin and
+  signed-in checks (402 at the end of Phase 5). No firebase command was run
+  against the real project in step 6b.9.
+- By the git history of the 26 commits: firestore.rules changed in 2 commits
+  (the last is 2c7e2a9, deployed in step 6b.4; the live rules equal HEAD);
+  firestore.indexes.json is unchanged since Phase 0; pubspec.yaml changed in
+  6b.6 (the assets) and 6b.8 (url_launcher 6.3.3, with pubspec.lock). The
+  ARB files have 173 keys, none unused. The 3 Home photos are bundled
+  without metadata.
+- The history of the 26 commits: every commit message (26) and every file
+  version changed (170; 20 binary or skipped), read with the scan's own code
+  by a temporary helper outside the repository (deleted afterwards): 0
+  errors, 17 warnings, all made-up phone shapes. An extra search of the
+  added lines found no e-mail address other than the allowed ones and
+  nothing shaped like a token.
+- Checked by hand by the owner: the extras prices are the original ones; the
+  live catalog has 7 cars, 7 visible, 0 hidden, 0 marked Popular, and no car
+  shows "Needs repair"; settings/company holds only the owner's chosen demo
+  values; the full Chrome check (Home, Cars, the booking form, Contact, FAQ,
+  the languages, a wide window, the admin area) passed.
+- Moved on to Phase 7: see Section 15, "For Phase 7 (from Phase 6b)" and the
+  other Phase 7 items there.
+
+Phase 6 is complete. Phase 6b is complete.

@@ -1,17 +1,18 @@
-# tbilisi_car_rental
+# Tbilisi Car Rental
 
-A new Flutter project.
+A portfolio car-rental app for Tbilisi: a public catalog of cars, booking
+requests and an admin panel. The company is fictional.
 
-## Getting Started
+## Tech
 
-This project is a starting point for a Flutter application.
+- Flutter and Dart, with Riverpod and go_router
+- Firebase: Firestore, Authentication and App Check
+- The texts are in Georgian, Russian and English
 
-A few resources to get you started if this is your first Flutter project:
+## Status
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+In development. The full README with the live link, the Android APK,
+screenshots and how the project was built comes in Phase 7.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+The plan, the decisions and the progress of every step are in
+[docs/PLAN.md](docs/PLAN.md).
