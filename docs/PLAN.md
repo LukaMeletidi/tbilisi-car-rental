@@ -1583,10 +1583,10 @@ Implementation decisions (step 2.2):
 - Packages installed: firebase_core 4.15.0, flutter_riverpod 3.4.3, go_router 18.0.2,
   flutter_localizations (Flutter SDK), intl 0.20.2, cloud_firestore 6.10.0,
   firebase_app_check 0.4.8 (added in step 2.9a), firebase_auth 6.7.0 (added in step
-  3.4).
+  3.4), url_launcher 6.3.3 (added in step 6b.8, with pubspec.lock).
 - Package approved for Phase 1: cloud_firestore.
-- Packages approved for later: url_launcher, shared_preferences, image_picker
-  (Phase 4). Other Firebase packages are added in the phase that first uses them, with
+- Packages approved for later: shared_preferences, image_picker (Phase 4);
+  url_launcher was added in step 6b.8. Other Firebase packages are added in the phase that first uses them, with
   approval.
 - Not added for now: cached_network_image, flutter_launcher_icons.
 
@@ -1717,6 +1717,12 @@ Phase 0 is complete.
 - For Phase 7 (noted in step 6b.7): ExpansionTile gives screen readers only
   the hint Collapsed or Expanded in this Flutter version; check the FAQ on a
   real phone with TalkBack.
+- For Phase 7 (noted in step 6b.8):
+  - Test the phone and e-mail links on a real Android phone. On the web a
+    failed tel: or mailto: cannot be detected; the copy button is the
+    fallback.
+  - The Contact tab shows the live values of settings/company, which anyone
+    can read; the Privacy Policy should mention the contact details shown.
 - firebase_core 4.15.0 still applies the Kotlin Gradle Plugin the old way (build
   warning). Do not run flutter upgrade mid-project; check for a newer FlutterFire
   release first.
@@ -3054,9 +3060,16 @@ Steps:
   - 2426 Flutter tests pass and analyze is clean; the scan has 0 errors and 11
     warnings.
 - 6b.8 About/Contact: the about text, the company data and tappable contacts.
-  Tier 2 — not started. Needs approval: the ARB files and the package
-  url_launcher (with pubspec.lock); the plan lists any Android or iOS platform
-  file it changes.
+  Tier 2 — DONE (in the commit "Add the Contact tab with the about text and
+  company contacts").
+  - The Contact tab: the about text from the ARB files and a contacts card
+    from settings/company (name, phone, e-mail, address, working hours, map
+    link, social links); a tap calls, writes or opens; copy buttons; loading,
+    error and empty states.
+  - The package url_launcher 6.3.3, the first new package since step 3.4;
+    pubspec.lock was committed with it. No platform file changed.
+  - 15 ARB keys. 2460 Flutter tests pass and analyze is clean; the scan has 0
+    errors and 11 warnings.
 - 6b.9 Verify Phase 6 and Phase 6b and close them (replaces step 6.10). Tier 3
   — not started. The totals in this file with the current count of scan
   warnings; a check that the live extras prices are the original ones; the
@@ -3066,3 +3079,6 @@ Steps:
     with the edit form; no code change.
   - Later (noted in step 6b.7): the old ARB key faqTitle is unused now;
     remove it in 6b.9, with its test, after approval.
+  - Later (noted in step 6b.8): remove PublicPlaceholder, the key
+    pageComingSoon and the key faqTitle (with its test) in 6b.9, after the
+    owner's approval.
