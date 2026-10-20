@@ -83,7 +83,9 @@ class ContactFields extends StatelessWidget {
           decoration: InputDecoration(
             labelText: l10n.bookingFullName,
             helperText: l10n.bookingFullNameHelper,
+            helperMaxLines: 2,
             errorText: nameError,
+            errorMaxLines: 6,
           ),
         ),
         const SizedBox(height: 12),
@@ -101,6 +103,7 @@ class ContactFields extends StatelessWidget {
             labelText: l10n.bookingPhone,
             hintText: bookingPhoneExample,
             errorText: phoneError,
+            errorMaxLines: 6,
           ),
         ),
         CheckboxListTile(
@@ -133,6 +136,7 @@ class ContactFields extends StatelessWidget {
           decoration: InputDecoration(
             labelText: l10n.bookingEmail,
             errorText: emailError,
+            errorMaxLines: 6,
           ),
         ),
       ],

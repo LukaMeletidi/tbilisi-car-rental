@@ -109,7 +109,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get catalogNoSearchMatch => 'No cars match your search';
 
   @override
-  String get makeBooking => 'Make a booking';
+  String get makeBooking => 'Request a booking';
 
   @override
   String get carNotAvailable => 'This car is not available';
@@ -135,7 +135,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bookingSectionContact => 'Your details';
 
   @override
-  String get bookingFullName => 'Full name and surname';
+  String get bookingFullName => 'First name and surname';
 
   @override
   String get bookingFullNameHelper => 'As in your passport';
@@ -156,10 +156,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bookingSectionDates => 'Dates';
 
   @override
-  String get bookingPickupDateTime => 'Pickup date and time';
+  String get bookingPickupDateTime => 'Pick-up date and time';
 
   @override
-  String get bookingDropoffDateTime => 'Dropoff date and time';
+  String get bookingDropoffDateTime => 'Return date and time';
 
   @override
   String get tbilisiTimeLabel => 'Tbilisi time (GMT+4)';
@@ -168,10 +168,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bookingSectionLocations => 'Places';
 
   @override
-  String get bookingPickupLocation => 'Pickup place';
+  String get bookingPickupLocation => 'Pick-up place';
 
   @override
-  String get bookingDropoffLocation => 'Dropoff place';
+  String get bookingDropoffLocation => 'Return place';
 
   @override
   String get bookingLocationOther => 'Other place';
@@ -271,18 +271,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bookingErrorEmailInvalid => 'Enter a valid e-mail address';
 
   @override
-  String get bookingErrorPickupRequired => 'Choose the pickup date and time';
+  String get bookingErrorPickupRequired => 'Choose the pick-up date and time';
 
   @override
   String get bookingErrorPickupNotInFuture =>
-      'The pickup time must be in the future';
+      'The pick-up time must be in the future';
 
   @override
-  String get bookingErrorDropoffRequired => 'Choose the dropoff date and time';
+  String get bookingErrorDropoffRequired => 'Choose the return date and time';
 
   @override
   String get bookingErrorDropoffNotAfterPickup =>
-      'The dropoff must be later than the pickup';
+      'The return must be later than the pick-up';
 
   @override
   String bookingErrorRentalTooLong(int days) {
@@ -321,10 +321,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bookingSentCar => 'Car';
 
   @override
-  String get bookingSentPickup => 'Pickup';
+  String get bookingSentPickup => 'Pick-up';
 
   @override
-  String get bookingSentDropoff => 'Dropoff';
+  String get bookingSentDropoff => 'Return';
 
   @override
   String get bookingSentNoExtras => 'None';

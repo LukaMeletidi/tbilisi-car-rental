@@ -418,8 +418,8 @@ void main() {
 
       await tapSend(tester);
 
-      expect(find.text('Choose the pickup date and time'), findsOneWidget);
-      expect(find.text('Choose the dropoff date and time'), findsOneWidget);
+      expect(find.text('Choose the pick-up date and time'), findsOneWidget);
+      expect(find.text('Choose the return date and time'), findsOneWidget);
       expect(find.text('Tbilisi time (GMT+4)'), findsNWidgets(2));
     });
 
@@ -447,7 +447,7 @@ void main() {
       expect(find.text('Enter your full name'), findsOneWidget);
       expect(find.text('Enter your phone number'), findsOneWidget);
       expect(find.text('Enter your e-mail'), findsOneWidget);
-      expect(find.text('Choose the pickup date and time'), findsOneWidget);
+      expect(find.text('Choose the pick-up date and time'), findsOneWidget);
       expect(find.text('Choose a place'), findsNWidgets(2));
       expect(find.text('Please check the marked fields'), findsOneWidget);
       expect(repository.sent, isEmpty);
@@ -458,7 +458,7 @@ void main() {
         'corrected', (tester) async {
       await pumpForm(tester);
 
-      await tester.enterText(field('Full name and surname'), 'N');
+      await tester.enterText(field('First name and surname'), 'N');
       await settle(tester);
       expect(find.text('The name is too short'), findsNothing);
 
@@ -469,7 +469,7 @@ void main() {
       // The other fields were not touched yet.
       expect(find.text('Enter your e-mail'), findsNothing);
 
-      await tester.enterText(field('Full name and surname'), 'Nino');
+      await tester.enterText(field('First name and surname'), 'Nino');
       await settle(tester);
       expect(find.text('The name is too short'), findsNothing);
     });
@@ -511,7 +511,7 @@ void main() {
 
       await tester.ensureVisible(sendButton());
       await settle(tester);
-      final name = field('Full name and surname');
+      final name = field('First name and surname');
       expect(tester.getRect(name).bottom, lessThan(0));
 
       await tapSend(tester);
@@ -678,7 +678,7 @@ void main() {
       final button = find.widgetWithText(FilledButton, 'Sending…');
       expect(tester.widget<FilledButton>(button).onPressed, isNull);
       expect(
-        tester.widget<TextField>(field('Full name and surname')).enabled,
+        tester.widget<TextField>(field('First name and surname')).enabled,
         false,
       );
       expect(
@@ -819,7 +819,7 @@ void main() {
     testWidgets('typed text survives a language switch and a reload of the '
         'settings, and the cursor stays in place', (tester) async {
       await pumpForm(tester);
-      final name = field('Full name and surname');
+      final name = field('First name and surname');
 
       await tester.enterText(name, 'Nino Beridze');
       await settle(tester);
@@ -836,7 +836,7 @@ void main() {
       container.read(appLanguageProvider.notifier).setLanguage(AppLanguage.ka);
       await settle(tester);
       expect(find.text('Nino Beridze'), findsOneWidget);
-      expect(find.text('Full name and surname'), findsNothing);
+      expect(find.text('First name and surname'), findsNothing);
 
       container.invalidate(extrasPricesProvider);
       container.invalidate(pickupLocationsProvider);
@@ -850,7 +850,7 @@ void main() {
     ) async {
       await pumpForm(tester);
 
-      await tester.enterText(field('Full name and surname'), 'Nino Beridze');
+      await tester.enterText(field('First name and surname'), 'Nino Beridze');
       await tester.enterText(field('Phone number'), '+995 555 12 34 56');
       await tester.tap(find.byType(DropdownButton<String>).first);
       await settle(tester);
@@ -867,13 +867,13 @@ void main() {
       expect(find.byType(BookingFormScreen), findsNothing);
       expect(find.byType(CarDetailScreen), findsOneWidget);
 
-      await tester.tap(find.widgetWithText(FilledButton, 'Make a booking'));
+      await tester.tap(find.widgetWithText(FilledButton, 'Request a booking'));
       await settle(tester);
 
       expect(find.byType(BookingFormScreen), findsOneWidget);
       String textOf(String label) =>
           tester.widget<TextField>(field(label)).controller!.text;
-      expect(textOf('Full name and surname'), 'Nino Beridze');
+      expect(textOf('First name and surname'), 'Nino Beridze');
       expect(textOf('Phone number'), '+995 555 12 34 56');
       expect(textOf('Address or place in Georgia'), 'Hotel in Batumi');
     });

@@ -294,7 +294,7 @@ void main() {
     ) async {
       await pumpApp(tester);
       await open(tester, '/cars/fiat');
-      await tester.tap(find.widgetWithText(FilledButton, 'Make a booking'));
+      await tester.tap(find.widgetWithText(FilledButton, 'Request a booking'));
       await settle(tester);
 
       expect(address(tester), '/cars/fiat/book');

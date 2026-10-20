@@ -73,6 +73,7 @@ class LocationField extends StatelessWidget {
           decoration: InputDecoration(
             labelText: label,
             errorText: isOther ? null : errorText,
+            errorMaxLines: 6,
             enabled: enabled,
           ),
           child: DropdownButtonHideUnderline(
@@ -113,6 +114,7 @@ class LocationField extends StatelessWidget {
             decoration: InputDecoration(
               labelText: l10n.bookingLocationOtherText,
               errorText: errorText,
+              errorMaxLines: 6,
             ),
           ),
         ],

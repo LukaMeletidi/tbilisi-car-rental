@@ -271,7 +271,7 @@ abstract class AppLocalizations {
   /// No description provided for @makeBooking.
   ///
   /// In en, this message translates to:
-  /// **'Make a booking'**
+  /// **'Request a booking'**
   String get makeBooking;
 
   /// No description provided for @carNotAvailable.
@@ -319,7 +319,7 @@ abstract class AppLocalizations {
   /// No description provided for @bookingFullName.
   ///
   /// In en, this message translates to:
-  /// **'Full name and surname'**
+  /// **'First name and surname'**
   String get bookingFullName;
 
   /// No description provided for @bookingFullNameHelper.
@@ -361,13 +361,13 @@ abstract class AppLocalizations {
   /// No description provided for @bookingPickupDateTime.
   ///
   /// In en, this message translates to:
-  /// **'Pickup date and time'**
+  /// **'Pick-up date and time'**
   String get bookingPickupDateTime;
 
   /// No description provided for @bookingDropoffDateTime.
   ///
   /// In en, this message translates to:
-  /// **'Dropoff date and time'**
+  /// **'Return date and time'**
   String get bookingDropoffDateTime;
 
   /// Shown with every date and time field.
@@ -385,13 +385,13 @@ abstract class AppLocalizations {
   /// No description provided for @bookingPickupLocation.
   ///
   /// In en, this message translates to:
-  /// **'Pickup place'**
+  /// **'Pick-up place'**
   String get bookingPickupLocation;
 
   /// No description provided for @bookingDropoffLocation.
   ///
   /// In en, this message translates to:
-  /// **'Dropoff place'**
+  /// **'Return place'**
   String get bookingDropoffLocation;
 
   /// No description provided for @bookingLocationOther.
@@ -577,25 +577,25 @@ abstract class AppLocalizations {
   /// No description provided for @bookingErrorPickupRequired.
   ///
   /// In en, this message translates to:
-  /// **'Choose the pickup date and time'**
+  /// **'Choose the pick-up date and time'**
   String get bookingErrorPickupRequired;
 
   /// No description provided for @bookingErrorPickupNotInFuture.
   ///
   /// In en, this message translates to:
-  /// **'The pickup time must be in the future'**
+  /// **'The pick-up time must be in the future'**
   String get bookingErrorPickupNotInFuture;
 
   /// No description provided for @bookingErrorDropoffRequired.
   ///
   /// In en, this message translates to:
-  /// **'Choose the dropoff date and time'**
+  /// **'Choose the return date and time'**
   String get bookingErrorDropoffRequired;
 
   /// No description provided for @bookingErrorDropoffNotAfterPickup.
   ///
   /// In en, this message translates to:
-  /// **'The dropoff must be later than the pickup'**
+  /// **'The return must be later than the pick-up'**
   String get bookingErrorDropoffNotAfterPickup;
 
   /// days = the longest rental the form accepts (365).
@@ -661,13 +661,13 @@ abstract class AppLocalizations {
   /// No description provided for @bookingSentPickup.
   ///
   /// In en, this message translates to:
-  /// **'Pickup'**
+  /// **'Pick-up'**
   String get bookingSentPickup;
 
   /// No description provided for @bookingSentDropoff.
   ///
   /// In en, this message translates to:
-  /// **'Dropoff'**
+  /// **'Return'**
   String get bookingSentDropoff;
 
   /// Shown in the summary when no extra was chosen.

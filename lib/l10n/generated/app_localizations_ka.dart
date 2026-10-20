@@ -109,7 +109,7 @@ class AppLocalizationsKa extends AppLocalizations {
   String get catalogNoSearchMatch => 'თქვენი ძიებით არაფერი მოიძებნა';
 
   @override
-  String get makeBooking => 'დაჯავშნა';
+  String get makeBooking => 'დაჯავშნის მოთხოვნა';
 
   @override
   String get carNotAvailable => 'ეს ავტომობილი მიუწვდომელია';
@@ -151,13 +151,13 @@ class AppLocalizationsKa extends AppLocalizations {
   String get bookingTelegram => 'ამ ნომერზე ვიყენებ Telegram-ს';
 
   @override
-  String get bookingEmail => 'ელ. ფოსტა';
+  String get bookingEmail => 'ელფოსტა';
 
   @override
   String get bookingSectionDates => 'თარიღები';
 
   @override
-  String get bookingPickupDateTime => 'აყვანის თარიღი და დრო';
+  String get bookingPickupDateTime => 'მიღების თარიღი და დრო';
 
   @override
   String get bookingDropoffDateTime => 'დაბრუნების თარიღი და დრო';
@@ -169,7 +169,7 @@ class AppLocalizationsKa extends AppLocalizations {
   String get bookingSectionLocations => 'ადგილები';
 
   @override
-  String get bookingPickupLocation => 'აყვანის ადგილი';
+  String get bookingPickupLocation => 'მიღების ადგილი';
 
   @override
   String get bookingDropoffLocation => 'დაბრუნების ადგილი';
@@ -187,7 +187,7 @@ class AppLocalizationsKa extends AppLocalizations {
   String get extraSnowChains => 'თოვლის ჯაჭვები';
 
   @override
-  String get extraChildSeat => 'ბავშვის სავარძელი';
+  String get extraChildSeat => 'საბავშვო სავარძელი';
 
   @override
   String get extraChildSeatAge => '1–4 წელი';
@@ -267,23 +267,23 @@ class AppLocalizationsKa extends AppLocalizations {
   }
 
   @override
-  String get bookingErrorEmailRequired => 'შეიყვანეთ ელ. ფოსტა';
+  String get bookingErrorEmailRequired => 'შეიყვანეთ ელფოსტა';
 
   @override
-  String get bookingErrorEmailInvalid => 'შეიყვანეთ სწორი ელ. ფოსტის მისამართი';
+  String get bookingErrorEmailInvalid => 'შეიყვანეთ სწორი ელფოსტის მისამართი';
 
   @override
-  String get bookingErrorPickupRequired => 'აირჩიეთ აყვანის თარიღი და დრო';
+  String get bookingErrorPickupRequired => 'აირჩიეთ მიღების თარიღი და დრო';
 
   @override
-  String get bookingErrorPickupNotInFuture => 'აყვანის დრო მომავალში უნდა იყოს';
+  String get bookingErrorPickupNotInFuture => 'მიღების დრო მომავალში უნდა იყოს';
 
   @override
   String get bookingErrorDropoffRequired => 'აირჩიეთ დაბრუნების თარიღი და დრო';
 
   @override
   String get bookingErrorDropoffNotAfterPickup =>
-      'დაბრუნება აყვანაზე გვიან უნდა იყოს';
+      'დაბრუნება მიღებაზე გვიან უნდა იყოს';
 
   @override
   String bookingErrorRentalTooLong(int days) {
@@ -322,7 +322,7 @@ class AppLocalizationsKa extends AppLocalizations {
   String get bookingSentCar => 'ავტომობილი';
 
   @override
-  String get bookingSentPickup => 'აყვანა';
+  String get bookingSentPickup => 'მიღება';
 
   @override
   String get bookingSentDropoff => 'დაბრუნება';
@@ -483,11 +483,11 @@ class AppLocalizationsKa extends AppLocalizations {
       'გზის გასწვრივ, ყოველ ხუთ კილომეტრში პატარა ბენზინგასამართი სადგურებია, ხოლო უფრო დიდი სადგურები — 10–15 კილომეტრის ინტერვალით. მათი უმეტესობა 24 საათის განმავლობაში მუშაობს. ხელმისაწვდომია საწვავის სხვადასხვა სახეობა, მათ შორის დიზელი, ასევე 92, 95 და 98-ოქტანიანი ბენზინი.';
 
   @override
-  String get faq3Question => 'როგორ ავიღო გაქირავებული ავტომობილი?';
+  String get faq3Question => 'როგორ მივიღო გაქირავებული ავტომობილი?';
 
   @override
   String get faq3Answer =>
-      'ჯავშნის წარმატებით დადასტურების შემდეგ, ავტომობილის წაღება შეგეძლებათ განსაზღვრულ ადგილას. ჩვენი წარმომადგენელი გადაგცემთ ავტომობილს, შეამოწმებს საჭირო დოკუმენტებს და აგიხსნით მისი გამოყენების თავისებურებებს.';
+      'ჯავშნის წარმატებით დადასტურების შემდეგ, ავტომობილის მიღება შეგეძლებათ განსაზღვრულ ადგილას. ჩვენი წარმომადგენელი გადაგცემთ ავტომობილს, შეამოწმებს საჭირო დოკუმენტებს და აგიხსნით მისი გამოყენების თავისებურებებს.';
 
   @override
   String get faq4Question =>

@@ -66,7 +66,8 @@ Future<void> settle(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 50));
 }
 
-Finder bookingButton() => find.widgetWithText(FilledButton, 'Make a booking');
+Finder bookingButton() =>
+    find.widgetWithText(FilledButton, 'Request a booking');
 
 /// The gallery's position text for screen readers, such as "Photo 1 of 3".
 Finder galleryPosition(String label) => find.byWidgetPredicate(

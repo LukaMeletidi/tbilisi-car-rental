@@ -125,7 +125,7 @@ void main() {
     expect(find.byType(CarDetailScreen), findsOneWidget);
     expect(find.text('Description'), findsOneWidget);
     expect(find.text('A good car.'), findsWidgets);
-    expect(find.widgetWithText(FilledButton, 'Make a booking'), findsOne);
+    expect(find.widgetWithText(FilledButton, 'Request a booking'), findsOne);
 
     await tester.pageBack();
     await settle(tester);
@@ -140,14 +140,14 @@ void main() {
     expect(find.text('Fiat 500, 2020'), findsNothing);
   });
 
-  testWidgets('"Make a booking" opens the form; Back returns to the car', (
+  testWidgets('"Request a booking" opens the form; Back returns to the car', (
     tester,
   ) async {
     await pumpApp(tester);
 
     await tester.tap(find.text('Skoda Octavia, 2020'));
     await settle(tester);
-    await tester.tap(find.widgetWithText(FilledButton, 'Make a booking'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Request a booking'));
     await settle(tester);
 
     expect(find.byType(BookingFormScreen), findsOneWidget);

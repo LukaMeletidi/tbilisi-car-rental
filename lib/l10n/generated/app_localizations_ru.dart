@@ -19,7 +19,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get catalogError =>
-      'Не удалось загрузить автомобили. Повторите попытку позже.';
+      'Не удалось загрузить автомобили. Попробуйте позже.';
 
   @override
   String get tryAgain => 'Повторить';
@@ -112,7 +112,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get catalogNoSearchMatch => 'По вашему запросу ничего не найдено';
 
   @override
-  String get makeBooking => 'Забронировать';
+  String get makeBooking => 'Оставить заявку';
 
   @override
   String get carNotAvailable => 'Этот автомобиль недоступен';
@@ -121,8 +121,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get backToCars => 'К списку автомобилей';
 
   @override
-  String get carError =>
-      'Не удалось загрузить автомобиль. Повторите попытку позже.';
+  String get carError => 'Не удалось загрузить автомобиль. Попробуйте позже.';
 
   @override
   String get descriptionTitle => 'Описание';

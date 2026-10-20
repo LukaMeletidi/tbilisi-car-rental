@@ -48,6 +48,7 @@ class NotesField extends StatelessWidget {
         hintText: l10n.bookingNotesHint,
         hintMaxLines: 3,
         errorText: errorText,
+        errorMaxLines: 6,
         counterText: showsNotesCounter(length)
             ? notesCounterText(length)
             : null,

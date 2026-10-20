@@ -125,7 +125,7 @@ void main() {
 
       await tapVisible(
         tester,
-        find.widgetWithText(FilledButton, 'Make a booking'),
+        find.widgetWithText(FilledButton, 'Request a booking'),
       );
       expect(find.byType(BookingFormScreen), findsOneWidget);
       expect(browserAddress(tester), '/cars/car-a/book');
@@ -135,10 +135,11 @@ void main() {
       expect(find.byType(CarDetailScreen), findsOneWidget);
       expect(browserAddress(tester), '/cars/car-a');
 
-      // The existing behaviour of the car page: "Make a booking" uses
+      // The existing behaviour of the car page: "Request a booking" uses
       // context.go, which builds the stack Cars -> car -> form anew. The
       // way back after a booking form therefore ends on the catalog, not
-      // on Home (decided in step 6b.6; the button is unchanged).
+      // on Home (decided in step 6b.6; the button's navigation is
+      // unchanged, its text since step 7.3a).
       await tester.pageBack();
       await settleHome(tester);
       expect(find.byType(CatalogScreen), findsOneWidget);

@@ -53,6 +53,7 @@ class DateTimeField extends StatelessWidget {
               decoration: InputDecoration(
                 labelText: label,
                 errorText: errorText,
+                errorMaxLines: 6,
                 enabled: enabled,
                 suffixIcon: const Icon(Icons.event),
               ),
