@@ -454,5 +454,65 @@
   "faq10Answer": "The amount of the prepayment depends on the date of booking, the rental period and the selected car model. Details are discussed personally at the time of booking.",
   "@faq10Answer": {
     "description": "FAQ page: the answer to question 10, shown when it is opened."
+  },
+  "aboutText": "Our company has been serving customers for years, offering high-quality, impeccably maintained, and clean vehicles. Our team of professionals is always ready to assist you 24/7. We provide not only high-quality cars but also excellent service and a friendly atmosphere. Our managers are always available to help you.",
+  "@aboutText": {
+    "description": "Contact tab: the \"About us\" paragraph."
+  },
+  "aboutContactsTitle": "Contacts",
+  "@aboutContactsTitle": {
+    "description": "Contact tab: the heading above the company contact details."
+  },
+  "aboutPhoneLabel": "Phone",
+  "@aboutPhoneLabel": {
+    "description": "Contact tab: the label of the phone number."
+  },
+  "aboutEmailLabel": "E-mail",
+  "@aboutEmailLabel": {
+    "description": "Contact tab: the label of the e-mail address."
+  },
+  "aboutAddressLabel": "Address",
+  "@aboutAddressLabel": {
+    "description": "Contact tab: the label of the address."
+  },
+  "aboutWorkingHoursLabel": "Working hours",
+  "@aboutWorkingHoursLabel": {
+    "description": "Contact tab: the label of the working hours."
+  },
+  "aboutShowOnMap": "Show on the map",
+  "@aboutShowOnMap": {
+    "description": "Contact tab: opens the map link when no address is set."
+  },
+  "aboutCopy": "Copy",
+  "@aboutCopy": {
+    "description": "Contact tab: the tooltip of the copy button next to a contact."
+  },
+  "aboutCopied": "Copied",
+  "@aboutCopied": {
+    "description": "Contact tab: shown after a contact was copied."
+  },
+  "aboutOpenFailed": "Could not open the link. The text was copied.",
+  "@aboutOpenFailed": {
+    "description": "Contact tab: shown when a link could not be opened; it was copied."
+  },
+  "aboutContactsError": "Could not load the contact details. Please try again later.",
+  "@aboutContactsError": {
+    "description": "Contact tab: shown when the contact details cannot be loaded."
+  },
+  "aboutFacebook": "Facebook",
+  "@aboutFacebook": {
+    "description": "Contact tab: the link to the Facebook page."
+  },
+  "aboutInstagram": "Instagram",
+  "@aboutInstagram": {
+    "description": "Contact tab: the link to the Instagram page."
+  },
+  "aboutWhatsapp": "WhatsApp",
+  "@aboutWhatsapp": {
+    "description": "Contact tab: the WhatsApp link."
+  },
+  "aboutTelegram": "Telegram",
+  "@aboutTelegram": {
+    "description": "Contact tab: the Telegram link."
   }
 }

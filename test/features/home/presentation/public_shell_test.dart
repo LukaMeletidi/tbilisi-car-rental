@@ -147,6 +147,8 @@ Future<void> pumpApp(
             ),
           ]),
         ),
+        // The Contact tab: company data not filled in yet.
+        companyInfoProvider.overrideWith((ref) => Stream.value(null)),
       ],
       child: const _App(),
     ),
@@ -215,15 +217,18 @@ void main() {
       }
     });
 
-    testWidgets('Home and FAQ have their content; Contact is still a '
-        'placeholder with its title and "coming soon"', (tester) async {
+    testWidgets('Home, Contact and FAQ have their content; no page is '
+        '"coming soon"', (tester) async {
       await pumpApp(tester);
       // Home since step 6b.6: the hero, no "coming soon".
       expect(find.text('Autopark'), findsOneWidget);
       expect(find.text('This page is coming soon.'), findsNothing);
+      // Contact since step 6b.8: "About us" and its text; no company data
+      // in this harness, so no Contacts card.
       await tapTab(tester, 'Contact');
       expect(find.text('About us'), findsOneWidget);
-      expect(find.text('This page is coming soon.'), findsOneWidget);
+      expect(find.text('Contacts'), findsNothing);
+      expect(find.text('This page is coming soon.'), findsNothing);
       // FAQ since step 6b.7: its heading, no "coming soon".
       await tapTab(tester, 'FAQ');
       expect(

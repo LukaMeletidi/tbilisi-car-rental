@@ -544,4 +544,51 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get faq10Answer =>
       'The amount of the prepayment depends on the date of booking, the rental period and the selected car model. Details are discussed personally at the time of booking.';
+
+  @override
+  String get aboutText =>
+      'Our company has been serving customers for years, offering high-quality, impeccably maintained, and clean vehicles. Our team of professionals is always ready to assist you 24/7. We provide not only high-quality cars but also excellent service and a friendly atmosphere. Our managers are always available to help you.';
+
+  @override
+  String get aboutContactsTitle => 'Contacts';
+
+  @override
+  String get aboutPhoneLabel => 'Phone';
+
+  @override
+  String get aboutEmailLabel => 'E-mail';
+
+  @override
+  String get aboutAddressLabel => 'Address';
+
+  @override
+  String get aboutWorkingHoursLabel => 'Working hours';
+
+  @override
+  String get aboutShowOnMap => 'Show on the map';
+
+  @override
+  String get aboutCopy => 'Copy';
+
+  @override
+  String get aboutCopied => 'Copied';
+
+  @override
+  String get aboutOpenFailed => 'Could not open the link. The text was copied.';
+
+  @override
+  String get aboutContactsError =>
+      'Could not load the contact details. Please try again later.';
+
+  @override
+  String get aboutFacebook => 'Facebook';
+
+  @override
+  String get aboutInstagram => 'Instagram';
+
+  @override
+  String get aboutWhatsapp => 'WhatsApp';
+
+  @override
+  String get aboutTelegram => 'Telegram';
 }

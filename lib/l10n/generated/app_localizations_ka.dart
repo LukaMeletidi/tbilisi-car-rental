@@ -548,4 +548,51 @@ class AppLocalizationsKa extends AppLocalizations {
   @override
   String get faq10Answer =>
       'წინასწარი გადახდის ოდენობა დამოკიდებულია დაჯავშნის თარიღზე, გაქირავების პერიოდსა და ავტომობილის შერჩეულ მოდელზე. დეტალები განიხილება ინდივიდუალურად, დაჯავშნის პროცესში.';
+
+  @override
+  String get aboutText =>
+      'ჩვენი კომპანია წლებია ემსახურება მომხმარებლებს და თავაზობს მაღალი ხარისხის, იდეალურად გამართულ და სუფთა ავტომობილებს. ჩვენი პროფესიონალებისგან შემდგარი გუნდი ყოველთვის მზადაა მოგემსახუროთ 24/7 რეჟიმში. ჩვენ გთავაზობთ არა მხოლოდ მაღალი ხარისხის ავტომობილებს, არამედ კარგ მომსახურებასა და მეგობრულ გარემოს. ჩვენი მენეჯერები მუდამ მზად არიან დახმარება გაგიწიონ.';
+
+  @override
+  String get aboutContactsTitle => 'კონტაქტები';
+
+  @override
+  String get aboutPhoneLabel => 'ტელეფონი';
+
+  @override
+  String get aboutEmailLabel => 'ელფოსტა';
+
+  @override
+  String get aboutAddressLabel => 'მისამართი';
+
+  @override
+  String get aboutWorkingHoursLabel => 'სამუშაო საათები';
+
+  @override
+  String get aboutShowOnMap => 'რუკაზე ნახვა';
+
+  @override
+  String get aboutCopy => 'კოპირება';
+
+  @override
+  String get aboutCopied => 'დაკოპირდა';
+
+  @override
+  String get aboutOpenFailed => 'ბმულის გახსნა ვერ მოხერხდა. ტექსტი დაკოპირდა.';
+
+  @override
+  String get aboutContactsError =>
+      'საკონტაქტო მონაცემების ჩატვირთვა ვერ მოხერხდა. სცადეთ მოგვიანებით.';
+
+  @override
+  String get aboutFacebook => 'Facebook';
+
+  @override
+  String get aboutInstagram => 'Instagram';
+
+  @override
+  String get aboutWhatsapp => 'WhatsApp';
+
+  @override
+  String get aboutTelegram => 'Telegram';
 }

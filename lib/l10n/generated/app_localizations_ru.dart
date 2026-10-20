@@ -549,4 +549,51 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get faq10Answer =>
       'Размер предоплаты зависит от даты брони, срока аренды и выбранной модели автомобиля. Подробности обсуждаются персонально при бронировании.';
+
+  @override
+  String get aboutText =>
+      'Наша компания работает с клиентами уже много лет, предлагая качественные, безупречно обслуживаемые и чистые автомобили. Наша команда профессионалов готова помочь вам в любое время — 24 часа в сутки, 7 дней в неделю. Мы предоставляем не только первоклассные автомобили, но и отличный сервис в доброжелательной атмосфере. Наши менеджеры всегда на связи и готовы вам помочь.';
+
+  @override
+  String get aboutContactsTitle => 'Контакты';
+
+  @override
+  String get aboutPhoneLabel => 'Телефон';
+
+  @override
+  String get aboutEmailLabel => 'Эл. почта';
+
+  @override
+  String get aboutAddressLabel => 'Адрес';
+
+  @override
+  String get aboutWorkingHoursLabel => 'Часы работы';
+
+  @override
+  String get aboutShowOnMap => 'Показать на карте';
+
+  @override
+  String get aboutCopy => 'Копировать';
+
+  @override
+  String get aboutCopied => 'Скопировано';
+
+  @override
+  String get aboutOpenFailed => 'Не удалось открыть ссылку. Текст скопирован.';
+
+  @override
+  String get aboutContactsError =>
+      'Не удалось загрузить контактные данные. Попробуйте позже.';
+
+  @override
+  String get aboutFacebook => 'Facebook';
+
+  @override
+  String get aboutInstagram => 'Instagram';
+
+  @override
+  String get aboutWhatsapp => 'WhatsApp';
+
+  @override
+  String get aboutTelegram => 'Telegram';
 }

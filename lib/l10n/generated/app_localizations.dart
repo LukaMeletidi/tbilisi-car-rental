@@ -1059,6 +1059,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The amount of the prepayment depends on the date of booking, the rental period and the selected car model. Details are discussed personally at the time of booking.'**
   String get faq10Answer;
+
+  /// Contact tab: the "About us" paragraph.
+  ///
+  /// In en, this message translates to:
+  /// **'Our company has been serving customers for years, offering high-quality, impeccably maintained, and clean vehicles. Our team of professionals is always ready to assist you 24/7. We provide not only high-quality cars but also excellent service and a friendly atmosphere. Our managers are always available to help you.'**
+  String get aboutText;
+
+  /// Contact tab: the heading above the company contact details.
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts'**
+  String get aboutContactsTitle;
+
+  /// Contact tab: the label of the phone number.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get aboutPhoneLabel;
+
+  /// Contact tab: the label of the e-mail address.
+  ///
+  /// In en, this message translates to:
+  /// **'E-mail'**
+  String get aboutEmailLabel;
+
+  /// Contact tab: the label of the address.
+  ///
+  /// In en, this message translates to:
+  /// **'Address'**
+  String get aboutAddressLabel;
+
+  /// Contact tab: the label of the working hours.
+  ///
+  /// In en, this message translates to:
+  /// **'Working hours'**
+  String get aboutWorkingHoursLabel;
+
+  /// Contact tab: opens the map link when no address is set.
+  ///
+  /// In en, this message translates to:
+  /// **'Show on the map'**
+  String get aboutShowOnMap;
+
+  /// Contact tab: the tooltip of the copy button next to a contact.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get aboutCopy;
+
+  /// Contact tab: shown after a contact was copied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get aboutCopied;
+
+  /// Contact tab: shown when a link could not be opened; it was copied.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the link. The text was copied.'**
+  String get aboutOpenFailed;
+
+  /// Contact tab: shown when the contact details cannot be loaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the contact details. Please try again later.'**
+  String get aboutContactsError;
+
+  /// Contact tab: the link to the Facebook page.
+  ///
+  /// In en, this message translates to:
+  /// **'Facebook'**
+  String get aboutFacebook;
+
+  /// Contact tab: the link to the Instagram page.
+  ///
+  /// In en, this message translates to:
+  /// **'Instagram'**
+  String get aboutInstagram;
+
+  /// Contact tab: the WhatsApp link.
+  ///
+  /// In en, this message translates to:
+  /// **'WhatsApp'**
+  String get aboutWhatsapp;
+
+  /// Contact tab: the Telegram link.
+  ///
+  /// In en, this message translates to:
+  /// **'Telegram'**
+  String get aboutTelegram;
 }
 
 class _AppLocalizationsDelegate
