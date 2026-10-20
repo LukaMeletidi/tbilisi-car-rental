@@ -3173,9 +3173,22 @@ Phase 7 decisions (the owner's, 2026-10-20):
   - The page is the last top-level catch-all route, plus errorBuilder for
     router errors; Android's system Back goes to Home. 3 ARB keys. 2492
     Flutter tests pass; the scan has 0 errors and 11 warnings.
-- 7.3 Small text polish: the offline notice of the settings forms, the
-  wording for a negative price, helper texts (admin texts, English only).
-  Tier 3 — not started.
+- 7.3a The public texts. Tier 2 — DONE (in the commit "Polish the public
+  texts and let booking field errors wrap").
+  - One term each: ka pick-up "მიღება" (also in FAQ 3), en "Pick-up" and
+    "Return"; ka "ელფოსტა" and "საბავშვო სავარძელი"; the ru load errors
+    say "Попробуйте позже"; the car page button is "Request a booking".
+  - errorMaxLines 6 on the booking form fields (the phone error needs 5
+    lines at 360 px and text size 1.3); a layout test (the form and the
+    filter sheet, ka, ru, en) and a terms test. 2506 Flutter tests pass.
+- 7.3b The admin texts (English only). Tier 3 — not started: the offline
+  notice of the settings forms, the wording for a negative price, helper
+  texts, and "Pickup" -> "Pick-up" in the admin texts to match the public
+  app. Optional: a shorter phone error with the example only in the hint
+  (needs the owner's wording).
+  - Small tidy-ups: replace the sample car name in
+    booking_form_screen_test.dart by a made-up one (a separate Tier 3
+    commit).
 - 7.4 The Privacy Policy page /privacy and its links from the booking form
   (next to Send) and from the Contact tab; the texts come from the owner's
   file in ka, ru and en. Decide whether the booking form needs a consent
