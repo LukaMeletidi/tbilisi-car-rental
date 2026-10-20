@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
+import 'package:tbilisi_car_rental/core/widgets/section_title.dart';
 import 'package:tbilisi_car_rental/features/home/presentation/home_layout.dart';
 import 'package:tbilisi_car_rental/features/home/presentation/widgets/home_info_card.dart';
 import 'package:tbilisi_car_rental/features/home/presentation/widgets/home_page_view.dart';
 import 'package:tbilisi_car_rental/features/home/presentation/widgets/home_photo_backdrop.dart';
-import 'package:tbilisi_car_rental/features/home/presentation/widgets/home_section_title.dart';
 import 'package:tbilisi_car_rental/l10n/generated/app_localizations.dart';
 
 /// The benefits: the title on the purple page and three white cards with a
@@ -63,7 +63,7 @@ class _CardsOnPurple extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        HomeSectionTitle(title),
+        SectionTitle(title),
         HomePageView(
           name: name,
           pages: [

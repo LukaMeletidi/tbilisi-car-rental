@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 
-import 'package:tbilisi_car_rental/features/home/presentation/home_layout.dart';
-
-/// The white bold title of a Home block, on the purple page, centered over
-/// the full width (also when a long title takes several lines).
-class HomeSectionTitle extends StatelessWidget {
-  const HomeSectionTitle(this.text, {super.key});
+/// The white bold title of a block of a public page (Home, FAQ), on the
+/// purple page, centered over the full width (also when a long title takes
+/// several lines). Screen readers hear it as a header.
+class SectionTitle extends StatelessWidget {
+  const SectionTitle(this.text, {super.key});
 
   final String text;
 
@@ -13,7 +12,7 @@ class HomeSectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(homeGutter, 24, homeGutter, 12),
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
       child: Semantics(
         header: true,
         child: SizedBox(

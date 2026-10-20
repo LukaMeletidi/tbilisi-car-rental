@@ -468,4 +468,80 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeTraffic3Text => 'On motorways';
+
+  @override
+  String get faqPageHeading => 'Answers to popular customer questions';
+
+  @override
+  String get faq1Question => 'What documents are required to rent a car?';
+
+  @override
+  String get faq1Answer =>
+      'To rent a car, you will need a valid driver\'s license, passport and international driver\'s license (if your country is not included in the agreed list).';
+
+  @override
+  String get faq2Question => 'Where is the best place to refuel in Georgia?';
+
+  @override
+  String get faq2Answer =>
+      'On each five-kilometer stretch of road you will find small gas stations, and larger ones are located 10-15 km away. The vast majority of stations operate around the clock. Various types of fuel are available to you, including diesel, 92nd, 95th and 98th gasoline.';
+
+  @override
+  String get faq3Question => 'How do I get a rental car?';
+
+  @override
+  String get faq3Answer =>
+      'After successful booking, you can pick up the car at the specified location. Our representative will provide you with a car, check the necessary documents and tell you about the features of use.';
+
+  @override
+  String get faq4Question =>
+      'Have plans changed: the cancellation process and related payments?';
+
+  @override
+  String get faq4Answer =>
+      'If your plans have changed, you can cancel your reservation by contacting our support service. Depending on the date and reason for cancellation, certain payments may apply.';
+
+  @override
+  String get faq5Question =>
+      'The impact of flight cancellation or postponement on car booking?';
+
+  @override
+  String get faq5Answer =>
+      'If your flight is cancelled or rescheduled, please contact us as soon as possible. We will try to adapt your order according to the new schedule.';
+
+  @override
+  String get faq6Question => 'What expenses can I incur when renting a car?';
+
+  @override
+  String get faq6Answer =>
+      'Expenses may include fuel, payment of fines for traffic violations and additional services if they are not included in the main package.';
+
+  @override
+  String get faq7Question => 'What happens if you break the lease?';
+
+  @override
+  String get faq7Answer =>
+      'Violation of the lease agreement may result in unilateral termination of the agreement, fines under the agreement and legal consequences in accordance with the legislation of Georgia.';
+
+  @override
+  String get faq8Question =>
+      'The procedure for paying for a car rental: when and how is it performed?';
+
+  @override
+  String get faq8Answer =>
+      'The rent is paid at the time of signing the contract. We accept payments by cards, online transfers, and cryptocurrency — in any currency.';
+
+  @override
+  String get faq9Question => 'How should cars be returned after the rental?';
+
+  @override
+  String get faq9Answer =>
+      'It is necessary to return the car in the same condition in which it was received, with the same fuel level. Our cars are available for rent in a clean condition.';
+
+  @override
+  String get faq10Question => 'What is the amount of the prepayment?';
+
+  @override
+  String get faq10Answer =>
+      'The amount of the prepayment depends on the date of booking, the rental period and the selected car model. Details are discussed personally at the time of booking.';
 }

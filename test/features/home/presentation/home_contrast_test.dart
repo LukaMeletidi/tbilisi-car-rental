@@ -5,9 +5,9 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:tbilisi_car_rental/core/theme/app_theme.dart';
+import 'package:tbilisi_car_rental/core/widgets/section_title.dart';
 import 'package:tbilisi_car_rental/features/home/presentation/home_layout.dart';
 import 'package:tbilisi_car_rental/features/home/presentation/widgets/home_photo_backdrop.dart';
-import 'package:tbilisi_car_rental/features/home/presentation/widgets/home_section_title.dart';
 
 import 'home_harness.dart';
 
@@ -130,7 +130,7 @@ void main() {
       ) async {
         await pumpHome(tester, language: language);
         final titles = find.descendant(
-          of: find.byType(HomeSectionTitle),
+          of: find.byType(SectionTitle),
           matching: find.byType(RichText),
         );
         expect(titles, findsWidgets);

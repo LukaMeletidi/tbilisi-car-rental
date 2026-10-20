@@ -5,11 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:tbilisi_car_rental/core/models/car.dart';
 import 'package:tbilisi_car_rental/core/router/app_router.dart';
 import 'package:tbilisi_car_rental/core/widgets/app_card.dart';
+import 'package:tbilisi_car_rental/core/widgets/section_title.dart';
 import 'package:tbilisi_car_rental/features/catalog/presentation/widgets/car_photo.dart';
 import 'package:tbilisi_car_rental/features/fleet/domain/car_limits.dart';
 import 'package:tbilisi_car_rental/features/home/presentation/home_layout.dart';
 import 'package:tbilisi_car_rental/features/home/presentation/home_popular_provider.dart';
-import 'package:tbilisi_car_rental/features/home/presentation/widgets/home_section_title.dart';
 import 'package:tbilisi_car_rental/l10n/generated/app_localizations.dart';
 
 /// The key of the photo card of the car [carId], for tests.
@@ -33,7 +33,7 @@ class HomePopularCars extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        HomeSectionTitle(AppLocalizations.of(context).homeTopCarsTitle),
+        SectionTitle(AppLocalizations.of(context).homeTopCarsTitle),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: homeGutter),
           child: LayoutBuilder(

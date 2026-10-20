@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import 'package:tbilisi_car_rental/core/theme/app_theme.dart';
+import 'package:tbilisi_car_rental/core/widgets/section_title.dart';
 import 'package:tbilisi_car_rental/features/home/presentation/home_layout.dart';
 import 'package:tbilisi_car_rental/features/home/presentation/widgets/home_page_view.dart';
 import 'package:tbilisi_car_rental/features/home/presentation/widgets/home_photo_backdrop.dart';
-import 'package:tbilisi_car_rental/features/home/presentation/widgets/home_section_title.dart';
 import 'package:tbilisi_car_rental/l10n/generated/app_localizations.dart';
 
 /// The rental process: the title, then one photo that never changes with
@@ -26,7 +26,7 @@ class HomeProcessSection extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        HomeSectionTitle(l10n.homeProcessTitle),
+        SectionTitle(l10n.homeProcessTitle),
         HomePhotoBackdrop(
           image: homeProcessImage,
           scrim: true,
