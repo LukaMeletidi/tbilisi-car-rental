@@ -3,10 +3,9 @@
     "short_name": "Tbilisi Car Rental",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
+    "background_color": "#673AB7",
+    "theme_color": "#673AB7",
     "description": "Car rental in Tbilisi, Georgia.",
-    "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
         {
