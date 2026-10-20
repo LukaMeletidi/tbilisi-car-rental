@@ -3168,8 +3168,11 @@ Phase 7 decisions (the owner's, 2026-10-20):
 - 7.1 The Phase 7 decisions in this file. Tier 3 — DONE (in the commit
   "Record the Phase 7 decisions in the plan").
 - 7.2 A public "not found" page for unknown addresses such as /#/zzz,
-  instead of go_router's own error page. Tier 2 — not started. Needs
-  approval: the ARB files.
+  instead of go_router's own error page. Tier 2 — DONE (in the commit "Add
+  the public not-found page for unknown addresses").
+  - The page is the last top-level catch-all route, plus errorBuilder for
+    router errors; Android's system Back goes to Home. 3 ARB keys. 2492
+    Flutter tests pass; the scan has 0 errors and 11 warnings.
 - 7.3 Small text polish: the offline notice of the settings forms, the
   wording for a negative price, helper texts (admin texts, English only).
   Tier 3 — not started.
