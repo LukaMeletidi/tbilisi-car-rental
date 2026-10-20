@@ -1482,6 +1482,8 @@ Implementation decisions (step 2.2):
 
 ## 9. Analytics & Compliance
 
+Not planned since 2026-10-20; see Section 15 ('Not planned').
+
 - Firebase Analytics: track car views and filter usage.
 - Cookie/consent banner (web): Analytics is disabled until the user accepts; the choice
   is stored on the device; the banner links to the Privacy Policy.
@@ -1608,16 +1610,21 @@ Implementation decisions (step 2.2):
 6. Settings screens (Extras & Prices, Company Info) + About Us page — DONE
    (Sections 21 and 22). Phase 6b, a redesign of the public app (Home, Cars,
    About/Contact, FAQ), was part of it: Section 22.
-7. Cloud Functions + compliance + polish (App Check step 2.9b, consent banner, Privacy
-   Policy, TTL, email, README with screenshots, launcher icon). The launcher icon is
-   still open; it needs the package flutter_launcher_icons, which needs the owner's
-   permission then. This phase is open.
-   README: screenshots; an honest "how I worked" paragraph (architecture and business
-   rules are the owner's decisions, Claude Code writes the code under supervision, the
-   owner reviews and approves every change); a note that iOS could not be tested on
-   Windows.
+7. Release on the free plan: polish, the Privacy Policy, the live link (Flutter
+   web on Firebase Hosting) and an Android APK from a GitHub Release, then the
+   final README — open (the decisions of 2026-10-20 and the steps 7.1 to 7.12
+   are in Section 23). No paid services: the Blaze plan, Cloud Functions,
+   e-mail, TTL, the photo upload and Analytics are not planned (Section 15).
+   README: the live link, the APK link, screenshots and GIFs (the admin panel
+   is shown this way, never opened to visitors); an honest "how I worked"
+   paragraph (architecture and business rules are the owner's decisions,
+   Claude Code writes the code under supervision, the owner reviews and
+   approves every change); a note that iOS could not be tested on Windows;
+   "possible future work".
 
 ## 12. Cloud Functions — LAST PHASE ONLY
+
+Not planned since 2026-10-20; see Section 15 ('Not planned').
 
 The app must be fully functional without the Blaze plan until the last phase. In the
 last phase:
@@ -1685,14 +1692,24 @@ Phase 0 is complete.
   the Storage upload of Phase 7 (below).
 - CLOSED before step 4.1: the Cloud Storage question. It needs the Blaze plan, so
   Phase 4 has no upload; photos are https addresses (Section 3.3, Phase 4 decisions).
-- For Phase 7, not decided: car photos by a real upload to Cloud Storage. It needs
-  the Blaze plan (a billing account), a budget alert (which only warns and does not
-  stop spending), the packages firebase_storage and a picker, a storage.rules file
-  with its own emulator tests and deploy, and a bucket region. Only a bucket in
-  US-CENTRAL1, US-EAST1 or US-WEST1 has a no-cost level; read the pricing page again
-  at that time. `photos` stays a list of addresses, so the catalog does not change.
-- Before Phase 7: switch to Blaze, set a Google Cloud budget alert; Cloud Functions use
-  Node 22 (Node 20 is being shut down).
+- Not planned (free plan decision, 2026-10-20). The project stays on the Spark
+  plan; the Blaze plan is not planned. The README lists these items as
+  "possible future work":
+  - Cloud Functions and e-mail on a new booking (Section 12).
+  - expireAt with a TTL policy, or any automatic deletion (Sections 4 and 9);
+    the Privacy Policy says the data is kept until the owner deletes it. If
+    expireAt is ever added, the admin update rule must also allow an
+    unchanged expireAt, because an update is checked on the merged document.
+  - The car photo upload to Cloud Storage: car photos stay https addresses.
+    It would need Blaze, the packages firebase_storage and a picker, a
+    storage.rules file with emulator tests and a deploy, and a bucket in
+    US-CENTRAL1, US-EAST1 or US-WEST1 for the no-cost level.
+  - Analytics, and with it the consent banner (Section 9): no Analytics and no
+    advertising, so no consent banner is needed.
+  - App Check enforcement (step 2.9b, below): App Check stays monitoring only,
+    for the web and for the sideloaded APK.
+  - If this ever changes: Blaze first, with a Google Cloud budget alert (it
+    only warns and does not stop spending); Cloud Functions on Node 22.
 - CLOSED in step 6b.9: a centered maximum width for the public pages. Home,
   FAQ and Contact are centered at 720 px; the catalog has its own widths; the
   owner checked a wide window.
@@ -1738,8 +1755,9 @@ Phase 0 is complete.
     Apps > the Android app > Manage debug tokens). The token is a secret: never in a
     file, never committed, never in a build argument that ends up in the repo.
   - Not enforced. App Check itself is free on the Spark plan.
-  - Web: nothing yet. reCAPTCHA needs the domain of the site, and the site has no
-    public address (Hosting is undecided). Firebase recommends reCAPTCHA Enterprise
+  - Web: nothing yet; step 7.6 (Section 23) adds a reCAPTCHA key made by the
+    owner, monitoring only. reCAPTCHA needs the domain of the site (the
+    Hosting domain of step 7.7). Firebase recommends reCAPTCHA Enterprise
     for new integrations: 10,000 assessments per month at no cost; on Spark only four
     score levels can be chosen. Not settled from the documentation: whether creating
     the key needs a billing account in Google Cloud, and what happens above 10,000
@@ -1751,12 +1769,10 @@ Phase 0 is complete.
     README.
   - LOCK-OUT RISK: enforcing App Check for Firestore while Android users have a
     sideloaded APK would lock that app out completely (no catalog, no booking).
-  - OPEN for step 2.9b (Phase 7, with the public-demo decision), not decided:
-    (a) no enforcement at all, the rules stay the only protection;
-    (b) enforcement only if the public demo is a hosted web build with reCAPTCHA (and
-        no Android build is handed out, or the Android app is accepted as locked out);
-    (c) another option from the documentation at that time, for example a custom
-        App Check provider with our own server (needs Cloud Functions and Blaze).
+  - DECIDED for step 2.9b (2026-10-20): no enforcement at all, never Enforce; the
+    rules stay the only protection. The web gets reCAPTCHA in monitoring only
+    (step 7.6); the sideloaded APK has no App Check provider. The two items
+    below apply only if this decision ever changes.
   - Rollout when it is enforced: watch the request metrics first (verified, outdated
     client, unknown origin, invalid); press Enforce for Cloud Firestore only after a
     booking was made from the real release build; it can take up to 15 minutes to
@@ -1767,7 +1783,7 @@ Phase 0 is complete.
   - My anonymous REST checks against the live database (steps 2.3 and 2.6) stop
     working once Firestore is enforced; that is the intended effect.
   - The admin panel runs on web too. An enforced Firestore would need an App Check
-    provider for the admin web build as well; add this to the 2.9b decision.
+    provider for the admin web build as well (not needed: nothing is enforced).
   - Learned in steps 2.9a and 2.10: the debug token is created per app install. After
     a reinstall (for example after flutter run --release, or an uninstall) a NEW token
     appears in Logcat (filter DebugAppCheckProvider) and must be registered in the
@@ -1779,15 +1795,15 @@ Phase 0 is complete.
     "Unverified: invalid". Nothing is enforced.
   - Never commit or share a debug token. Delete all debug tokens in the console when
     the project is finished.
-- Analytics consent: Section 9 describes a web consent banner; decide in Phase 7 how
-  consent works on Android (proposal: the same consent screen on all platforms, the
-  choice stored with shared_preferences, Analytics off until accepted).
 - Privacy Policy and the booking form: the form has no consent line yet (decided in
-  step 2.7). When the Privacy Policy page exists, link it from the booking form, next
-  to the Send button, and decide then whether a consent line is needed.
-- Public demo: decide in Phase 7 whether it is a hosted web build, an APK, or both.
-- Web URLs keep the # for now; decide clean URLs and the Firebase Hosting rewrite rule
-  when we set up Hosting.
+  step 2.7). Step 7.4 adds the page /privacy, linked from the booking form next
+  to the Send button and from the Contact tab; whether a consent line is needed
+  is decided in step 7.4.
+- Public demo: DECIDED (2026-10-20): both, a live link (Flutter web on Firebase
+  Hosting) and an Android APK from a GitHub Release; no store. No demo notice on
+  Home or the booking form.
+- Web URLs: DECIDED (2026-10-20): the hash URLs (/#/...) stay; no clean URLs and
+  no Hosting rewrite rule.
 - Georgian font: not bundled. Checked in Phase 2 on the emulator with the full
   booking flow in Georgian: it looks fine.
 - Offline behaviour (since step 3.12b; it replaces what was noted in step 2.10).
@@ -1842,10 +1858,11 @@ Phase 0 is complete.
   system-wide Java is installed.
 - Before making the repo public: review it for secrets (google-services.json and
   firebase_options.dart are not secret and are allowed).
-- README is written in the last phase: screenshots, an honest "how I worked" paragraph
-  (architecture and business rules are my decisions; Claude Code writes the code under
-  my supervision; I review and approve every change), and a note that iOS could not be
-  tested on Windows.
+- README is written in the last phase (step 7.12): screenshots, an honest "how I
+  worked" paragraph (architecture and business rules are my decisions; Claude Code
+  writes the code under my supervision; I review and approve every change), and a
+  note that iOS could not be tested on Windows. The admin panel is not opened to
+  visitors (no shared password); the README shows it with screenshots and GIFs.
 - OPEN QUESTION, not a decision: Navigation between screens is not decided. Proposal to
   decide later: the public app uses plain back navigation for the booking flow and a
   small app bar menu for the About Us and Privacy Policy pages (decide in Phase 6); the
@@ -1854,8 +1871,9 @@ Phase 0 is complete.
   DECIDED before step 4.1: the responsive shell, built in step 4.4a (Section 3.3,
   Phase 4 decisions). The public part is DECIDED in Phase 6b (Section 22): a
   bottom navigation with four tabs at every width (Home, Cars, About/Contact,
-  FAQ); the info icon planned in step 6.1 is dropped. Where Privacy Policy
-  goes is decided in Phase 7.
+  FAQ); the info icon planned in step 6.1 is dropped. The Privacy Policy is
+  the page /privacy, linked from the booking form and the Contact tab (step
+  7.4).
 - App bar on other screens: the car detail screen reuses AppBarLogo next to the back
   arrow, with the same toolbar height (decided in step 2.4); the booking form and the
   thank-you screen do the same (step 2.7). Decide again for each new screen.
@@ -1867,16 +1885,14 @@ Phase 0 is complete.
 - Admin data on the device: CLOSED in step 3.12b. Firestore keeps no copy on disk on
   Android and iOS any more, and the old copy is removed at the first start after the
   update (see "Decisions of step 3.12b" in Section 3 and "Offline behaviour" above).
-- When Phase 7 adds expireAt (TTL), the admin update rule must also allow an
-  unchanged expireAt, because an update is checked on the merged document.
 - createdBy is not tied to who created a booking: the rules let an admin add or
   change it on any booking. A known simplification.
 - Web sign-in, not verified: the app asks Firebase to keep the admin sign-in for the
   browser session only, but that closing the browser really signs out was NOT verified
   on a normal Chrome profile. "flutter run -d chrome" opens a fresh temporary profile
   each time, so being signed out after reopening proves nothing. Check it on the
-  hosted web build (Phase 7), or with a normal Chrome and a local web server.
-- Web admin without a connection, not verified by hand (for Phase 7): a START
+  hosted web build (step 7.7), or with a normal Chrome and a local web server.
+- Web admin without a connection, not verified by hand (step 7.5): a START
   without a connection on the web was not tested by hand in step 3.12b; only the
   "Offline" note of a running session was seen in Chrome, and "flutter run" cannot
   reload its page offline. Tests cover the logic. Verify it once on a deployed or
@@ -3117,3 +3133,73 @@ Phase 6 and 6b totals (written in step 6b.9):
   other Phase 7 items there.
 
 Phase 6 is complete. Phase 6b is complete.
+
+## 23. Phase 7 status
+
+Phase 7: the release on the free plan (Section 11). The tiers are those of
+Section 19. A change of firestore.rules, firebase.json, the ARB files, the
+packages, pubspec.yaml (also the assets), the Android platform files or the
+indexes needs the owner's separate approval, and so does every firebase
+command and every release build; such steps say so.
+
+Phase 7 decisions (the owner's, 2026-10-20):
+- Goal: a portfolio app. No Google Play and no other store. Deliverables: a
+  live link (Flutter web on Firebase Hosting, Spark plan, free) and an
+  Android APK shared from a GitHub Release. iOS is not possible on Windows.
+- No paid services: the Blaze plan is not planned, so no Cloud Functions, no
+  e-mail sending, no TTL or automatic deletion, no Cloud Storage photo
+  upload (car photos stay https addresses) and no Analytics. The README lists
+  them as "possible future work" (Section 15, "Not planned"). No consent
+  banner is needed: there is no Analytics and no advertising.
+- No demo notice on Home or the booking form.
+- App Check for the web: a reCAPTCHA key (free), monitoring only. Never
+  Enforce, also not for the sideloaded APK.
+- A Privacy Policy page /privacy with the owner's texts (6 sections, ka, ru
+  and en), linked from the booking form and the Contact tab. It says that
+  the data is kept until the owner deletes it (no automatic deletion). Its
+  sentence about Google reCAPTCHA stays only once the App Check web step is
+  done.
+- The hash URLs (/#/...) stay; no clean URLs.
+- The admin panel is not opened to visitors (no shared password); the README
+  shows it with screenshots and GIFs.
+- Order: 7.1 to 7.12 as listed. The first four steps change no Firebase
+  setting.
+
+- 7.1 The Phase 7 decisions in this file. Tier 3 — DONE (in the commit
+  "Record the Phase 7 decisions in the plan").
+- 7.2 A public "not found" page for unknown addresses such as /#/zzz,
+  instead of go_router's own error page. Tier 2 — not started. Needs
+  approval: the ARB files.
+- 7.3 Small text polish: the offline notice of the settings forms, the
+  wording for a negative price, helper texts (admin texts, English only).
+  Tier 3 — not started.
+- 7.4 The Privacy Policy page /privacy and its links from the booking form
+  (next to Send) and from the Contact tab; the texts come from the owner's
+  file in ka, ru and en. Decide whether the booking form needs a consent
+  line. Tier 2 — not started. Needs approval: the ARB files.
+- 7.5 The web release build, a hosting block in firebase.json and a local
+  check with a local web server, including the web admin offline-after-reload
+  check of Section 15. Tier 1 — not started. Needs approval: firebase.json.
+- 7.6 App Check for the web: a reCAPTCHA key made by the owner in the
+  console, the site key in the code, monitoring only. Tier 1 — not started.
+  Needs: the owner's key; approval of the code change.
+- 7.7 The first Hosting deploy, only after the owner's explicit "GO". The
+  hosted domain must be in the authorized domains of Authentication; a smoke
+  test on the live link (public tabs, the booking form, the admin sign-in,
+  the web sign-in for the browser session only). Tier 1 — not started.
+- 7.8 The launcher icon and the app name. Tier 2 — not started. Needs: the
+  owner's approval of the package flutter_launcher_icons (with
+  pubspec.lock), the icon PNG from the owner, approval of the Android
+  platform files.
+- 7.9 The release signing: the keystore is made by the owner locally and
+  never committed; key.properties is git-ignored (.gitignore is checked
+  first); a signing config in the Android build file. Tier 1 — not started.
+- 7.10 The SHA-1 and SHA-256 of the release key added to the Firebase
+  Android app by the owner; flutter build apk --release; the APK goes to a
+  GitHub Release. Tier 1 — not started. Needs approval: the release build.
+- 7.11 Checks on a real Android phone by the owner: the public tabs, the
+  phone and e-mail links, TalkBack on the FAQ, Android Back everywhere,
+  offline, and the admin screens on Android. Tier 3 — not started.
+- 7.12 The final README: the live link, the APK link, screenshots, GIFs, an
+  honest "how I worked" paragraph, "iOS not tested on Windows" and "possible
+  future work". Tier 3 — not started.
