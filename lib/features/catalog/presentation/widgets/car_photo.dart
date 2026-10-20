@@ -7,14 +7,17 @@ const _photoCacheWidth = 1200;
 
 /// The first photo of a car in a 16:9 frame, or a placeholder.
 class CarPhoto extends StatelessWidget {
-  const CarPhoto({super.key, required this.photos});
+  const CarPhoto({super.key, required this.photos, this.aspectRatio = 16 / 9});
 
   final List<String> photos;
+
+  /// Width divided by height of the frame. Home uses 4:3 for its small cards.
+  final double aspectRatio;
 
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
-      aspectRatio: 16 / 9,
+      aspectRatio: aspectRatio,
       child: photos.isEmpty
           ? const _PhotoPlaceholder()
           : Image.network(

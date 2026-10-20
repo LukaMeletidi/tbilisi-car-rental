@@ -238,5 +238,137 @@
   "pageComingSoon": "This page is coming soon.",
   "@pageComingSoon": {
     "description": "Shown on a page whose content is not ready yet."
+  },
+  "homeHeroTitle": "Autopark",
+  "@homeHeroTitle": {
+    "description": "Home: the large title on the hero photo."
+  },
+  "homeHeroSubtitle": "Car catalog",
+  "@homeHeroSubtitle": {
+    "description": "Home: the subtitle below the hero title."
+  },
+  "homeTopCarsTitle": "The most popular cars",
+  "@homeTopCarsTitle": {
+    "description": "Home: the title above the popular cars."
+  },
+  "homeProcessTitle": "The process of car rental and delivery",
+  "@homeProcessTitle": {
+    "description": "Home: the title of the rental process steps."
+  },
+  "homeProcess1Title": "Choosing a car",
+  "@homeProcess1Title": {
+    "description": "Home: the title of rental process step 1."
+  },
+  "homeProcess1Text": "Take a look at our catalog and select the appropriate model.",
+  "@homeProcess1Text": {
+    "description": "Home: the text of rental process step 1."
+  },
+  "homeProcess2Title": "Booking",
+  "@homeProcess2Title": {
+    "description": "Home: the title of rental process step 2."
+  },
+  "homeProcess2Text": "Fill out the form on the website or contact us by phone.",
+  "@homeProcess2Text": {
+    "description": "Home: the text of rental process step 2."
+  },
+  "homeProcess3Title": "Confirmation",
+  "@homeProcess3Title": {
+    "description": "Home: the title of rental process step 3."
+  },
+  "homeProcess3Text": "Our manager will contact you to clarify the details.",
+  "@homeProcess3Text": {
+    "description": "Home: the text of rental process step 3."
+  },
+  "homeProcess4Title": "Getting a car",
+  "@homeProcess4Title": {
+    "description": "Home: the title of rental process step 4."
+  },
+  "homeProcess4Text": "Meeting at a place convenient for you, signing the contract and handing over the keys.",
+  "@homeProcess4Text": {
+    "description": "Home: the text of rental process step 4."
+  },
+  "homeBenefitsTitle": "We are interested in having you choose us again next time",
+  "@homeBenefitsTitle": {
+    "description": "Home: the title of the benefits cards."
+  },
+  "homeBenefit1Title": "24/7 service",
+  "@homeBenefit1Title": {
+    "description": "Home: the title of benefits card 1."
+  },
+  "homeBenefit1Text": "Our clients receive not only car rental, but also individual attention 24/7. A personal manager is always available to resolve issues during the entire rental period.",
+  "@homeBenefit1Text": {
+    "description": "Home: the text of benefits card 1."
+  },
+  "homeBenefit2Title": "Complete security",
+  "@homeBenefit2Title": {
+    "description": "Home: the title of benefits card 2."
+  },
+  "homeBenefit2Text": "All cars in our fleet are insured, providing you with peace of mind and confidence on any trip.",
+  "@homeBenefit2Text": {
+    "description": "Home: the text of benefits card 2."
+  },
+  "homeBenefit3Title": "High quality cars",
+  "@homeBenefit3Title": {
+    "description": "Home: the title of benefits card 3."
+  },
+  "homeBenefit3Text": "Our cars are always in excellent technical condition, equipped with winter tires in winter for your safety.",
+  "@homeBenefit3Text": {
+    "description": "Home: the text of benefits card 3."
+  },
+  "homeTermsTitle": "The best conditions for a comfortable trip",
+  "@homeTermsTitle": {
+    "description": "Home: the title of the conditions cards."
+  },
+  "homeTerms1Title": "Minimum deposit",
+  "@homeTerms1Title": {
+    "description": "Home: the title of conditions card 1."
+  },
+  "homeTerms1Text": "When renting a car, you need to make a deposit, the amount of which depends on the type of transmission of the car.",
+  "@homeTerms1Text": {
+    "description": "Home: the text of conditions card 1."
+  },
+  "homeTerms2Title": "Age from 21 years old",
+  "@homeTerms2Title": {
+    "description": "Home: the title of conditions card 2."
+  },
+  "homeTerms2Text": "Driving experience minimum 2 years: insurance requirements are standard, without additional conditions.",
+  "@homeTerms2Text": {
+    "description": "Home: the text of conditions card 2."
+  },
+  "homeTerms3Title": "Honest risk sharing",
+  "@homeTerms3Title": {
+    "description": "Home: the title of conditions card 3."
+  },
+  "homeTerms3Text": "For maximum peace of mind for tenants, all vehicles are covered by mandatory third-party civil liability insurance, and many also have full insurance coverage.",
+  "@homeTerms3Text": {
+    "description": "Home: the text of conditions card 3."
+  },
+  "homeTrafficTitle": "Features of traffic in Georgia",
+  "@homeTrafficTitle": {
+    "description": "Home: the title of the traffic rules cards."
+  },
+  "homeTraffic1Title": "Up to 60 km/h",
+  "@homeTraffic1Title": {
+    "description": "Home: the title of traffic rules card 1."
+  },
+  "homeTraffic1Text": "In populated areas",
+  "@homeTraffic1Text": {
+    "description": "Home: the text of traffic rules card 1."
+  },
+  "homeTraffic2Title": "Up to 90 km/h",
+  "@homeTraffic2Title": {
+    "description": "Home: the title of traffic rules card 2."
+  },
+  "homeTraffic2Text": "Outside the settlements",
+  "@homeTraffic2Text": {
+    "description": "Home: the text of traffic rules card 2."
+  },
+  "homeTraffic3Title": "Up to 110 km/h",
+  "@homeTraffic3Title": {
+    "description": "Home: the title of traffic rules card 3."
+  },
+  "homeTraffic3Text": "On motorways",
+  "@homeTraffic3Text": {
+    "description": "Home: the text of traffic rules card 3."
   }
 }

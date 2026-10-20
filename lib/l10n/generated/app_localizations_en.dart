@@ -358,4 +358,114 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pageComingSoon => 'This page is coming soon.';
+
+  @override
+  String get homeHeroTitle => 'Autopark';
+
+  @override
+  String get homeHeroSubtitle => 'Car catalog';
+
+  @override
+  String get homeTopCarsTitle => 'The most popular cars';
+
+  @override
+  String get homeProcessTitle => 'The process of car rental and delivery';
+
+  @override
+  String get homeProcess1Title => 'Choosing a car';
+
+  @override
+  String get homeProcess1Text =>
+      'Take a look at our catalog and select the appropriate model.';
+
+  @override
+  String get homeProcess2Title => 'Booking';
+
+  @override
+  String get homeProcess2Text =>
+      'Fill out the form on the website or contact us by phone.';
+
+  @override
+  String get homeProcess3Title => 'Confirmation';
+
+  @override
+  String get homeProcess3Text =>
+      'Our manager will contact you to clarify the details.';
+
+  @override
+  String get homeProcess4Title => 'Getting a car';
+
+  @override
+  String get homeProcess4Text =>
+      'Meeting at a place convenient for you, signing the contract and handing over the keys.';
+
+  @override
+  String get homeBenefitsTitle =>
+      'We are interested in having you choose us again next time';
+
+  @override
+  String get homeBenefit1Title => '24/7 service';
+
+  @override
+  String get homeBenefit1Text =>
+      'Our clients receive not only car rental, but also individual attention 24/7. A personal manager is always available to resolve issues during the entire rental period.';
+
+  @override
+  String get homeBenefit2Title => 'Complete security';
+
+  @override
+  String get homeBenefit2Text =>
+      'All cars in our fleet are insured, providing you with peace of mind and confidence on any trip.';
+
+  @override
+  String get homeBenefit3Title => 'High quality cars';
+
+  @override
+  String get homeBenefit3Text =>
+      'Our cars are always in excellent technical condition, equipped with winter tires in winter for your safety.';
+
+  @override
+  String get homeTermsTitle => 'The best conditions for a comfortable trip';
+
+  @override
+  String get homeTerms1Title => 'Minimum deposit';
+
+  @override
+  String get homeTerms1Text =>
+      'When renting a car, you need to make a deposit, the amount of which depends on the type of transmission of the car.';
+
+  @override
+  String get homeTerms2Title => 'Age from 21 years old';
+
+  @override
+  String get homeTerms2Text =>
+      'Driving experience minimum 2 years: insurance requirements are standard, without additional conditions.';
+
+  @override
+  String get homeTerms3Title => 'Honest risk sharing';
+
+  @override
+  String get homeTerms3Text =>
+      'For maximum peace of mind for tenants, all vehicles are covered by mandatory third-party civil liability insurance, and many also have full insurance coverage.';
+
+  @override
+  String get homeTrafficTitle => 'Features of traffic in Georgia';
+
+  @override
+  String get homeTraffic1Title => 'Up to 60 km/h';
+
+  @override
+  String get homeTraffic1Text => 'In populated areas';
+
+  @override
+  String get homeTraffic2Title => 'Up to 90 km/h';
+
+  @override
+  String get homeTraffic2Text => 'Outside the settlements';
+
+  @override
+  String get homeTraffic3Title => 'Up to 110 km/h';
+
+  @override
+  String get homeTraffic3Text => 'On motorways';
 }

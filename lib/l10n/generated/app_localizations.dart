@@ -735,6 +735,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This page is coming soon.'**
   String get pageComingSoon;
+
+  /// Home: the large title on the hero photo.
+  ///
+  /// In en, this message translates to:
+  /// **'Autopark'**
+  String get homeHeroTitle;
+
+  /// Home: the subtitle below the hero title.
+  ///
+  /// In en, this message translates to:
+  /// **'Car catalog'**
+  String get homeHeroSubtitle;
+
+  /// Home: the title above the popular cars.
+  ///
+  /// In en, this message translates to:
+  /// **'The most popular cars'**
+  String get homeTopCarsTitle;
+
+  /// Home: the title of the rental process steps.
+  ///
+  /// In en, this message translates to:
+  /// **'The process of car rental and delivery'**
+  String get homeProcessTitle;
+
+  /// Home: the title of rental process step 1.
+  ///
+  /// In en, this message translates to:
+  /// **'Choosing a car'**
+  String get homeProcess1Title;
+
+  /// Home: the text of rental process step 1.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a look at our catalog and select the appropriate model.'**
+  String get homeProcess1Text;
+
+  /// Home: the title of rental process step 2.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking'**
+  String get homeProcess2Title;
+
+  /// Home: the text of rental process step 2.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill out the form on the website or contact us by phone.'**
+  String get homeProcess2Text;
+
+  /// Home: the title of rental process step 3.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmation'**
+  String get homeProcess3Title;
+
+  /// Home: the text of rental process step 3.
+  ///
+  /// In en, this message translates to:
+  /// **'Our manager will contact you to clarify the details.'**
+  String get homeProcess3Text;
+
+  /// Home: the title of rental process step 4.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting a car'**
+  String get homeProcess4Title;
+
+  /// Home: the text of rental process step 4.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting at a place convenient for you, signing the contract and handing over the keys.'**
+  String get homeProcess4Text;
+
+  /// Home: the title of the benefits cards.
+  ///
+  /// In en, this message translates to:
+  /// **'We are interested in having you choose us again next time'**
+  String get homeBenefitsTitle;
+
+  /// Home: the title of benefits card 1.
+  ///
+  /// In en, this message translates to:
+  /// **'24/7 service'**
+  String get homeBenefit1Title;
+
+  /// Home: the text of benefits card 1.
+  ///
+  /// In en, this message translates to:
+  /// **'Our clients receive not only car rental, but also individual attention 24/7. A personal manager is always available to resolve issues during the entire rental period.'**
+  String get homeBenefit1Text;
+
+  /// Home: the title of benefits card 2.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete security'**
+  String get homeBenefit2Title;
+
+  /// Home: the text of benefits card 2.
+  ///
+  /// In en, this message translates to:
+  /// **'All cars in our fleet are insured, providing you with peace of mind and confidence on any trip.'**
+  String get homeBenefit2Text;
+
+  /// Home: the title of benefits card 3.
+  ///
+  /// In en, this message translates to:
+  /// **'High quality cars'**
+  String get homeBenefit3Title;
+
+  /// Home: the text of benefits card 3.
+  ///
+  /// In en, this message translates to:
+  /// **'Our cars are always in excellent technical condition, equipped with winter tires in winter for your safety.'**
+  String get homeBenefit3Text;
+
+  /// Home: the title of the conditions cards.
+  ///
+  /// In en, this message translates to:
+  /// **'The best conditions for a comfortable trip'**
+  String get homeTermsTitle;
+
+  /// Home: the title of conditions card 1.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum deposit'**
+  String get homeTerms1Title;
+
+  /// Home: the text of conditions card 1.
+  ///
+  /// In en, this message translates to:
+  /// **'When renting a car, you need to make a deposit, the amount of which depends on the type of transmission of the car.'**
+  String get homeTerms1Text;
+
+  /// Home: the title of conditions card 2.
+  ///
+  /// In en, this message translates to:
+  /// **'Age from 21 years old'**
+  String get homeTerms2Title;
+
+  /// Home: the text of conditions card 2.
+  ///
+  /// In en, this message translates to:
+  /// **'Driving experience minimum 2 years: insurance requirements are standard, without additional conditions.'**
+  String get homeTerms2Text;
+
+  /// Home: the title of conditions card 3.
+  ///
+  /// In en, this message translates to:
+  /// **'Honest risk sharing'**
+  String get homeTerms3Title;
+
+  /// Home: the text of conditions card 3.
+  ///
+  /// In en, this message translates to:
+  /// **'For maximum peace of mind for tenants, all vehicles are covered by mandatory third-party civil liability insurance, and many also have full insurance coverage.'**
+  String get homeTerms3Text;
+
+  /// Home: the title of the traffic rules cards.
+  ///
+  /// In en, this message translates to:
+  /// **'Features of traffic in Georgia'**
+  String get homeTrafficTitle;
+
+  /// Home: the title of traffic rules card 1.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to 60 km/h'**
+  String get homeTraffic1Title;
+
+  /// Home: the text of traffic rules card 1.
+  ///
+  /// In en, this message translates to:
+  /// **'In populated areas'**
+  String get homeTraffic1Text;
+
+  /// Home: the title of traffic rules card 2.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to 90 km/h'**
+  String get homeTraffic2Title;
+
+  /// Home: the text of traffic rules card 2.
+  ///
+  /// In en, this message translates to:
+  /// **'Outside the settlements'**
+  String get homeTraffic2Text;
+
+  /// Home: the title of traffic rules card 3.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to 110 km/h'**
+  String get homeTraffic3Title;
+
+  /// Home: the text of traffic rules card 3.
+  ///
+  /// In en, this message translates to:
+  /// **'On motorways'**
+  String get homeTraffic3Text;
 }
 
 class _AppLocalizationsDelegate

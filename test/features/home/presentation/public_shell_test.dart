@@ -215,14 +215,15 @@ void main() {
       }
     });
 
-    testWidgets('the placeholders show their titles and "coming soon"', (
-      tester,
-    ) async {
+    testWidgets('Home has its content; Contact and FAQ are still '
+        'placeholders with their titles and "coming soon"', (tester) async {
       await pumpApp(tester);
-      expect(find.text('Tbilisi Car Rental'), findsWidgets);
-      expect(find.text('This page is coming soon.'), findsOneWidget);
+      // Home since step 6b.6: the hero, no "coming soon".
+      expect(find.text('Autopark'), findsOneWidget);
+      expect(find.text('This page is coming soon.'), findsNothing);
       await tapTab(tester, 'Contact');
       expect(find.text('About us'), findsOneWidget);
+      expect(find.text('This page is coming soon.'), findsOneWidget);
       await tapTab(tester, 'FAQ');
       expect(find.text('Frequently asked questions'), findsOneWidget);
     });

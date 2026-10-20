@@ -8,7 +8,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tbilisi_car_rental/core/theme/app_theme.dart';
 import 'package:tbilisi_car_rental/features/about/presentation/about_screen.dart';
 import 'package:tbilisi_car_rental/features/faq/presentation/faq_screen.dart';
-import 'package:tbilisi_car_rental/features/home/presentation/home_screen.dart';
 import 'package:tbilisi_car_rental/l10n/generated/app_localizations.dart';
 
 /// The contrast ratio of two colours (WCAG): 1 for the same colour, 21 for
@@ -20,8 +19,8 @@ double contrast(Color a, Color b) {
 }
 
 void main() {
+  // Home is no placeholder since step 6b.6: home_contrast_test.dart.
   for (final (name, screen) in const <(String, Widget)>[
-    ('Home', HomeScreen()),
     ('About', AboutScreen()),
     ('FAQ', FaqScreen()),
   ]) {

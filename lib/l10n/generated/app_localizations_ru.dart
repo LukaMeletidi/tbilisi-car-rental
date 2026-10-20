@@ -362,4 +362,114 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get pageComingSoon => 'Эта страница скоро появится.';
+
+  @override
+  String get homeHeroTitle => 'Автопарк';
+
+  @override
+  String get homeHeroSubtitle => 'Каталог автомобилей';
+
+  @override
+  String get homeTopCarsTitle => 'Самые популярные автомобили';
+
+  @override
+  String get homeProcessTitle => 'Процесс аренды и доставки автомобиля';
+
+  @override
+  String get homeProcess1Title => 'Выбор автомобиля';
+
+  @override
+  String get homeProcess1Text =>
+      'Ознакомьтесь с нашим каталогом и выберите подходящую модель.';
+
+  @override
+  String get homeProcess2Title => 'Бронирование';
+
+  @override
+  String get homeProcess2Text =>
+      'Заполните форму на сайте или свяжитесь с нами по телефону.';
+
+  @override
+  String get homeProcess3Title => 'Подтверждение';
+
+  @override
+  String get homeProcess3Text =>
+      'Наш менеджер свяжется с вами для уточнения деталей.';
+
+  @override
+  String get homeProcess4Title => 'Получение автомобиля';
+
+  @override
+  String get homeProcess4Text =>
+      'Встреча в удобном для вас месте, подписание договора и передача ключей.';
+
+  @override
+  String get homeBenefitsTitle =>
+      'Мы заинтересованы в том, чтобы в следующий раз вы выбрали нас снова';
+
+  @override
+  String get homeBenefit1Title => 'Обслуживание 24/7';
+
+  @override
+  String get homeBenefit1Text =>
+      'Наши клиенты получают не только аренду авто, но и индивидуальное внимание 24/7. Всегда доступен личный менеджер для решения вопросов в течение всего срока аренды.';
+
+  @override
+  String get homeBenefit2Title => 'Полная безопасность';
+
+  @override
+  String get homeBenefit2Text =>
+      'Все автомобили в нашем парке застрахованы, обеспечивая вам спокойствие и уверенность в любой поездке.';
+
+  @override
+  String get homeBenefit3Title => 'Высокое качество автомобилей';
+
+  @override
+  String get homeBenefit3Text =>
+      'Наши машины всегда в отличном техническом состоянии, оснащены зимней резиной в зимний период для вашей безопасности.';
+
+  @override
+  String get homeTermsTitle => 'Лучшие условия для комфортной поездки';
+
+  @override
+  String get homeTerms1Title => 'Минимальный залог';
+
+  @override
+  String get homeTerms1Text =>
+      'При аренде машины необходимо внести депозит, размер которого зависит от типа трансмиссии автомобиля.';
+
+  @override
+  String get homeTerms2Title => 'Возраст от 21 года';
+
+  @override
+  String get homeTerms2Text =>
+      'Опыт вождения не менее 2 лет: страховые требования стандартные, без дополнительных условий.';
+
+  @override
+  String get homeTerms3Title => 'Честное разделение рисков';
+
+  @override
+  String get homeTerms3Text =>
+      'Для максимального спокойствия арендаторов, на все транспортные средства оформлен полис обязательного страхования гражданской ответственности, а многие из них также имеют полное страховое покрытие.';
+
+  @override
+  String get homeTrafficTitle => 'Особенности дорожного движения в Грузии';
+
+  @override
+  String get homeTraffic1Title => 'до 60 км/ч';
+
+  @override
+  String get homeTraffic1Text => 'в населенных пунктах';
+
+  @override
+  String get homeTraffic2Title => 'до 90 км/ч';
+
+  @override
+  String get homeTraffic2Text => 'вне населенных пунктов';
+
+  @override
+  String get homeTraffic3Title => 'до 110 км/ч';
+
+  @override
+  String get homeTraffic3Text => 'на автомагистралях';
 }

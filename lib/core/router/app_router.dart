@@ -159,6 +159,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   // admin area) are put on it, above the public shell.
   final rootNavigatorKey = GlobalKey<NavigatorState>();
 
+  // A push (Home -> a popular car, the app's only one) also shows its
+  // address in the browser and adds a browser history entry, so the
+  // browser's Back returns to Home as the app's back arrow does.
+  GoRouter.optionURLReflectsImperativeAPIs = true;
+
   final router = GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: AppRoutes.home,

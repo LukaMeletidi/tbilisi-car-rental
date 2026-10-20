@@ -359,4 +359,113 @@ class AppLocalizationsKa extends AppLocalizations {
 
   @override
   String get pageComingSoon => 'ეს გვერდი მალე დაემატება.';
+
+  @override
+  String get homeHeroTitle => 'ავტოპარკი';
+
+  @override
+  String get homeHeroSubtitle => 'ავტომობილების კატალოგი';
+
+  @override
+  String get homeTopCarsTitle => 'ყველაზე პოპულარული ავტომობილები';
+
+  @override
+  String get homeProcessTitle => 'მანქანის გაქირავებისა და მიწოდების პროცესი';
+
+  @override
+  String get homeProcess1Title => 'ავტომობილის შერჩევა';
+
+  @override
+  String get homeProcess1Text =>
+      'გადახედეთ ჩვენს კატალოგს და შეარჩიეთ სასურველი მოდელი.';
+
+  @override
+  String get homeProcess2Title => 'დაჯავშნა';
+
+  @override
+  String get homeProcess2Text =>
+      'შეავსეთ ფორმა ვებგვერდზე ან დაგვიკავშირდით ტელეფონით.';
+
+  @override
+  String get homeProcess3Title => 'დადასტურება';
+
+  @override
+  String get homeProcess3Text =>
+      'ჩვენი მენეჯერი დაგიკავშირდებათ დეტალების დასაზუსტებლად.';
+
+  @override
+  String get homeProcess4Title => 'ავტომობილის მიღება';
+
+  @override
+  String get homeProcess4Text =>
+      'თქვენთვის მოსახერხებელ ადგილას შეხვედრა, ხელშეკრულების გაფორმება და გასაღებების გადაცემა.';
+
+  @override
+  String get homeBenefitsTitle => 'გვსურს, რომ მომავალშიც ჩვენ აგვირჩიოთ';
+
+  @override
+  String get homeBenefit1Title => '24/7 მომსახურება';
+
+  @override
+  String get homeBenefit1Text =>
+      'ჩვენი კლიენტები არა მხოლოდ ავტომობილის დაქირავებას, არამედ ინდივიდუალურ ყურადღებასაც იღებენ 24/7 რეჟიმში. პირადი მენეჯერი ყოველთვის ხელმისაწვდომია მთელი გაქირავების პერიოდის განმავლობაში არსებული პრობლემების გადასაჭრელად.';
+
+  @override
+  String get homeBenefit2Title => 'სრული უსაფრთხოება';
+
+  @override
+  String get homeBenefit2Text =>
+      'ჩვენს ავტოპარკში არსებული ყველა ავტომობილი დაზღვეულია, რაც ნებისმიერი მგზავრობისას თქვენს სიმშვიდესა და თავდაჯერებულობას უზრუნველყოფს.';
+
+  @override
+  String get homeBenefit3Title => 'უმაღლესი ხარისხის ავტომობილები';
+
+  @override
+  String get homeBenefit3Text =>
+      'ჩვენი ავტომობილები ყოველთვის შესანიშნავ ტექნიკურ მდგომარეობაშია; თქვენი უსაფრთხოებისთვის, ზამთრის პერიოდში ისინი აღჭურვილია ზამთრის საბურავებით.';
+
+  @override
+  String get homeTermsTitle => 'საუკეთესო პირობები კომფორტული მგზავრობისთვის';
+
+  @override
+  String get homeTerms1Title => 'მინიმალური დეპოზიტი';
+
+  @override
+  String get homeTerms1Text =>
+      'ავტომობილის დაქირავებისას საჭიროა დეპოზიტის შეტანა, რომლის ოდენობაც ავტომობილის გადაცემათა კოლოფის ტიპზეა დამოკიდებული.';
+
+  @override
+  String get homeTerms2Title => 'ასაკი — 21 წლიდან';
+
+  @override
+  String get homeTerms2Text =>
+      'მართვის გამოცდილება მინიმუმ 2 წელი: დაზღვევის მოთხოვნები სტანდარტულია, დამატებითი პირობების გარეშე.';
+
+  @override
+  String get homeTerms3Title => 'რისკების სამართლიანი გაზიარება';
+
+  @override
+  String get homeTerms3Text =>
+      'მქირავებლების მაქსიმალური სიმშვიდის უზრუნველსაყოფად, ყველა ავტომობილი დაზღვეულია მესამე პირის სამოქალაქო პასუხისმგებლობის სავალდებულო დაზღვევით, ბევრი მათგანი კი სრული დაზღვევითაც.';
+
+  @override
+  String get homeTrafficTitle => 'საგზაო მოძრაობის თავისებურებები საქართველოში';
+
+  @override
+  String get homeTraffic1Title => '60 კმ/სთ-მდე';
+
+  @override
+  String get homeTraffic1Text => 'დასახლებულ პუნქტებში';
+
+  @override
+  String get homeTraffic2Title => '90 კმ/სთ-მდე';
+
+  @override
+  String get homeTraffic2Text => 'დასახლებული პუნქტების გარეთ';
+
+  @override
+  String get homeTraffic3Title => '110 კმ/სთ-მდე';
+
+  @override
+  String get homeTraffic3Text => 'ავტომაგისტრალებზე';
 }
