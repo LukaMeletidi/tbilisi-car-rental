@@ -217,25 +217,21 @@ void main() {
       }
     });
 
-    testWidgets('Home, Contact and FAQ have their content; no page is '
-        '"coming soon"', (tester) async {
+    testWidgets('Home, Contact and FAQ show their content', (tester) async {
       await pumpApp(tester);
-      // Home since step 6b.6: the hero, no "coming soon".
+      // Home: the hero.
       expect(find.text('Autopark'), findsOneWidget);
-      expect(find.text('This page is coming soon.'), findsNothing);
-      // Contact since step 6b.8: "About us" and its text; no company data
-      // in this harness, so no Contacts card.
+      // Contact: "About us" and its text; no company data in this harness,
+      // so no Contacts card.
       await tapTab(tester, 'Contact');
       expect(find.text('About us'), findsOneWidget);
       expect(find.text('Contacts'), findsNothing);
-      expect(find.text('This page is coming soon.'), findsNothing);
-      // FAQ since step 6b.7: its heading, no "coming soon".
+      // FAQ: its heading.
       await tapTab(tester, 'FAQ');
       expect(
         find.text('Answers to popular customer questions'),
         findsOneWidget,
       );
-      expect(find.text('This page is coming soon.'), findsNothing);
     });
 
     testWidgets('opened directly, a tab is selected', (tester) async {

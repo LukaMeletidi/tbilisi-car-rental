@@ -724,18 +724,6 @@ abstract class AppLocalizations {
   /// **'About us'**
   String get aboutTitle;
 
-  /// Title of the FAQ page.
-  ///
-  /// In en, this message translates to:
-  /// **'Frequently asked questions'**
-  String get faqTitle;
-
-  /// Shown on a page whose content is not ready yet.
-  ///
-  /// In en, this message translates to:
-  /// **'This page is coming soon.'**
-  String get pageComingSoon;
-
   /// Home: the large title on the hero photo.
   ///
   /// In en, this message translates to:

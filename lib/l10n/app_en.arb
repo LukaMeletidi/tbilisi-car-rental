@@ -231,14 +231,6 @@
   "@aboutTitle": {
     "description": "Title of the About us and contact page."
   },
-  "faqTitle": "Frequently asked questions",
-  "@faqTitle": {
-    "description": "Title of the FAQ page."
-  },
-  "pageComingSoon": "This page is coming soon.",
-  "@pageComingSoon": {
-    "description": "Shown on a page whose content is not ready yet."
-  },
   "homeHeroTitle": "Autopark",
   "@homeHeroTitle": {
     "description": "Home: the large title on the hero photo."

@@ -354,12 +354,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutTitle => 'About us';
 
   @override
-  String get faqTitle => 'Frequently asked questions';
-
-  @override
-  String get pageComingSoon => 'This page is coming soon.';
-
-  @override
   String get homeHeroTitle => 'Autopark';
 
   @override

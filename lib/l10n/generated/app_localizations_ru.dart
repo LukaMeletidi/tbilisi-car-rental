@@ -358,12 +358,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get aboutTitle => 'О нас';
 
   @override
-  String get faqTitle => 'Часто задаваемые вопросы';
-
-  @override
-  String get pageComingSoon => 'Эта страница скоро появится.';
-
-  @override
   String get homeHeroTitle => 'Автопарк';
 
   @override

@@ -35,8 +35,4 @@ void main() {
       expect({ka[i], ru[i], en[i]}, hasLength(3), reason: '$i');
     }
   });
-
-  test('the old FAQ title is unchanged', () {
-    expect(texts('en').faqTitle, 'Frequently asked questions');
-  });
 }

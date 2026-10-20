@@ -355,12 +355,6 @@ class AppLocalizationsKa extends AppLocalizations {
   String get aboutTitle => 'ჩვენ შესახებ';
 
   @override
-  String get faqTitle => 'ხშირად დასმული კითხვები';
-
-  @override
-  String get pageComingSoon => 'ეს გვერდი მალე დაემატება.';
-
-  @override
   String get homeHeroTitle => 'ავტოპარკი';
 
   @override
