@@ -1701,10 +1701,19 @@ Phase 0 is complete.
     launcher icon; a test on a real phone. App Check is not enforced for a
     sideloaded APK.
   - A centered maximum width for the public pages on wide screens (a small
-    step at the end of Phase 6b).
+    step at the end of Phase 6b). Still open; Home has it since step 6b.6.
   - The README with the live link, the APK and screenshots.
   - An unknown address such as /#/zzz shows go_router's own error page; it is
     replaced by a public "not found" page.
+- For Phase 7 (noted in step 6b.6):
+  - Check the licence of the Home photos, or replace them with own or
+    free-licence photos under the same file names.
+  - After the booking form, Back goes to the catalog, not to Home: the car
+    page opens the form with context.go (known, unchanged).
+  - A Home visit opens the active-cars listener: it reads every active car
+    document even if Cars is never opened.
+  - GoRouter.optionURLReflectsImperativeAPIs = true was set for the push from
+    Home to a car, so the browser address and Back follow it.
 - firebase_core 4.15.0 still applies the Kotlin Gradle Plugin the old way (build
   warning). Do not run flutter upgrade mid-project; check for a newer FlutterFire
   release first.
@@ -3025,8 +3034,14 @@ Steps:
     restored to unmarked.
   - No live data written by Claude Code; no rules, ARB, package or index
     change.
-- 6b.6 The Home screen. Tier 2 (large) — not started. Needs approval: the ARB
-  files and the assets in pubspec.yaml.
+- 6b.6 The Home screen. Tier 2 (large) — DONE (in the commit "Build the
+  public Home screen with popular cars and info blocks").
+  - Home blocks: the hero, the popular cars, the process, the benefits, the
+    conditions and the traffic rules; the block titles are centered.
+  - The photos are bundled in assets/images/home/ without EXIF and XMP; the
+    texts are in the 3 ARB files (33 keys; homeTerms* for the conditions).
+  - 2414 Flutter tests pass and analyze is clean; the scan has 0 errors and 11
+    warnings.
 - 6b.7 The FAQ screen. Tier 2 — not started. Needs approval: the ARB files.
 - 6b.8 About/Contact: the about text, the company data and tappable contacts.
   Tier 2 — not started. Needs approval: the ARB files and the package
