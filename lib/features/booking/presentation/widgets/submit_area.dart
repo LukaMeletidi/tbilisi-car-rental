@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 
 import 'package:tbilisi_car_rental/core/widgets/app_card.dart';
+import 'package:tbilisi_car_rental/core/widgets/privacy_link.dart';
 import 'package:tbilisi_car_rental/l10n/generated/app_localizations.dart';
 
+/// The key of the consent line under Send, for tests.
+const privacyConsentKey = ValueKey('privacy-consent');
+
 /// The end of the booking form, on the purple page: a hint to check the
-/// fields, the message of a failed sending, and the Send button.
+/// fields, the message of a failed sending, the Send button, and under it
+/// the consent line with the link to the Privacy Policy.
 class SubmitArea extends StatelessWidget {
   const SubmitArea({
     super.key,
@@ -63,6 +68,16 @@ class SubmitArea extends StatelessWidget {
                 )
               : Text(l10n.bookingSubmit),
         ),
+        // The consent line and the Privacy Policy (step 7.4). The link is
+        // off while the request is on its way.
+        const SizedBox(height: 12),
+        Text(
+          l10n.privacyConsent,
+          key: privacyConsentKey,
+          style: Theme.of(context).textTheme.bodySmall,
+          textAlign: TextAlign.center,
+        ),
+        Center(child: PrivacyLink(enabled: !sending)),
       ],
     );
   }

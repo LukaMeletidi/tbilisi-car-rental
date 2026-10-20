@@ -599,4 +599,56 @@ class AppLocalizationsKa extends AppLocalizations {
 
   @override
   String get notFoundGoHome => 'მთავარ გვერდზე';
+
+  @override
+  String get privacyTitle => 'კონფიდენციალურობის პოლიტიკა';
+
+  @override
+  String get privacy1Title => 'ვინ ვართ';
+
+  @override
+  String get privacy1Text =>
+      'Tbilisi Car Rental არის პორტფოლიო პროექტი. საიტზე შეგიძლიათ ავტომობილის დაჯავშნის მოთხოვნის გაგზავნა.';
+
+  @override
+  String get privacy2Title => 'რა მონაცემებს ვაგროვებთ';
+
+  @override
+  String get privacy2Text =>
+      'ჯავშნის ფორმაში თქვენ მიერ მითითებულ მონაცემებს: სახელს და გვარს, ტელეფონის ნომერს (და იმას, იყენებთ თუ არა ამ ნომერზე WhatsApp-ს ან Telegram-ს), ელფოსტას, მიღებისა და დაბრუნების თარიღს, დროსა და ადგილს (ან მისამართს), არჩეულ ავტომობილს, დამატებით სერვისებს და კომენტარს, თუ დაწერთ. ასევე ვინახავთ ფორმის ენას, სავარაუდო ფასს, გაგზავნის დროს და მოთხოვნის სტატუსს. რეკლამისა და ანალიტიკის ხელსაწყოებს არ ვიყენებთ.';
+
+  @override
+  String get privacy3Title => 'რისთვის ვიყენებთ';
+
+  @override
+  String get privacy3Text =>
+      'მონაცემებს ვიყენებთ მხოლოდ თქვენი ჯავშნის მოთხოვნის დასამუშავებლად და თქვენთან დასაკავშირებლად.';
+
+  @override
+  String get privacy4Title => 'რამდენ ხანს ინახება';
+
+  @override
+  String get privacy4Text =>
+      'მონაცემები ინახება მანამ, სანამ საიტის მფლობელი არ წაშლის.';
+
+  @override
+  String get privacy5Title => 'ვის შეუძლია მონაცემების ნახვა';
+
+  @override
+  String get privacy5Text =>
+      'ჯავშნის მონაცემებს ხედავს მხოლოდ საიტის მფლობელი ადმინისტრატორის პანელში. მონაცემები ინახება Google Firebase-ის სერვერებზე, რომლებიც საიტით სარგებლობისას ტექნიკურ მონაცემებსაც (მაგალითად, IP მისამართს) ამუშავებენ. სხვა პირებს მონაცემებს არ ვაწვდით და არ ვყიდით.';
+
+  @override
+  String get privacy6Title => 'თქვენი უფლებები';
+
+  @override
+  String get privacy6Text =>
+      'შეგიძლიათ მოითხოვოთ თქვენი მონაცემების ნახვა, შესწორება ან წაშლა. დაგვიკავშირდით კონტაქტის გვერდზე მითითებული საშუალებით.';
+
+  @override
+  String get privacyGoToContact => 'კონტაქტის გვერდზე გადასვლა';
+
+  @override
+  String get privacyConsent =>
+      'მოთხოვნის გაგზავნით თქვენ ეთანხმებით კონფიდენციალურობის პოლიტიკას.';
 }

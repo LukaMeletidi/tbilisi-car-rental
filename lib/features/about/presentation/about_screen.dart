@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:tbilisi_car_rental/core/localization/app_language_provider.dart';
+import 'package:tbilisi_car_rental/core/widgets/privacy_link.dart';
 import 'package:tbilisi_car_rental/core/widgets/section_title.dart';
 import 'package:tbilisi_car_rental/features/about/domain/contact_rows.dart';
 import 'package:tbilisi_car_rental/features/about/presentation/widgets/about_text_card.dart';
@@ -69,6 +70,9 @@ class AboutScreen extends ConsumerWidget {
                         child: contacts,
                       ),
                     ],
+                    // The Privacy Policy (step 7.4).
+                    const SizedBox(height: 12),
+                    const Center(child: PrivacyLink()),
                   ],
                 ),
               ),

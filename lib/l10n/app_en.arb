@@ -518,5 +518,65 @@
   "notFoundGoHome": "Go to Home",
   "@notFoundGoHome": {
     "description": "Not-found page: the button that opens Home."
+  },
+  "privacyTitle": "Privacy Policy",
+  "@privacyTitle": {
+    "description": "Privacy Policy: the title; also the link text."
+  },
+  "privacy1Title": "Who we are",
+  "@privacy1Title": {
+    "description": "Privacy Policy: heading of section 1."
+  },
+  "privacy1Text": "Tbilisi Car Rental is a portfolio project. The site accepts car booking requests.",
+  "@privacy1Text": {
+    "description": "Privacy Policy: text of section 1."
+  },
+  "privacy2Title": "What data we collect",
+  "@privacy2Title": {
+    "description": "Privacy Policy: heading of section 2."
+  },
+  "privacy2Text": "The data you enter in the booking form: your first name and surname, phone number (and whether you use WhatsApp or Telegram on it), e-mail, pick-up and return date, time and place (or address), the chosen car, extra services and a comment, if you write one. We also store the language of the form, the estimated price, the time the request was sent and its status. We do not use advertising or analytics tools.",
+  "@privacy2Text": {
+    "description": "Privacy Policy: text of section 2."
+  },
+  "privacy3Title": "Why we use it",
+  "@privacy3Title": {
+    "description": "Privacy Policy: heading of section 3."
+  },
+  "privacy3Text": "We use the data only to process your booking request and to contact you.",
+  "@privacy3Text": {
+    "description": "Privacy Policy: text of section 3."
+  },
+  "privacy4Title": "How long we keep it",
+  "@privacy4Title": {
+    "description": "Privacy Policy: heading of section 4."
+  },
+  "privacy4Text": "The data is kept until the site owner deletes it.",
+  "@privacy4Text": {
+    "description": "Privacy Policy: text of section 4."
+  },
+  "privacy5Title": "Who can see the data",
+  "@privacy5Title": {
+    "description": "Privacy Policy: heading of section 5."
+  },
+  "privacy5Text": "Only the site owner sees the booking data, in the admin panel. The data is stored on Google Firebase servers, which also process technical data such as the IP address when you use the site. We do not pass the data to others and we do not sell it.",
+  "@privacy5Text": {
+    "description": "Privacy Policy: text of section 5."
+  },
+  "privacy6Title": "Your rights",
+  "@privacy6Title": {
+    "description": "Privacy Policy: heading of section 6."
+  },
+  "privacy6Text": "You can ask to see, correct or delete your data. Contact us using the details on the Contact page.",
+  "@privacy6Text": {
+    "description": "Privacy Policy: text of section 6."
+  },
+  "privacyGoToContact": "Go to the Contact page",
+  "@privacyGoToContact": {
+    "description": "Privacy Policy: the button that opens the Contact tab."
+  },
+  "privacyConsent": "By sending the request, you accept the Privacy Policy.",
+  "@privacyConsent": {
+    "description": "Booking form: the line next to the Privacy Policy link under Send."
   }
 }

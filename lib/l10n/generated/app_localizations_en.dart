@@ -595,4 +595,56 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notFoundGoHome => 'Go to Home';
+
+  @override
+  String get privacyTitle => 'Privacy Policy';
+
+  @override
+  String get privacy1Title => 'Who we are';
+
+  @override
+  String get privacy1Text =>
+      'Tbilisi Car Rental is a portfolio project. The site accepts car booking requests.';
+
+  @override
+  String get privacy2Title => 'What data we collect';
+
+  @override
+  String get privacy2Text =>
+      'The data you enter in the booking form: your first name and surname, phone number (and whether you use WhatsApp or Telegram on it), e-mail, pick-up and return date, time and place (or address), the chosen car, extra services and a comment, if you write one. We also store the language of the form, the estimated price, the time the request was sent and its status. We do not use advertising or analytics tools.';
+
+  @override
+  String get privacy3Title => 'Why we use it';
+
+  @override
+  String get privacy3Text =>
+      'We use the data only to process your booking request and to contact you.';
+
+  @override
+  String get privacy4Title => 'How long we keep it';
+
+  @override
+  String get privacy4Text =>
+      'The data is kept until the site owner deletes it.';
+
+  @override
+  String get privacy5Title => 'Who can see the data';
+
+  @override
+  String get privacy5Text =>
+      'Only the site owner sees the booking data, in the admin panel. The data is stored on Google Firebase servers, which also process technical data such as the IP address when you use the site. We do not pass the data to others and we do not sell it.';
+
+  @override
+  String get privacy6Title => 'Your rights';
+
+  @override
+  String get privacy6Text =>
+      'You can ask to see, correct or delete your data. Contact us using the details on the Contact page.';
+
+  @override
+  String get privacyGoToContact => 'Go to the Contact page';
+
+  @override
+  String get privacyConsent =>
+      'By sending the request, you accept the Privacy Policy.';
 }

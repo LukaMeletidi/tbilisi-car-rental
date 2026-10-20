@@ -1155,6 +1155,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Go to Home'**
   String get notFoundGoHome;
+
+  /// Privacy Policy: the title; also the link text.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyTitle;
+
+  /// Privacy Policy: heading of section 1.
+  ///
+  /// In en, this message translates to:
+  /// **'Who we are'**
+  String get privacy1Title;
+
+  /// Privacy Policy: text of section 1.
+  ///
+  /// In en, this message translates to:
+  /// **'Tbilisi Car Rental is a portfolio project. The site accepts car booking requests.'**
+  String get privacy1Text;
+
+  /// Privacy Policy: heading of section 2.
+  ///
+  /// In en, this message translates to:
+  /// **'What data we collect'**
+  String get privacy2Title;
+
+  /// Privacy Policy: text of section 2.
+  ///
+  /// In en, this message translates to:
+  /// **'The data you enter in the booking form: your first name and surname, phone number (and whether you use WhatsApp or Telegram on it), e-mail, pick-up and return date, time and place (or address), the chosen car, extra services and a comment, if you write one. We also store the language of the form, the estimated price, the time the request was sent and its status. We do not use advertising or analytics tools.'**
+  String get privacy2Text;
+
+  /// Privacy Policy: heading of section 3.
+  ///
+  /// In en, this message translates to:
+  /// **'Why we use it'**
+  String get privacy3Title;
+
+  /// Privacy Policy: text of section 3.
+  ///
+  /// In en, this message translates to:
+  /// **'We use the data only to process your booking request and to contact you.'**
+  String get privacy3Text;
+
+  /// Privacy Policy: heading of section 4.
+  ///
+  /// In en, this message translates to:
+  /// **'How long we keep it'**
+  String get privacy4Title;
+
+  /// Privacy Policy: text of section 4.
+  ///
+  /// In en, this message translates to:
+  /// **'The data is kept until the site owner deletes it.'**
+  String get privacy4Text;
+
+  /// Privacy Policy: heading of section 5.
+  ///
+  /// In en, this message translates to:
+  /// **'Who can see the data'**
+  String get privacy5Title;
+
+  /// Privacy Policy: text of section 5.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the site owner sees the booking data, in the admin panel. The data is stored on Google Firebase servers, which also process technical data such as the IP address when you use the site. We do not pass the data to others and we do not sell it.'**
+  String get privacy5Text;
+
+  /// Privacy Policy: heading of section 6.
+  ///
+  /// In en, this message translates to:
+  /// **'Your rights'**
+  String get privacy6Title;
+
+  /// Privacy Policy: text of section 6.
+  ///
+  /// In en, this message translates to:
+  /// **'You can ask to see, correct or delete your data. Contact us using the details on the Contact page.'**
+  String get privacy6Text;
+
+  /// Privacy Policy: the button that opens the Contact tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to the Contact page'**
+  String get privacyGoToContact;
+
+  /// Booking form: the line next to the Privacy Policy link under Send.
+  ///
+  /// In en, this message translates to:
+  /// **'By sending the request, you accept the Privacy Policy.'**
+  String get privacyConsent;
 }
 
 class _AppLocalizationsDelegate

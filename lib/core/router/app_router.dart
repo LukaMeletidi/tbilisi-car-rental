@@ -26,6 +26,7 @@ import 'package:tbilisi_car_rental/features/fleet/presentation/admin_cars_screen
 import 'package:tbilisi_car_rental/features/home/domain/public_navigation.dart';
 import 'package:tbilisi_car_rental/features/home/presentation/home_screen.dart';
 import 'package:tbilisi_car_rental/features/home/presentation/not_found_screen.dart';
+import 'package:tbilisi_car_rental/features/home/presentation/privacy_screen.dart';
 import 'package:tbilisi_car_rental/features/home/presentation/public_shell.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/admin_company_info_screen.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/admin_extras_prices_screen.dart';
@@ -44,6 +45,10 @@ abstract final class AppRoutes {
 
   /// The FAQ tab.
   static const faq = publicFaqPath;
+
+  /// The Privacy Policy, above the shell (no bottom bar). It is always
+  /// opened with push, so Back returns to the page it was opened from.
+  static const privacy = '/privacy';
 
   /// Path pattern of the car detail screen, below [cars].
   static const carPattern = ':carId';
@@ -256,6 +261,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
+      ),
+      // The Privacy Policy (step 7.4), on the root navigator: no bottom bar.
+      // It must stay above the catch-all below.
+      GoRoute(
+        path: AppRoutes.privacy,
+        builder: (context, state) => const PrivacyScreen(),
       ),
       // Every address that no route above matches: the public "not found"
       // page, on the root navigator (no bottom bar). It must stay the LAST

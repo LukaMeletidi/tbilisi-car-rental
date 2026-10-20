@@ -599,4 +599,56 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get notFoundGoHome => 'На главную';
+
+  @override
+  String get privacyTitle => 'Политика конфиденциальности';
+
+  @override
+  String get privacy1Title => 'Кто мы';
+
+  @override
+  String get privacy1Text =>
+      'Tbilisi Car Rental — портфолио-проект. На сайте можно отправить заявку на бронирование автомобиля.';
+
+  @override
+  String get privacy2Title => 'Какие данные мы собираем';
+
+  @override
+  String get privacy2Text =>
+      'Данные, которые вы указываете в форме бронирования: имя и фамилия, номер телефона (и используете ли вы на этом номере WhatsApp или Telegram), эл. почта, дата, время и место получения и возврата (или адрес), выбранный автомобиль, дополнительные услуги и комментарий, если вы его напишете. Мы также сохраняем язык формы, примерную стоимость, время отправки и статус заявки. Мы не используем рекламные и аналитические инструменты.';
+
+  @override
+  String get privacy3Title => 'Для чего мы их используем';
+
+  @override
+  String get privacy3Text =>
+      'Мы используем данные только для обработки вашей заявки на бронирование и для связи с вами.';
+
+  @override
+  String get privacy4Title => 'Как долго они хранятся';
+
+  @override
+  String get privacy4Text =>
+      'Данные хранятся, пока владелец сайта их не удалит.';
+
+  @override
+  String get privacy5Title => 'Кто видит данные';
+
+  @override
+  String get privacy5Text =>
+      'Данные бронирования видит только владелец сайта в панели администратора. Данные хранятся на серверах Google Firebase, которые при использовании сайта также обрабатывают технические данные, например IP-адрес. Мы не передаём данные другим лицам и не продаём их.';
+
+  @override
+  String get privacy6Title => 'Ваши права';
+
+  @override
+  String get privacy6Text =>
+      'Вы можете запросить просмотр, исправление или удаление ваших данных. Свяжитесь с нами по контактам на странице «Контакты».';
+
+  @override
+  String get privacyGoToContact => 'Перейти к контактам';
+
+  @override
+  String get privacyConsent =>
+      'Отправляя заявку, вы принимаете Политику конфиденциальности.';
 }
