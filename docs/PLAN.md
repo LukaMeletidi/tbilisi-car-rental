@@ -1714,6 +1714,9 @@ Phase 0 is complete.
     document even if Cars is never opened.
   - GoRouter.optionURLReflectsImperativeAPIs = true was set for the push from
     Home to a car, so the browser address and Back follow it.
+- For Phase 7 (noted in step 6b.7): ExpansionTile gives screen readers only
+  the hint Collapsed or Expanded in this Flutter version; check the FAQ on a
+  real phone with TalkBack.
 - firebase_core 4.15.0 still applies the Kotlin Gradle Plugin the old way (build
   warning). Do not run flutter upgrade mid-project; check for a newer FlutterFire
   release first.
@@ -3042,7 +3045,14 @@ Steps:
     texts are in the 3 ARB files (33 keys; homeTerms* for the conditions).
   - 2414 Flutter tests pass and analyze is clean; the scan has 0 errors and 11
     warnings.
-- 6b.7 The FAQ screen. Tier 2 — not started. Needs approval: the ARB files.
+- 6b.7 The FAQ screen. Tier 2 — DONE (in the commit "Add the public FAQ
+  screen with expandable questions").
+  - The FAQ page: a heading and 10 expandable questions (several can be
+    open), content at most 720 px wide; the texts are in the 3 ARB files
+    (21 keys: faqPageHeading, faq1Question to faq10Answer).
+  - SectionTitle moved to lib/core/widgets (shared by Home and FAQ).
+  - 2426 Flutter tests pass and analyze is clean; the scan has 0 errors and 11
+    warnings.
 - 6b.8 About/Contact: the about text, the company data and tappable contacts.
   Tier 2 — not started. Needs approval: the ARB files and the package
   url_launcher (with pubspec.lock); the plan lists any Android or iOS platform
@@ -3054,3 +3064,5 @@ Steps:
   - Later (noted in step 6b.5): some older cars in the live catalog show
     "Needs repair" in the admin list (missing text). The owner repairs them
     with the edit form; no code change.
+  - Later (noted in step 6b.7): the old ARB key faqTitle is unused now;
+    remove it in 6b.9, with its test, after approval.
