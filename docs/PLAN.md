@@ -1892,13 +1892,14 @@ Phase 0 is complete.
   on a normal Chrome profile. "flutter run -d chrome" opens a fresh temporary profile
   each time, so being signed out after reopening proves nothing. Check it on the
   hosted web build (step 7.7), or with a normal Chrome and a local web server.
-- Web admin without a connection, not verified by hand (step 7.5): a START
-  without a connection on the web was not tested by hand in step 3.12b; only the
-  "Offline" note of a running session was seen in Chrome, and "flutter run" cannot
-  reload its page offline. Tests cover the logic. Verify it once on a deployed or
-  release web build: open /admin as admin, go offline, reload, and see the spinner
-  and then "No connection. The bookings could not be loaded.", never "No bookings
-  yet."; go online again and see the bookings appear by themselves.
+- Web admin without a connection, not verified by hand: a START without a
+  connection on the web was not tested by hand in step 3.12b. Changed in step
+  7.5: a reload while offline cannot work at all, because Flutter 3.44 web
+  builds have no offline service worker (the page itself cannot load). The
+  check is now "offline WITHOUT a reload", still open: as admin on Bookings,
+  set the browser offline without reloading and see "Offline: showing saved
+  data" or "No connection", never "No bookings yet."; go online again and see
+  the bookings appear by themselves. Tests cover the logic.
 - For Phase 7 (polish): offline car writes on the web. In Chrome without a
   connection a car transaction fails with a raw JavaScript error (NativeError),
   not a FirebaseException, so the forms take the safe "may or may not be saved"
@@ -3200,8 +3201,36 @@ Phase 7 decisions (the owner's, 2026-10-20):
   - 15 ARB keys. No reCAPTCHA mention yet: it is added in step 7.6. 2529
     Flutter tests pass; the scan has 0 errors and 11 warnings.
 - 7.5 The web release build, a hosting block in firebase.json and a local
-  check with a local web server, including the web admin offline-after-reload
-  check of Section 15. Tier 1 — not started. Needs approval: firebase.json.
+  check. Tier 1 — DONE (in the commits "Add the Hosting configuration and
+  web metadata" and "Add a check that the web release build has its
+  plugins").
+  - firebase.json: a hosting block (build/web, every address rewritten to
+    index.html, no-cache for HTML/JS/JSON, one day for images and fonts);
+    the other blocks unchanged. web/index.html: lang="en", the theme colour,
+    a longer description, og:title, og:description, og:type (no og:image
+    yet); the manifest uses #673AB7 and has no fixed orientation.
+  - The Flutter 3.44.8 web build: the default JavaScript/CanvasKit build
+    (no --wasm, the CanvasKit CDN), 43 MB in build/web, main.dart.js about
+    4 MB, no source maps.
+  - Checked locally on the Hosting emulator with a demo project: the
+    rewrite works (/cars without # opens the app). The emulator does not
+    apply the cache headers (even a "**" rule adds none); they are checked
+    on the live domain in step 7.7.
+  - Finding: the release web build used a stale web_plugin_registrant.dart
+    (a Flutter tool step that is cached) without firebase_auth_web and
+    url_launcher_web, so the admin sign-in failed with channel-error and
+    the Contact links could not open; debug (flutter run) was not
+    affected. Fixed by flutter clean and guarded by tool/check_web_build.mjs.
+    Verified by the owner on the emulator: the sign-in works, the session
+    ends when the browser closes, and the Contact links open.
+  - Release procedure, for every web build and before every deploy:
+    flutter clean, flutter build web --release, node
+    tool/check_web_build.mjs (it must pass).
+  - Notes: test a local build only on http://localhost:5000 (127.0.0.1 is
+    not an authorized domain of Authentication, so the sign-in fails
+    there). Step 7.8 (the icon) must be done before the first deploy in
+    7.7: the favicon and the web icons are still Flutter's. A report of the
+    caching gap to Flutter is possible (Phase 7, optional).
 - 7.6 App Check for the web: a reCAPTCHA key made by the owner in the
   console, the site key in the code, monitoring only. Tier 1 — not started.
   Needs: the owner's key; approval of the code change.
@@ -3211,6 +3240,9 @@ Phase 7 decisions (the owner's, 2026-10-20):
   hosted domain must be in the authorized domains of Authentication; a smoke
   test on the live link (public tabs, the booking form, the admin sign-in,
   the web sign-in for the browser session only). Tier 1 — not started.
+  - Before it: step 7.8 (the icon) and the release procedure of 7.5.
+  - Check on the live domain: the cache headers with curl -I, the
+    authorized domains of Authentication, and the admin sign-in.
 - 7.8 The launcher icon and the app name. Tier 2 — not started. Needs: the
   owner's approval of the package flutter_launcher_icons (with
   pubspec.lock), the icon PNG from the owner, approval of the Android
