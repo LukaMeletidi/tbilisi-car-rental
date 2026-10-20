@@ -1137,6 +1137,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Telegram'**
   String get aboutTelegram;
+
+  /// Not-found page: the heading, for an address that does not exist.
+  ///
+  /// In en, this message translates to:
+  /// **'Page not found'**
+  String get notFoundTitle;
+
+  /// Not-found page: the text below the heading.
+  ///
+  /// In en, this message translates to:
+  /// **'This page does not exist. The address may be mistyped or out of date.'**
+  String get notFoundText;
+
+  /// Not-found page: the button that opens Home.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Home'**
+  String get notFoundGoHome;
 }
 
 class _AppLocalizationsDelegate

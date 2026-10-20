@@ -25,6 +25,7 @@ import 'package:tbilisi_car_rental/features/faq/presentation/faq_screen.dart';
 import 'package:tbilisi_car_rental/features/fleet/presentation/admin_cars_screen.dart';
 import 'package:tbilisi_car_rental/features/home/domain/public_navigation.dart';
 import 'package:tbilisi_car_rental/features/home/presentation/home_screen.dart';
+import 'package:tbilisi_car_rental/features/home/presentation/not_found_screen.dart';
 import 'package:tbilisi_car_rental/features/home/presentation/public_shell.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/admin_company_info_screen.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/admin_extras_prices_screen.dart';
@@ -175,6 +176,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       session: ref.read(adminSessionProvider),
       location: state.uri,
     ),
+    // A router error (an address no route matches is caught by the last
+    // route below): the same public "not found" page.
+    errorBuilder: (context, state) => const NotFoundScreen(),
     routes: [
       // The public app (Phase 6b): a frame with the bottom bar
       // (PublicShell) and one branch per PublicTab, in its order. Each
@@ -252,6 +256,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
+      ),
+      // Every address that no route above matches: the public "not found"
+      // page, on the root navigator (no bottom bar). It must stay the LAST
+      // top-level route, because routes are tried in order; the admin area
+      // and its own catch-all lie inside the shell and are tried first.
+      // This route gives an ordinary match, so Android's system Back reaches
+      // the page's PopScope; with errorBuilder alone go_router has no match
+      // to pop from. errorBuilder stays for real router errors.
+      GoRoute(
+        path: '/:rest(.*)',
+        builder: (context, state) => const NotFoundScreen(),
       ),
     ],
   );
@@ -396,8 +411,8 @@ List<RouteBase> _adminRoutes(GlobalKey<NavigatorState> root) => [
   // Every other address under /admin: the admin "not found" page.
   // It must stay the LAST admin route, because routes are tried in
   // order. The redirect runs first, so only an admin ever sees it.
-  // An unknown public address does not match and keeps go_router's
-  // own "Page Not Found" screen.
+  // An unknown public address does not match here and gets the public
+  // NotFoundScreen of the last top-level route.
   GoRoute(
     parentNavigatorKey: root,
     path: '${_below(AppRoutes.admin)}/:rest(.*)',

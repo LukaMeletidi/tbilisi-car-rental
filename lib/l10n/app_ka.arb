@@ -172,5 +172,8 @@
   "aboutFacebook": "Facebook",
   "aboutInstagram": "Instagram",
   "aboutWhatsapp": "WhatsApp",
-  "aboutTelegram": "Telegram"
+  "aboutTelegram": "Telegram",
+  "notFoundTitle": "გვერდი ვერ მოიძებნა",
+  "notFoundText": "ეს გვერდი არ არსებობს. შესაძლოა მისამართი არასწორად არის აკრეფილი ან მოძველებულია.",
+  "notFoundGoHome": "მთავარ გვერდზე"
 }

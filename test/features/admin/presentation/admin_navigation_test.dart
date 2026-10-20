@@ -21,6 +21,7 @@ import 'package:tbilisi_car_rental/features/catalog/presentation/cars_providers.
 import 'package:tbilisi_car_rental/features/catalog/presentation/catalog_screen.dart';
 import 'package:tbilisi_car_rental/features/fleet/data/fleet_repository.dart';
 import 'package:tbilisi_car_rental/features/home/presentation/home_screen.dart';
+import 'package:tbilisi_car_rental/features/home/presentation/not_found_screen.dart';
 import 'package:tbilisi_car_rental/features/settings/presentation/settings_providers.dart';
 import 'package:tbilisi_car_rental/l10n/generated/app_localizations.dart';
 
@@ -617,16 +618,16 @@ void main() {
       expectOnly(AdminNotFoundScreen);
     });
 
-    testWidgets('an unknown public address keeps the router\'s own screen', (
-      tester,
-    ) async {
+    testWidgets('an unknown public address shows the public "not found" '
+        'page, also for an admin (step 7.2)', (tester) async {
       await pumpApp(tester, initial: AdminSession.admin);
       await open(tester, '/no-such-page');
 
       expectOnly(Null);
       expect(find.text(adminNotFoundText), findsNothing);
       expect(find.byType(CatalogScreen), findsNothing);
-      expect(find.textContaining('Page Not Found'), findsOneWidget);
+      expect(find.byType(NotFoundScreen), findsOneWidget);
+      expect(find.textContaining('Page Not Found'), findsNothing);
     });
   });
 }

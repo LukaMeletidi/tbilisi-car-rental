@@ -585,4 +585,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aboutTelegram => 'Telegram';
+
+  @override
+  String get notFoundTitle => 'Page not found';
+
+  @override
+  String get notFoundText =>
+      'This page does not exist. The address may be mistyped or out of date.';
+
+  @override
+  String get notFoundGoHome => 'Go to Home';
 }

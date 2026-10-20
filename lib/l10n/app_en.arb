@@ -506,5 +506,17 @@
   "aboutTelegram": "Telegram",
   "@aboutTelegram": {
     "description": "Contact tab: the Telegram link."
+  },
+  "notFoundTitle": "Page not found",
+  "@notFoundTitle": {
+    "description": "Not-found page: the heading, for an address that does not exist."
+  },
+  "notFoundText": "This page does not exist. The address may be mistyped or out of date.",
+  "@notFoundText": {
+    "description": "Not-found page: the text below the heading."
+  },
+  "notFoundGoHome": "Go to Home",
+  "@notFoundGoHome": {
+    "description": "Not-found page: the button that opens Home."
   }
 }

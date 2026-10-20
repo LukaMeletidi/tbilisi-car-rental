@@ -589,4 +589,14 @@ class AppLocalizationsKa extends AppLocalizations {
 
   @override
   String get aboutTelegram => 'Telegram';
+
+  @override
+  String get notFoundTitle => 'გვერდი ვერ მოიძებნა';
+
+  @override
+  String get notFoundText =>
+      'ეს გვერდი არ არსებობს. შესაძლოა მისამართი არასწორად არის აკრეფილი ან მოძველებულია.';
+
+  @override
+  String get notFoundGoHome => 'მთავარ გვერდზე';
 }

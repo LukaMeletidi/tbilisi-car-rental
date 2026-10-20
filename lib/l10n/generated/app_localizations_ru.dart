@@ -590,4 +590,14 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get aboutTelegram => 'Telegram';
+
+  @override
+  String get notFoundTitle => 'Страница не найдена';
+
+  @override
+  String get notFoundText =>
+      'Такой страницы нет. Возможно, адрес введён с ошибкой или устарел.';
+
+  @override
+  String get notFoundGoHome => 'На главную';
 }
