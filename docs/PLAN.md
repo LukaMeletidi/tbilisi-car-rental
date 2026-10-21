@@ -1613,7 +1613,8 @@ Not planned since 2026-10-20; see Section 15 ('Not planned').
 7. Release on the free plan: polish, the Privacy Policy, the live link (Flutter
    web on Firebase Hosting) and an Android APK from a GitHub Release, then the
    final README — open (the decisions of 2026-10-20 and the steps 7.1 to 7.12
-   are in Section 23). No paid services: the Blaze plan, Cloud Functions,
+   are in Section 23; 7.1 to 7.10a are done; 7.3b, 7.7b, 7.11 and 7.12
+   remain). No paid services: the Blaze plan, Cloud Functions,
    e-mail, TTL, the photo upload and Analytics are not planned (Section 15).
    README: the live link, the APK link, screenshots and GIFs (the admin panel
    is shown this way, never opened to visitors); an honest "how I worked"
@@ -3436,8 +3437,9 @@ Phase 7 decisions (the owner's, 2026-10-20):
     nothing in the app uses them (no Google Sign-In, no phone sign-in, no
     Play Integrity; the admin signs in with e-mail and password). So 7.10
     skips that.
-- 7.10a Make the repository public. Tier 1 — Audit DONE; making it public
-  is the owner's step, not done.
+- 7.10a Make the repository public. Tier 1 — DONE (the audit in the
+  commit "Record the history audit before the repository goes public";
+  the repository made public by the owner on 2026-10-21).
   - The history audit covered all 146 commits of the 3 refs (no stash, no
     tags): 1,099 blobs, 530 paths ever, 65 of them deleted, every commit
     message and every author and committer field.
@@ -3460,22 +3462,56 @@ Phase 7 decisions (the owner's, 2026-10-20):
   - Photos: the owner accepts all photos as they are.
   - Licence of the repository: none for now (all rights reserved); look
     again in 7.12.
-  - Remaining, by the owner by hand on GitHub: the description, the
-    website, the topics; Projects and Discussions off, Wiki off, Issues the
-    owner's choice; no Actions secrets; one collaborator. Then, as the
-    last click: Settings > General > Change visibility > Make public.
-- 7.10 flutter build apk --release; the APK goes to a GitHub Release.
-  Tier 1 — not started. Needs approval: the release build. No SHA
-  fingerprints in the Firebase console (see 7.9).
-  - It comes after 7.10a: a release in a private repository cannot be
-    downloaded by visitors. It includes tool/check_apk.mjs with a test,
-    gh to create the release, the tag v1.0.0, the asset
-    tbilisi-car-rental-1.0.0.apk with its .sha256 file and the release
-    notes approved by the owner; it is published only after the owner's
-    separate "GO".
+  - Done by the owner by hand on GitHub, after the audit: the About
+    description, the website and the topics; Wiki, Issues, Projects and
+    Discussions off (Sponsorships stay off); one person has access; no
+    Actions and no secrets. Then, as the last click, Settings > General >
+    Change visibility > Make public (2026-10-21). The release page opens
+    in an Incognito window.
+- 7.10 The release APK on a GitHub Release. Tier 1 — DONE (in the commit
+  "Add a check that a release APK holds no secret"; the tag v1.0.0).
+  It came after 7.10a: a release in a private repository cannot be
+  downloaded by visitors. No SHA fingerprints in the Firebase console (see
+  7.9).
+  - Commit 0c2fc4e: tool/check_apk.mjs with 16 tests. It reads the APK as
+    a zip with Node's zlib and checks every entry: forbidden file names,
+    every deny-list text (ASCII case-folded, UTF-8 and UTF-16LE at any
+    offset), the secret shapes (private key, service-account key, App
+    Check debug token outside images, a reCAPTCHA secret other than the
+    public site key), and e-mail addresses only in libapp.so (Dart
+    private names like _name@<digits>.member are not addresses). It
+    prints entry names, rule names and counts only, and fails without a
+    usable deny list. Found in review before the commit: the deny-list
+    texts must be case-folded like the bytes; fixed and tested.
+  - The build: flutter clean, flutter build apk --release from 0c2fc4e;
+    2536 Flutter tests, 114 Node tests, analyze and the secrets scan
+    passed; pubspec.lock unchanged. check_apk: 198 entries, 0 findings.
+    apksigner verified it (v2); the signer certificate equals that of 7.9
+    (the keystore's). The APK is 62,223,547 bytes (59.3 MB), SHA-256
+    e936940b95fdb6afaaadbdc21b668644c10806545896bacd218e46a24ba67007.
+  - The release: the annotated tag v1.0.0 on 0c2fc4e and the GitHub
+    Release "Tbilisi Car Rental 1.0.0 (Android APK)", created with gh
+    after the owner's separate "GO", with the assets
+    tbilisi-car-rental-1.0.0.apk and tbilisi-car-rental-1.0.0.apk.sha256.
+    The notes (demo, Android 7.0+, install steps, the Play Protect note,
+    the hashes, the privacy link) are on the release page only; the APK
+    and the release folder never entered the repository.
+  - Checked after publishing: the download URL answers 200; a fresh
+    download has the same SHA-256 as the local file and the .sha256 file,
+    and passes check_apk. The owner installed the same APK on
+    emulator-5554 (after uninstalling the debug app) and checked the icon
+    and the label "Tbilisi Car", Home, the catalog, a car page, the
+    booking form (no booking sent), Privacy, Back, the language switch
+    and the FAQ: all fine.
+  - App Check: this APK has no App Check provider, so its requests show
+    as "Unverified: outdated client". Expected; nothing is enforced.
 - 7.11 Checks on a real Android phone by the owner: the public tabs, the
   phone and e-mail links, TalkBack on the FAQ, Android Back everywhere,
   offline, and the admin screens on Android. Tier 3 — not started.
 - 7.12 The final README: the live link, the APK link, screenshots, GIFs, an
   honest "how I worked" paragraph, "iOS not tested on Windows" and "possible
   future work". Tier 3 — not started.
+  - The README links the release page
+    https://github.com/LukaMeletidi/tbilisi-car-rental/releases/tag/v1.0.0
+    and the live site. The repository licence is decided there (none for
+    now, all rights reserved).
