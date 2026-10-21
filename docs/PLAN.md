@@ -3164,7 +3164,8 @@ Phase 7 decisions (the owner's, 2026-10-20):
 - The admin panel is not opened to visitors (no shared password); the README
   shows it with screenshots and GIFs.
 - Order: 7.1 to 7.12 as listed. The first four steps change no Firebase
-  setting.
+  setting. Changed on 2026-10-21: the first deploy 7.7 comes before the
+  icon 7.8.
 
 - 7.1 The Phase 7 decisions in this file. Tier 3 — DONE (in the commit
   "Record the Phase 7 decisions in the plan").
@@ -3228,8 +3229,8 @@ Phase 7 decisions (the owner's, 2026-10-20):
     tool/check_web_build.mjs (it must pass).
   - Notes: test a local build only on http://localhost:5000 (127.0.0.1 is
     not an authorized domain of Authentication, so the sign-in fails
-    there). Step 7.8 (the icon) must be done before the first deploy in
-    7.7: the favicon and the web icons are still Flutter's. A report of the
+    there). The favicon and the web icons are still Flutter's; step 7.8
+    replaces them after the first deploy (order changed in 7.7). A report of the
     caching gap to Flutter is possible (Phase 7, optional).
 - 7.6 App Check for the web, monitoring only. Tier 1 — DONE (in the commit
   "Turn on App Check monitoring for the web build").
@@ -3258,14 +3259,50 @@ Phase 7 decisions (the owner's, 2026-10-20):
 - 7.7 The first Hosting deploy, only after the owner's explicit "GO". The
   hosted domain must be in the authorized domains of Authentication; a smoke
   test on the live link (public tabs, the booking form, the admin sign-in,
-  the web sign-in for the browser session only). Tier 1 — not started.
-  - Before it: step 7.8 (the icon) and the release procedure of 7.5.
+  the web sign-in for the browser session only). Tier 1 — pre-flight
+  prepared; not deployed.
+  - ORDER CHANGED (the owner, 2026-10-21): 7.7 (the first deploy) comes
+    BEFORE 7.8 (the icon). The link is not public until the README, so
+    nobody sees the default icon; the deploy shows early whether the live
+    domain, the sign-in and App Check work. The icon goes out with a
+    second deploy in 7.8.
+  - The site: tbilisi-car-rental.web.app and
+    tbilisi-car-rental.firebaseapp.com (the default site; the owner checks
+    it in the console). The command deploys hosting only and names the
+    project: firebase deploy --only hosting --project tbilisi-car-rental.
+    Rules and indexes are not deployed.
+  - Before GO, the owner checks in the console: the Hosting site, the
+    authorized domains of Authentication, the browser API key
+    restrictions. The reCAPTCHA key already lists both Hosting domains.
+  - Pre-flight (prepared): a clean tree on main equal to origin/main;
+    flutter analyze; flutter test; the Node tests in tool/; the secrets
+    scan; flutter clean; flutter build web --release; node
+    tool/check_web_build.mjs; build/web about 43 MB, no .map files; the
+    built index.html has the noindex tag.
+  - Search engines: web/index.html has <meta name="robots"
+    content="noindex, nofollow"> (the company is fictional). There is no
+    robots.txt that blocks crawling, so the tag can be read.
+  - Rollback: the console's Hosting release history (Rollback). Firebase
+    CLI 15.30.1 has no hosting:rollback command.
   - Check on the live domain: the cache headers with curl -I, the
     authorized domains of Authentication, and the admin sign-in.
-- 7.8 The launcher icon and the app name. Tier 2 — not started. Needs: the
-  owner's approval of the package flutter_launcher_icons (with
-  pubspec.lock), the icon PNG from the owner, approval of the Android
-  platform files.
+  - If / and /cars get Hosting's default max-age=3600 (the header rules
+    match the requested path), a separate small fix after 7.7 (accepted).
+  - Release retention in the Hosting settings: not set now.
+  - The three old test bookings stay (made-up names and numbers).
+  - Before the link is published in the README (not before the deploy):
+    settle the licences of the Home photos, the settings/company values
+    and the car photos.
+  - Car photos: some are typed https addresses on outside sites (for
+    example a car-news CDN). On the web they fail with a CORS error; in
+    the Android app they work. They are probably not free to use. Before
+    the README, replace them with own or free-licence photos (for example
+    Wikimedia Commons, which sends CORS headers, or files hosted in the
+    site's own folder); decided when we get there.
+- 7.8 The launcher icon and the app name, then a second Hosting deploy
+  (its own GO). Tier 2 — not started. Needs: the owner's approval of the
+  package flutter_launcher_icons (with pubspec.lock), the icon PNG from the
+  owner, approval of the Android platform files.
 - 7.9 The release signing: the keystore is made by the owner locally and
   never committed; key.properties is git-ignored (.gitignore is checked
   first); a signing config in the Android build file. Tier 1 — not started.
