@@ -1725,7 +1725,8 @@ Phase 0 is complete.
     interim README exists since step 6b.9.
   - An unknown address such as /#/zzz shows go_router's own error page; it is
     replaced by a public "not found" page (6b.2).
-  - The licence of the Home photos (6b.6): moved to step 7.7b (Section 23).
+  - The licence of the Home photos (6b.6): settled in step 7.10a (Section
+    23): the owner accepts the photos as they are.
   - After the booking form, Back goes to the catalog, not to Home: the car
     page opens the form with context.go (known, unchanged; 6b.6).
   - A Home visit opens the active-cars listener: it reads every active car
@@ -3336,14 +3337,13 @@ Phase 7 decisions (the owner's, 2026-10-20):
   - App Check on the live site: closed in step 7.8a (see 7.7).
 - 7.7b The photos, before the link goes into the README (not needed for a
   deploy). Tier 2 — not started.
-  - Car photos: some are typed https addresses on outside sites (for
-    example a car-news CDN). On the web they fail with a CORS error; in
-    the Android app they work. They are probably not free to use. Replace
-    them with own or free-licence photos (for example Wikimedia Commons,
-    which sends CORS headers, or files hosted in the site's own folder);
-    decided when we get there.
-  - Settle the licences of the Home photos and check the settings/company
-    values.
+  - The owner accepts the Home photos, the app-bar logo and all car
+    photos as they are (decided in 7.10a); no licence work.
+  - The only photo item left: in 7.11 or before the README screenshots,
+    look whether any car photo fails to show on the live web site (a CORS
+    problem of an outside address; it works in the Android app), and
+    decide then.
+  - Check the settings/company values.
 - 7.8 The launcher icon and the app name. Tier 2 — DONE (in the commit
   "Add the launcher and web icons from the owner's logo"). Not deployed
   yet: step 7.8a.
@@ -3436,9 +3436,43 @@ Phase 7 decisions (the owner's, 2026-10-20):
     nothing in the app uses them (no Google Sign-In, no phone sign-in, no
     Play Integrity; the admin signs in with e-mail and password). So 7.10
     skips that.
+- 7.10a Make the repository public. Tier 1 — Audit DONE; making it public
+  is the owner's step, not done.
+  - The history audit covered all 146 commits of the 3 refs (no stash, no
+    tags): 1,099 blobs, 530 paths ever, 65 of them deleted, every commit
+    message and every author and committer field.
+  - Method: a one-off script run once, reusing the functions of
+    tool/check_secrets.mjs; proved first on a throwaway repo with made-up
+    planted values (also in deleted files and in UTF-16 binaries).
+  - Result: the deny list (2 entries) had 0 matches in files, binaries,
+    commit messages and author fields. No key, token, service account,
+    keystore or reCAPTCHA secret. Author and committer addresses are
+    GitHub noreply addresses only.
+  - 3 errors, judged harmless and left (option iii): the Windows
+    manifest's public OS GUIDs (old Windows template), npm's public
+    deprecation text in tool/admin/package-lock.json, and a made-up
+    address in an old version of a booking validation test (looked at by
+    the owner). 58 phone-number warnings, all made-up test data or format
+    cases (looked at by the owner), left as well. No history rewrite, no
+    new repository, no force push.
+  - Limits: the audit is only as complete as the 2-entry deny list, and
+    the case folding in binary files covers ASCII letters only.
+  - Photos: the owner accepts all photos as they are.
+  - Licence of the repository: none for now (all rights reserved); look
+    again in 7.12.
+  - Remaining, by the owner by hand on GitHub: the description, the
+    website, the topics; Projects and Discussions off, Wiki off, Issues the
+    owner's choice; no Actions secrets; one collaborator. Then, as the
+    last click: Settings > General > Change visibility > Make public.
 - 7.10 flutter build apk --release; the APK goes to a GitHub Release.
   Tier 1 — not started. Needs approval: the release build. No SHA
   fingerprints in the Firebase console (see 7.9).
+  - It comes after 7.10a: a release in a private repository cannot be
+    downloaded by visitors. It includes tool/check_apk.mjs with a test,
+    gh to create the release, the tag v1.0.0, the asset
+    tbilisi-car-rental-1.0.0.apk with its .sha256 file and the release
+    notes approved by the owner; it is published only after the owner's
+    separate "GO".
 - 7.11 Checks on a real Android phone by the owner: the public tabs, the
   phone and e-mail links, TalkBack on the FAQ, Android Back everywhere,
   offline, and the admin screens on Android. Tier 3 — not started.
