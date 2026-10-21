@@ -3409,12 +3409,36 @@ Phase 7 decisions (the owner's, 2026-10-20):
     web icons".
   - A normal Chrome profile may keep the old icons for up to one day
     (max-age=86400).
-- 7.9 The release signing: the keystore is made by the owner locally and
-  never committed; key.properties is git-ignored (.gitignore is checked
-  first); a signing config in the Android build file. Tier 1 — not started.
-- 7.10 The SHA-1 and SHA-256 of the release key added to the Firebase
-  Android app by the owner; flutter build apk --release; the APK goes to a
-  GitHub Release. Tier 1 — not started. Needs approval: the release build.
+- 7.9 The release signing. Tier 1 — DONE (in the commit "Sign the Android
+  release build with the owner's key").
+  - android/app/build.gradle.kts: a release signing config that reads
+    android/key.properties (storeFile, storePassword, keyAlias,
+    keyPassword). The owner made the file himself; git ignores it and no
+    tool of this project opens it. The release build no longer uses the
+    debug key.
+  - A release build without key.properties, with a missing value or with
+    a missing keystore stops with a clear error that names no value.
+    Debug builds, flutter analyze and flutter test do not need the file.
+  - The keystore was made by the owner with keytool and lives outside the
+    repository, with the owner's own backup: alias release, RSA 4096,
+    PKCS12, valid for 10000 days, one password for store and key. With no
+    Google Play there is no Play App Signing: this key is the app's only
+    signing key, and every later APK must be signed with it.
+  - tool/signing_files.test.mjs (5 tests) checks that git ignores and does
+    not track key.properties and keystores, and that the build file reads
+    the four values only from key.properties. 2536 Flutter tests and 98
+    Node tests pass; the scan has 0 errors; a debug APK still builds.
+  - The release APK (1.0.0+1, 59.3 MB) is signed with the owner's key:
+    apksigner verifies it (v2 scheme), the signer is the owner's
+    certificate (not Android Debug), and its SHA-256 and SHA-1 equal the
+    keystore's (compared by the owner).
+  - The SHA fingerprints are NOT added to the Firebase Android app:
+    nothing in the app uses them (no Google Sign-In, no phone sign-in, no
+    Play Integrity; the admin signs in with e-mail and password). So 7.10
+    skips that.
+- 7.10 flutter build apk --release; the APK goes to a GitHub Release.
+  Tier 1 — not started. Needs approval: the release build. No SHA
+  fingerprints in the Firebase console (see 7.9).
 - 7.11 Checks on a real Android phone by the owner: the public tabs, the
   phone and e-mail links, TalkBack on the FAQ, Android Back everywhere,
   offline, and the admin screens on Android. Tier 3 — not started.
