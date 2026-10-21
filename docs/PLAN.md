@@ -3279,9 +3279,10 @@ Phase 7 decisions (the owner's, 2026-10-20):
     all Chrome windows the admin panel asks for the sign-in again. The
     browser console showed only the known CORS error of one outside car
     photo (step 7.7b).
-  - OPEN: App Check on the live site is not checked yet (the console needs
-    about an hour to show the "Verified" share): Security > App Check >
-    APIs > Cloud Firestore and Authentication. Both stay on Monitoring.
+  - App Check on the live site (CLOSED in step 7.8a, the owner's check):
+    "Verified" requests now appear for Cloud Firestore and Authentication;
+    both stay on Monitoring. The other categories are old traffic and
+    local tests.
   - ORDER CHANGED (the owner, 2026-10-21): 7.7 (the first deploy) comes
     BEFORE 7.8 (the icon). The link is not public until the README, so
     nobody sees the default icon; the deploy shows early whether the live
@@ -3332,7 +3333,7 @@ Phase 7 decisions (the owner's, 2026-10-20):
     Last-Modified time of the second deploy. The images, fonts and icons
     came from the disk cache. The old copy stays in a browser for up to
     one hour, and only for visitors who opened the site before the fix.
-  - App Check on the live site is still OPEN (see 7.7).
+  - App Check on the live site: closed in step 7.8a (see 7.7).
 - 7.7b The photos, before the link goes into the README (not needed for a
   deploy). Tier 2 — not started.
   - Car photos: some are typed https addresses on outside sites (for
@@ -3385,9 +3386,29 @@ Phase 7 decisions (the owner's, 2026-10-20):
     on a real phone.
   - Note: a normal Chrome profile may show the old favicon from its cache
     until the site data is cleared.
-- 7.8a The third Hosting deploy with the new web icons (its own GO, as in
-  7.7a). Tier 1 — not started. The APK with the new icon comes with 7.9
-  and 7.10.
+- 7.8a The third Hosting deploy with the new web icons. Tier 1 — DONE
+  (deployed 2026-10-21 after the owner's GO with firebase deploy --only
+  hosting --project tbilisi-car-rental, message "Step 7.8a: new web
+  icons"; no extra flags, no prompts; 8 new files of 43). The APK with
+  the new icon comes with 7.9 and 7.10.
+  - The pre-flight passed on c9b90a1: analyze, 2536 Flutter tests, 93
+    Node tests, the scan 0 errors / 11 warnings, flutter clean, the
+    release build, check_web_build, 43 MB, no .map files, the noindex
+    tag; the five icons in build/web identical to web/.
+  - curl -I on the live domain (all 200): no-cache for /, /index.html,
+    /manifest.json and main.dart.js; max-age=86400 for favicon.png
+    (1013 bytes), Icon-192 (8558), Icon-512 (27951), Icon-maskable-192
+    (5036) and Icon-maskable-512 (16252), each length equal to the local
+    file. firebaseapp.com answers 200; the noindex tag, short_name
+    "Tbilisi Car" and the touch icon Icon-maskable-192.png are served.
+  - App Check: the open item of 7.7 is closed (see 7.7).
+  - The owner's check in Incognito on https://tbilisi-car-rental.web.app
+    passed: the favicon, Icon-512, Icon-maskable-512, the manifest (short
+    name "Tbilisi Car", name "Tbilisi Car Rental", four icons loaded),
+    Home and a car page, and the release history showing "Step 7.8a: new
+    web icons".
+  - A normal Chrome profile may keep the old icons for up to one day
+    (max-age=86400).
 - 7.9 The release signing: the keystore is made by the owner locally and
   never committed; key.properties is git-ignored (.gitignore is checked
   first); a signing config in the Android build file. Tier 1 — not started.
