@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
@@ -5,6 +8,39 @@ plugins {
     // END: FlutterFire Configuration
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+// The release signing key (step 7.9). android/key.properties is made by
+// the owner, is git-ignored and is read only by this build; the keystore
+// lives outside the repository. A release build without it stops with a
+// clear error; debug builds do not need it. No value is ever printed.
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties = Properties().apply {
+    if (keystorePropertiesFile.exists()) {
+        FileInputStream(keystorePropertiesFile).use { load(it) }
+    }
+}
+val isReleaseBuild = gradle.startParameter.taskNames.any {
+    it.contains("Release", ignoreCase = true)
+}
+if (isReleaseBuild) {
+    if (!keystorePropertiesFile.exists()) {
+        throw GradleException(
+            "Release build: android/key.properties is missing (docs/PLAN.md, 7.9).",
+        )
+    }
+    val missing = listOf("storeFile", "storePassword", "keyAlias", "keyPassword")
+        .filter { keystoreProperties.getProperty(it).isNullOrBlank() }
+    if (missing.isNotEmpty()) {
+        throw GradleException(
+            "android/key.properties lacks: ${missing.joinToString()}",
+        )
+    }
+    if (!file(keystoreProperties.getProperty("storeFile")).exists()) {
+        throw GradleException(
+            "The keystore named in android/key.properties is missing.",
+        )
+    }
 }
 
 android {
@@ -28,11 +64,21 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (keystorePropertiesFile.exists()) {
+            create("release") {
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // The owner's release key; see the check above.
+            signingConfig = signingConfigs.findByName("release")
         }
     }
 }
