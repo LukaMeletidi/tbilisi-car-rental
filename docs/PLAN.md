@@ -3304,9 +3304,35 @@ Phase 7 decisions (the owner's, 2026-10-20):
     CLI 15.30.1 has no hosting:rollback command.
   - Release retention in the Hosting settings: not set now.
   - The three old test bookings stay (made-up names and numbers).
-- 7.7a The cache headers of / and /cars (max-age=3600): a small fix in
-  firebase.json, then a second deploy with its own GO. Tier 1 — not
-  started.
+- 7.7a The cache headers of / and /cars. Tier 1 — DONE (in the commit
+  "Send the start page with no-cache on every path"; deployed 2026-10-21
+  after the owner's GO with firebase deploy --only hosting --project
+  tbilisi-car-rental, message "Step 7.7a: no-cache for the start page";
+  no prompts, 1 new file of 43).
+  - The deploy command was run without extra flags; the only extra was the
+    shell redirect < /dev/null (it makes a prompt fail instead of wait).
+  - firebase.json: the first header rule's source is now "**" (no-cache);
+    the image and font rule stays last (max-age=86400).
+    tool/hosting_config.test.mjs guards the two rules, their order, the
+    rewrite, the public folder and the Firestore block (JSON only). 2536
+    Flutter tests and 65 Node tests pass.
+  - Precedence, checked live: Hosting applies every matching header rule
+    in order and the LAST one wins for the same header (not documented).
+    A rule that must win goes after the general "**" rule.
+  - curl -I on the live domain (all 200): no-cache for /, /cars,
+    /index.html, main.dart.js, flutter_bootstrap.js, version.json,
+    canvaskit.wasm and assets/NOTICES; max-age=86400 for hero.jpg, the
+    MaterialIcons font, favicon.png and Icon-192.png; main.dart.js is
+    served with br or gzip. firebaseapp.com answers 200; the noindex tag
+    is served on both domains.
+  - The owner's check in Chrome: the start page first came from the
+    browser's disk cache with the OLD max-age=3600 (a copy stored before
+    the fix, from the first deploy). After a hard reload (Ctrl+Shift+R) it
+    came from the network with Cache-Control: no-cache and the
+    Last-Modified time of the second deploy. The images, fonts and icons
+    came from the disk cache. The old copy stays in a browser for up to
+    one hour, and only for visitors who opened the site before the fix.
+  - App Check on the live site is still OPEN (see 7.7).
 - 7.7b The photos, before the link goes into the README (not needed for a
   deploy). Tier 2 — not started.
   - Car photos: some are typed https addresses on outside sites (for
