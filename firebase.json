@@ -30,7 +30,7 @@
     "rewrites": [{ "source": "**", "destination": "/index.html" }],
     "headers": [
       {
-        "source": "**/*.@(html|js|json|wasm)",
+        "source": "**",
         "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
       },
       {
