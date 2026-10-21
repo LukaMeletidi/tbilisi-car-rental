@@ -1725,8 +1725,7 @@ Phase 0 is complete.
     interim README exists since step 6b.9.
   - An unknown address such as /#/zzz shows go_router's own error page; it is
     replaced by a public "not found" page (6b.2).
-  - Check the licence of the Home photos, or replace them with own or
-    free-licence photos under the same file names (6b.6).
+  - The licence of the Home photos (6b.6): moved to step 7.7b (Section 23).
   - After the booking form, Back goes to the catalog, not to Home: the car
     page opens the form with context.go (known, unchanged; 6b.6).
   - A Home visit opens the active-cars listener: it reads every active car
@@ -3256,27 +3255,46 @@ Phase 7 decisions (the owner's, 2026-10-20):
     nothing above it is enabled (no billing).
   - The old classic reCAPTCHA key in the other Google project is unused
     and may be deleted.
-- 7.7 The first Hosting deploy, only after the owner's explicit "GO". The
-  hosted domain must be in the authorized domains of Authentication; a smoke
-  test on the live link (public tabs, the booking form, the admin sign-in,
-  the web sign-in for the browser session only). Tier 1 — pre-flight
-  prepared; not deployed.
+- 7.7 The first Hosting deploy. Tier 1 — DONE (deployed 2026-10-21, after
+  the owner's GO, with firebase deploy --only hosting --project
+  tbilisi-car-rental, message "Step 7.7: first deploy"; 43 files, no
+  prompts; rules and indexes not deployed).
+  - --non-interactive was added to the deploy command (not in the approved
+    text; it only makes a prompt fail instead of wait).
+  - The pre-flight passed on c975f04: analyze, 2536 Flutter tests, 59 Node
+    tests, the scan 0 errors / 11 warnings, flutter clean, the release
+    build, check_web_build (5 plugins and the site key), 43 MB, no .map
+    files, the noindex tag in the build.
+  - Live: https://tbilisi-car-rental.web.app and
+    https://tbilisi-car-rental.firebaseapp.com (both 200, both with the
+    noindex tag); /cars without # serves the app.
+  - Headers (curl -I): no-cache for /index.html, the JS files and
+    version.json; max-age=86400 for the images; main.dart.js is served
+    with br or gzip. / and /cars get Hosting's default max-age=3600 (the
+    header rules match the requested path): step 7.7a.
+  - The owner's smoke test on https://tbilisi-car-rental.web.app passed:
+    the public tabs and the language switch, the unknown address (the
+    not-found page), /cars without # opens the app, the admin sign-in
+    works on the live domain, the bookings list loads, and after closing
+    all Chrome windows the admin panel asks for the sign-in again. The
+    browser console showed only the known CORS error of one outside car
+    photo (step 7.7b).
+  - OPEN: App Check on the live site is not checked yet (the console needs
+    about an hour to show the "Verified" share): Security > App Check >
+    APIs > Cloud Firestore and Authentication. Both stay on Monitoring.
   - ORDER CHANGED (the owner, 2026-10-21): 7.7 (the first deploy) comes
     BEFORE 7.8 (the icon). The link is not public until the README, so
     nobody sees the default icon; the deploy shows early whether the live
     domain, the sign-in and App Check work. The icon goes out with a
     second deploy in 7.8.
-  - The site: tbilisi-car-rental.web.app and
-    tbilisi-car-rental.firebaseapp.com (the default site; the owner checks
-    it in the console). The command deploys hosting only and names the
-    project: firebase deploy --only hosting --project tbilisi-car-rental.
-    Rules and indexes are not deployed.
-  - Before GO, the owner checks in the console: the Hosting site, the
-    authorized domains of Authentication, the browser API key
-    restrictions. The reCAPTCHA key already lists both Hosting domains.
-  - Pre-flight (prepared): a clean tree on main equal to origin/main;
-    flutter analyze; flutter test; the Node tests in tool/; the secrets
-    scan; flutter clean; flutter build web --release; node
+  - Before GO, the owner checked in the console: the Hosting site
+    (the default site tbilisi-car-rental), the authorized domains of
+    Authentication (localhost and both Hosting domains), the browser API
+    key (application restrictions "None"), the reCAPTCHA key (both Hosting
+    domains), App Check on Monitoring, the Spark plan.
+  - Pre-flight for every deploy: a clean tree on main equal to
+    origin/main; flutter analyze; flutter test; the Node tests in tool/;
+    the secrets scan; flutter clean; flutter build web --release; node
     tool/check_web_build.mjs; build/web about 43 MB, no .map files; the
     built index.html has the noindex tag.
   - Search engines: web/index.html has <meta name="robots"
@@ -3284,21 +3302,21 @@ Phase 7 decisions (the owner's, 2026-10-20):
     robots.txt that blocks crawling, so the tag can be read.
   - Rollback: the console's Hosting release history (Rollback). Firebase
     CLI 15.30.1 has no hosting:rollback command.
-  - Check on the live domain: the cache headers with curl -I, the
-    authorized domains of Authentication, and the admin sign-in.
-  - If / and /cars get Hosting's default max-age=3600 (the header rules
-    match the requested path), a separate small fix after 7.7 (accepted).
   - Release retention in the Hosting settings: not set now.
   - The three old test bookings stay (made-up names and numbers).
-  - Before the link is published in the README (not before the deploy):
-    settle the licences of the Home photos, the settings/company values
-    and the car photos.
+- 7.7a The cache headers of / and /cars (max-age=3600): a small fix in
+  firebase.json, then a second deploy with its own GO. Tier 1 — not
+  started.
+- 7.7b The photos, before the link goes into the README (not needed for a
+  deploy). Tier 2 — not started.
   - Car photos: some are typed https addresses on outside sites (for
     example a car-news CDN). On the web they fail with a CORS error; in
-    the Android app they work. They are probably not free to use. Before
-    the README, replace them with own or free-licence photos (for example
-    Wikimedia Commons, which sends CORS headers, or files hosted in the
-    site's own folder); decided when we get there.
+    the Android app they work. They are probably not free to use. Replace
+    them with own or free-licence photos (for example Wikimedia Commons,
+    which sends CORS headers, or files hosted in the site's own folder);
+    decided when we get there.
+  - Settle the licences of the Home photos and check the settings/company
+    values.
 - 7.8 The launcher icon and the app name, then a second Hosting deploy
   (its own GO). Tier 2 — not started. Needs: the owner's approval of the
   package flutter_launcher_icons (with pubspec.lock), the icon PNG from the
