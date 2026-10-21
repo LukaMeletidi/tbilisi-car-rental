@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The fill of the logo ellipse, not the app theme colour (#673AB7):
+         it hides the ellipse edge. Same value as LOGO_FILL in
+         tool/make_icons.mjs. -->
+    <color name="ic_launcher_background">#623CA5</color>
+</resources>
