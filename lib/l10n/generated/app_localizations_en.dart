@@ -632,7 +632,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacy5Text =>
-      'Only the site owner sees the booking data, in the admin panel. The data is stored on Google Firebase servers, which also process technical data such as the IP address when you use the site. We do not pass the data to others and we do not sell it.';
+      'Only the site owner sees the booking data, in the admin panel. The data is stored on Google Firebase servers, which also process technical data such as the IP address when you use the site. We do not pass the data to others and we do not sell it. To protect the site against bots, it uses Google reCAPTCHA, which checks how the site is used.';
 
   @override
   String get privacy6Title => 'Your rights';

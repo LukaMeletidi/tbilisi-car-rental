@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:tbilisi_car_rental/core/config/app_check_config.dart';
 import 'package:tbilisi_car_rental/core/data/firestore_start_up.dart';
 import 'package:tbilisi_car_rental/core/localization/app_language_provider.dart';
 import 'package:tbilisi_car_rental/core/router/app_router.dart';
@@ -29,20 +30,46 @@ Future<void> main() async {
   runApp(const ProviderScope(child: TbilisiCarRentalApp()));
 }
 
-/// Turns on Firebase App Check, for now ONLY in debug builds on Android,
-/// with the debug provider (step 2.9a).
+/// Turns on Firebase App Check. It is monitoring only: nothing is enforced
+/// in the Firebase console, so requests without a valid token are still
+/// accepted and only counted (decided in Phase 7).
 ///
-/// Release builds and the web build do not activate anything yet; step 2.9b
-/// (Phase 7) decides their setup. App Check is not enforced in the Firebase
-/// console, so requests without a token are still accepted and only counted.
+/// - Web (step 7.6): the provider of [appCheckWebProvider]: the debug
+///   provider under flutter run, reCAPTCHA Enterprise with the public site
+///   key in a release build.
+/// - Android: ONLY in debug builds, with the debug provider (step 2.9a). A
+///   release APK has no provider.
 ///
-/// The debug provider prints a debug token in the Android log on the first
-/// start. The owner registers it by hand in the Firebase console. The token
-/// is a secret: it is never written into a file of this project.
+/// A debug provider prints a debug token (the Android log, or the browser
+/// console on the web). The owner registers it by hand in the Firebase
+/// console. The token is a secret: it is never written into a file of this
+/// project.
 ///
-/// A failure here never stops the app: the error is logged and the app
-/// starts as usual.
+/// A failure here never stops the app: it is logged and the app starts as
+/// usual.
 Future<void> _activateAppCheck() async {
+  if (kIsWeb) {
+    final provider = appCheckWebProvider(
+      debug: kDebugMode,
+      siteKey: appCheckWebSiteKey,
+    );
+    if (provider == null) return;
+    try {
+      await FirebaseAppCheck.instance
+          .activate(providerWeb: provider)
+          .timeout(const Duration(seconds: 5));
+    } catch (error, stackTrace) {
+      // Only the type: never a token or a key.
+      developer.log(
+        'App Check could not be activated on the web: ${error.runtimeType}',
+        name: 'main',
+        level: 900, // warning
+        stackTrace: stackTrace,
+      );
+    }
+    return;
+  }
+
   final isAndroidApp =
       !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
   if (!kDebugMode || !isAndroidApp) return;

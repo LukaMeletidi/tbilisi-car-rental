@@ -9,15 +9,30 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { WEB_PLUGIN_MARKERS, checkWebBuild } from './check_web_build.mjs';
+import {
+  SITE_KEY_FILE,
+  WEB_PLUGIN_MARKERS,
+  checkWebBuild,
+  readSiteKey,
+} from './check_web_build.mjs';
 
 const script = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
   'check_web_build.mjs',
 );
 
-/// A made-up project folder with the given web plugins and main.dart.js.
-function project({ plugins, js, withBuild = true, deps }) {
+/// A made-up site key; never the real one.
+const fakeKey = '6LmadeUpSiteKeyForTheTests000000000000000';
+
+/// A made-up project folder with the given web plugins, main.dart.js and
+/// App Check config file ([keySource] null: no config file).
+function project({
+  plugins,
+  js,
+  withBuild = true,
+  deps,
+  keySource = `const appCheckWebSiteKey = '${fakeKey}';\n`,
+}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'web-build-test-'));
   const content =
     deps ??
@@ -26,6 +41,12 @@ function project({ plugins, js, withBuild = true, deps }) {
   if (withBuild) {
     fs.mkdirSync(path.join(root, 'build', 'web'), { recursive: true });
     fs.writeFileSync(path.join(root, 'build', 'web', 'main.dart.js'), js);
+  }
+  if (keySource !== null) {
+    fs.mkdirSync(path.join(root, path.dirname(SITE_KEY_FILE)), {
+      recursive: true,
+    });
+    fs.writeFileSync(path.join(root, SITE_KEY_FILE), keySource);
   }
   return root;
 }
@@ -37,15 +58,61 @@ function run(root) {
 }
 
 const allPlugins = Object.keys(WEB_PLUGIN_MARKERS);
-const allMarkers = Object.values(WEB_PLUGIN_MARKERS).join(' ');
+const allMarkers = `${Object.values(WEB_PLUGIN_MARKERS).join(' ')} ${fakeKey}`;
 
-test('every web plugin in the build: passes with exit code 0', () => {
+test('every web plugin and the key in the build: passes with exit 0', () => {
   const root = project({ plugins: allPlugins, js: `x ${allMarkers} y` });
   assert.equal(checkWebBuild(root).ok, true);
   const result = run(root);
   assert.equal(result.status, 0);
-  assert.match(result.stdout, /OK: every web plugin is in the build/);
+  assert.match(result.stdout, /OK: every web plugin and the App Check key/);
   assert.match(result.stdout, /firebase_auth_web\s+yes/);
+  assert.match(result.stdout, /app_check_web_site_key\s+yes/);
+});
+
+test('the site key missing from the build: fails, without printing it', () => {
+  const js = allMarkers.replace(fakeKey, '');
+  const root = project({ plugins: allPlugins, js });
+  assert.equal(checkWebBuild(root).ok, false);
+  const result = run(root);
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /app_check_web_site_key\s+no/);
+  assert.doesNotMatch(result.stdout, new RegExp(fakeKey));
+});
+
+test('no App Check config file: fails with a clear message', () => {
+  const root = project({ plugins: allPlugins, js: allMarkers, keySource: null });
+  const result = run(root);
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /No lib\/core\/config\/app_check_config\.dart/);
+});
+
+test('no key constant in the config file: fails with a clear message', () => {
+  const root = project({
+    plugins: allPlugins,
+    js: allMarkers,
+    keySource: 'const somethingElse = 1;\n',
+  });
+  const result = run(root);
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /No appCheckWebSiteKey constant/);
+});
+
+test('readSiteKey reads the constant of the real file shape', () => {
+  assert.equal(
+    readSiteKey(`/// doc\nconst appCheckWebSiteKey = '${fakeKey}';\n`),
+    fakeKey,
+  );
+  assert.equal(readSiteKey('const other = 1;'), null);
+});
+
+test('the real config file has a key the check can read', () => {
+  const real = fs.readFileSync(
+    path.join(path.dirname(script), '..', SITE_KEY_FILE),
+    'utf8',
+  );
+  const key = readSiteKey(real);
+  assert.ok(key && key.startsWith('6L') && !/\s/.test(key));
 });
 
 test('flutter-fire-auth missing: fails with exit code 1', () => {

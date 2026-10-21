@@ -1219,7 +1219,7 @@ abstract class AppLocalizations {
   /// Privacy Policy: text of section 5.
   ///
   /// In en, this message translates to:
-  /// **'Only the site owner sees the booking data, in the admin panel. The data is stored on Google Firebase servers, which also process technical data such as the IP address when you use the site. We do not pass the data to others and we do not sell it.'**
+  /// **'Only the site owner sees the booking data, in the admin panel. The data is stored on Google Firebase servers, which also process technical data such as the IP address when you use the site. We do not pass the data to others and we do not sell it. To protect the site against bots, it uses Google reCAPTCHA, which checks how the site is used.'**
   String get privacy5Text;
 
   /// Privacy Policy: heading of section 6.

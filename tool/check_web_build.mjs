@@ -8,7 +8,11 @@
 // "channel-error". Run this after every `flutter build web --release` and
 // before every deploy; `flutter clean` before the build fixes a stale cache.
 //
-// Read-only. It prints no file contents: only plugin names and yes/no.
+// It also checks that the public App Check site key of the web app (step
+// 7.6) is in the build.
+//
+// Read-only. It prints no file contents and never the key: only plugin
+// names and yes/no.
 //
 // Usage: node tool/check_web_build.mjs [--root <project dir>]
 // Exit code: 0 when every web plugin is found; 1 otherwise, or when a file
@@ -29,10 +33,28 @@ export const WEB_PLUGIN_MARKERS = {
   url_launcher_web: '__url_launcher::link',
 };
 
+/// The file with the public App Check site key of the web app (step 7.6)
+/// and the row name the check prints for it. The key itself is never
+/// printed.
+export const SITE_KEY_FILE = path.join(
+  'lib',
+  'core',
+  'config',
+  'app_check_config.dart',
+);
+export const SITE_KEY_ROW = 'app_check_web_site_key';
+
+/// The value of `const appCheckWebSiteKey = '...';`, or null.
+export function readSiteKey(source) {
+  const match = source.match(/const appCheckWebSiteKey\s*=\s*'([^']+)';/);
+  return match ? match[1] : null;
+}
+
 /// Checks the build under [root]. Returns { ok, rows, error }.
 export function checkWebBuild(root) {
   const depsPath = path.join(root, '.flutter-plugins-dependencies');
   const jsPath = path.join(root, 'build', 'web', 'main.dart.js');
+  const keyPath = path.join(root, SITE_KEY_FILE);
   if (!fs.existsSync(depsPath)) {
     return {
       ok: false,
@@ -48,18 +70,34 @@ export function checkWebBuild(root) {
         'No build/web/main.dart.js: run "flutter build web --release" first.',
     };
   }
+  if (!fs.existsSync(keyPath)) {
+    return {
+      ok: false,
+      rows: [],
+      error: `No ${SITE_KEY_FILE.replaceAll('\\', '/')}: the App Check key.`,
+    };
+  }
 
   let plugins;
   let js;
+  let siteKey;
   try {
     const deps = JSON.parse(fs.readFileSync(depsPath, 'utf8'));
     plugins = (deps.plugins?.web ?? []).map((plugin) => plugin.name);
     js = fs.readFileSync(jsPath, 'utf8');
+    siteKey = readSiteKey(fs.readFileSync(keyPath, 'utf8'));
   } catch (error) {
     return {
       ok: false,
       rows: [],
       error: `A file could not be read (${error.name}).`,
+    };
+  }
+  if (!siteKey) {
+    return {
+      ok: false,
+      rows: [],
+      error: 'No appCheckWebSiteKey constant in the App Check config file.',
     };
   }
 
@@ -68,6 +106,7 @@ export function checkWebBuild(root) {
     if (marker === undefined) return { name, found: 'no marker known' };
     return { name, found: js.includes(marker) ? 'yes' : 'no' };
   });
+  rows.push({ name: SITE_KEY_ROW, found: js.includes(siteKey) ? 'yes' : 'no' });
   return { ok: rows.every((row) => row.found === 'yes'), rows, error: null };
 }
 
@@ -84,7 +123,7 @@ function main(argv) {
   }
   console.log(
     result.ok
-      ? 'OK: every web plugin is in the build.'
+      ? 'OK: every web plugin and the App Check key are in the build.'
       : 'MISSING: run "flutter clean", then build again.',
   );
   return result.ok ? 0 : 1;

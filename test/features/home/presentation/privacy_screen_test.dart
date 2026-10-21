@@ -254,12 +254,17 @@ void main() {
       }
     });
 
-    test('no reCAPTCHA, no "აღებისა", no "not yet" about deletion', () {
+    test('reCAPTCHA only in section 5 (step 7.6); no "აღებისა", no "not '
+        'yet" about deletion', () {
       for (final language in languages) {
-        for (final text in privacyTexts(texts(language)).values) {
-          expect(text.toLowerCase(), isNot(contains('recaptcha')));
+        final all = privacyTexts(texts(language));
+        expect(all['privacy5Text'], contains('Google reCAPTCHA'));
+        all.forEach((name, text) {
+          if (name != 'privacy5Text') {
+            expect(text.toLowerCase(), isNot(contains('recaptcha')));
+          }
           expect(text, isNot(contains('აღებისა')));
-        }
+        });
       }
       expect(texts('en').privacy4Text, isNot(contains('yet')));
       expect(texts('ka').privacy4Text, isNot(contains('ჯერ')));
