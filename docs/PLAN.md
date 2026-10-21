@@ -3343,10 +3343,51 @@ Phase 7 decisions (the owner's, 2026-10-20):
     decided when we get there.
   - Settle the licences of the Home photos and check the settings/company
     values.
-- 7.8 The launcher icon and the app name, then a second Hosting deploy
-  (its own GO). Tier 2 — not started. Needs: the owner's approval of the
-  package flutter_launcher_icons (with pubspec.lock), the icon PNG from the
-  owner, approval of the Android platform files.
+- 7.8 The launcher icon and the app name. Tier 2 — DONE (in the commit
+  "Add the launcher and web icons from the owner's logo"). Not deployed
+  yet: step 7.8a.
+  - The source: the owner's own logo (made in CorelDRAW, no third-party
+    mark), an ellipse of 1025 x 689 px, 8-bit RGBA. The repo copy
+    tool/icon_source/logo.png is re-encoded without metadata (no colour
+    profile, no text chunks).
+  - tool/make_icons.mjs makes the 15 icons with Node's own zlib, no
+    package (pubspec unchanged). It centres the ellipse on a square
+    canvas without stretching it, never scales up, averages with
+    premultiplied alpha and writes PNGs without metadata.
+    tool/make_icons.test.mjs (28 tests) checks the sizes, the missing
+    metadata, the safe zones and that the committed icons are what the
+    script makes. Rerun after a logo change: node tool/make_icons.mjs
+    --import <logo.png>, then node tool/make_icons.mjs, then the tests.
+  - Android: 5 legacy ic_launcher icons (the ellipse at 94 % on
+    transparency), 5 adaptive foregrounds (66 %; the car stays inside the
+    safe circle of 66 of 108 dp) and mipmap-anydpi-v26/ic_launcher.xml
+    on values/colors.xml.
+  - Web: favicon.png (32 px), Icon-192 and Icon-512 (94 % on
+    transparency), Icon-maskable-192 and -512 (80 % on the fill colour;
+    the car inside the 40 % circle).
+  - The adaptive background and the maskable icons use the logo's fill
+    colour #623CA5, not the theme colour #673AB7: on #673AB7 the ellipse
+    edge shows as a faint oval. LOGO_FILL in the script and colors.xml
+    have the same value.
+  - The Android label and the web short_name are "Tbilisi Car"; the web
+    title, the web name, the ARB appTitle and iOS keep "Tbilisi Car
+    Rental". The Apple touch icon points at Icon-maskable-192.png (iOS
+    fills transparency with black).
+  - iOS skipped: for the README, "iOS icon: Flutter default, not tested".
+  - Checked: 2536 Flutter tests and 93 Node tests pass; the scan has 0
+    errors. The owner's checks: the web build on the local Hosting
+    emulator (localhost:5000) in Incognito: the favicon, Icon-192,
+    Icon-512, the maskable icons and DevTools > Application > Manifest;
+    the Android emulator: the icon in the launcher, the app and recent
+    apps.
+  - The label "Tbilisi Car" is set in AndroidManifest.xml but NOT yet
+    checked with the owner's eyes in the app drawer: to be seen in 7.11
+    on a real phone.
+  - Note: a normal Chrome profile may show the old favicon from its cache
+    until the site data is cleared.
+- 7.8a The third Hosting deploy with the new web icons (its own GO, as in
+  7.7a). Tier 1 — not started. The APK with the new icon comes with 7.9
+  and 7.10.
 - 7.9 The release signing: the keystore is made by the owner locally and
   never committed; key.properties is git-ignored (.gitignore is checked
   first); a signing config in the Android build file. Tier 1 — not started.
