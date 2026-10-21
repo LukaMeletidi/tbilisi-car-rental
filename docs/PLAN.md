@@ -1755,13 +1755,13 @@ Phase 0 is complete.
     Apps > the Android app > Manage debug tokens). The token is a secret: never in a
     file, never committed, never in a build argument that ends up in the repo.
   - Not enforced. App Check itself is free on the Spark plan.
-  - Web: nothing yet; step 7.6 (Section 23) adds a reCAPTCHA key made by the
-    owner, monitoring only. reCAPTCHA needs the domain of the site (the
-    Hosting domain of step 7.7). Firebase recommends reCAPTCHA Enterprise
-    for new integrations: 10,000 assessments per month at no cost; on Spark only four
-    score levels can be chosen. Not settled from the documentation: whether creating
-    the key needs a billing account in Google Cloud, and what happens above 10,000
-    without billing. Never add localhost to a production key.
+  - Web: done in step 7.6 (Section 23): reCAPTCHA Enterprise in the release
+    build, the web debug provider under flutter run, monitoring only. The
+    key was made with no billing account (the classic v3 registration is no
+    longer offered); 10,000 assessments a month at no cost, nothing above
+    it enabled. The public site key is committed; no localhost on the key
+    (never add it). The web debug token was not registered. "Verified" web
+    requests are expected only on the live domain after step 7.7.
   - Android release: the app will NOT be published on Google Play (portfolio project),
     so Play Integrity is not planned. A sideloaded APK then cannot get a real App
     Check token. The debug provider must never be shipped in a build for users.
@@ -3231,11 +3231,30 @@ Phase 7 decisions (the owner's, 2026-10-20):
     there). Step 7.8 (the icon) must be done before the first deploy in
     7.7: the favicon and the web icons are still Flutter's. A report of the
     caching gap to Flutter is possible (Phase 7, optional).
-- 7.6 App Check for the web: a reCAPTCHA key made by the owner in the
-  console, the site key in the code, monitoring only. Tier 1 — not started.
-  Needs: the owner's key; approval of the code change.
-  - Add the reCAPTCHA sentence to privacy section 5 (ka/ru/en) when App
-    Check is switched on.
+- 7.6 App Check for the web, monitoring only. Tier 1 — DONE (in the commit
+  "Turn on App Check monitoring for the web build").
+  - The provider is reCAPTCHA Enterprise (Fraud Defense): the classic
+    reCAPTCHA v3 registration is no longer possible in the Firebase
+    console. The key was made with no billing account and no payment
+    method; the project stays on Spark. The localhost domain is not on it.
+  - The public site key is a committed constant (appCheckWebSiteKey in
+    lib/core/config/app_check_config.dart). flutter run uses the web debug
+    provider, the release build reCAPTCHA Enterprise; nothing activates
+    when the key is empty. Android is unchanged (debug provider in debug
+    builds only).
+  - Monitoring only: Cloud Firestore and Authentication stay "Monitoring";
+    never press Enforce.
+  - Privacy section 5 (ka, ru, en) mentions Google reCAPTCHA.
+    tool/check_web_build.mjs also checks that the site key is in the build
+    (it never prints the key). 2536 Flutter tests and 59 Node tests pass.
+  - The web debug token was not registered (optional). flutter run -d
+    chrome starts a fresh browser profile, so it makes a new debug token
+    on every run. "Verified" requests are expected only on the live domain
+    after step 7.7: check the App Check metrics there.
+  - The reCAPTCHA Enterprise free quota is 10,000 assessments a month;
+    nothing above it is enabled (no billing).
+  - The old classic reCAPTCHA key in the other Google project is unused
+    and may be deleted.
 - 7.7 The first Hosting deploy, only after the owner's explicit "GO". The
   hosted domain must be in the authorized domains of Authentication; a smoke
   test on the live link (public tabs, the booking form, the admin sign-in,
