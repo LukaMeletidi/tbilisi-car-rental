@@ -48,8 +48,8 @@ const individualNote =
 
 const car = Car(
   id: carId,
-  brand: 'Toyota',
-  model: 'Prius',
+  brand: 'Testmark',
+  model: 'Sample S',
   year: 2019,
   drivetrain: Drivetrain.fwd,
   transmission: Transmission.automatic,
@@ -367,7 +367,7 @@ void main() {
       await pumpForm(tester);
 
       expect(find.text('Booking request'), findsOneWidget);
-      expect(find.text('Toyota Prius, 2019'), findsOneWidget);
+      expect(find.text('Testmark Sample S, 2019'), findsOneWidget);
       expect(find.text('\$45 / day'), findsOneWidget);
       for (final title in [
         'Your details',
