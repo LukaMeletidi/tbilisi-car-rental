@@ -1894,14 +1894,22 @@ Phase 0 is complete.
   on a normal Chrome profile. "flutter run -d chrome" opens a fresh temporary profile
   each time, so being signed out after reopening proves nothing. Check it on the
   hosted web build (step 7.7), or with a normal Chrome and a local web server.
-- Web admin without a connection, not verified by hand: a START without a
-  connection on the web was not tested by hand in step 3.12b. Changed in step
-  7.5: a reload while offline cannot work at all, because Flutter 3.44 web
-  builds have no offline service worker (the page itself cannot load). The
-  check is now "offline WITHOUT a reload", still open: as admin on Bookings,
-  set the browser offline without reloading and see "Offline: showing saved
-  data" or "No connection", never "No bookings yet."; go online again and see
-  the bookings appear by themselves. Tests cover the logic.
+- CLOSED on 2026-10-22. Web admin without a connection, not verified by hand:
+  a START without a connection on the web was not tested by hand in step
+  3.12b. Changed in step 7.5: a reload while offline cannot work at all,
+  because Flutter 3.44 web builds have no offline service worker (the page
+  itself cannot load). The check is now "offline WITHOUT a reload": as admin
+  on Bookings, set the browser offline without reloading and see "Offline:
+  showing saved data" or "No connection", never "No bookings yet."; go
+  online again and see the bookings appear by themselves. Tests cover the
+  logic.
+  - Result (the owner, by hand, 2026-10-22): on the live release build
+    (https://tbilisi-car-rental.web.app) in an Incognito window, signed in
+    as the admin, on Bookings: DevTools > Network set to Offline, no
+    reload. The screen showed "Offline: showing saved data" and kept all
+    three bookings and the filters; it never showed "No bookings yet".
+    With the network back on "No throttling", the notice went away by
+    itself and the data requests answered 200, with no reload.
 - For Phase 7 (polish): offline car writes on the web. In Chrome without a
   connection a car transaction fails with a raw JavaScript error (NativeError),
   not a FirebaseException, so the forms take the safe "may or may not be saved"
