@@ -1613,9 +1613,10 @@ Not planned since 2026-10-20; see Section 15 ('Not planned').
 7. Release on the free plan: polish, the Privacy Policy, the live link (Flutter
    web on Firebase Hosting) and an Android APK from a GitHub Release, then the
    final README — open (the decisions of 2026-10-20 and the steps 7.1 to 7.12
-   are in Section 23; 7.1 to 7.10a are done; 7.3b, 7.7b, 7.11 and 7.12
-   remain). No paid services: the Blaze plan, Cloud Functions,
-   e-mail, TTL, the photo upload and Analytics are not planned (Section 15).
+   are in Section 23; 7.1 to 7.11 are done, 7.3b is skipped; only 7.12,
+   the final README, and the final clean-up remain). No paid services: the
+   Blaze plan, Cloud Functions, e-mail, TTL, the photo upload and Analytics
+   are not planned (Section 15).
    README: the live link, the APK link, screenshots and GIFs (the admin panel
    is shown this way, never opened to visitors); an honest "how I worked"
    paragraph (architecture and business rules are the owner's decisions,
@@ -3184,11 +3185,14 @@ Phase 7 decisions (the owner's, 2026-10-20):
   - errorMaxLines 6 on the booking form fields (the phone error needs 5
     lines at 360 px and text size 1.3); a layout test (the form and the
     filter sheet, ka, ru, en) and a terms test. 2506 Flutter tests pass.
-- 7.3b The admin texts (English only). Tier 3 — not started: the offline
-  notice of the settings forms, the wording for a negative price, helper
-  texts, and "Pickup" -> "Pick-up" in the admin texts to match the public
-  app. Optional: a shorter phone error with the example only in the hint
-  (needs the owner's wording).
+- 7.3b The admin texts (English only). Tier 3 — SKIPPED by the owner,
+  listed as future work in the README: the offline notice of the settings
+  forms, the wording for a negative price, helper texts, "Pickup" ->
+  "Pick-up" in the admin texts, and optionally a shorter phone error with
+  the example only in the hint.
+  - Reason: these texts are only in the admin panel, which visitors do not
+    see, and any text change would need a new web deploy and a new APK and
+    release so that the live site and the APK keep matching.
   - Small tidy-ups: replace the sample car name in
     booking_form_screen_test.dart by a made-up one (a separate Tier 3
     commit).
@@ -3336,15 +3340,14 @@ Phase 7 decisions (the owner's, 2026-10-20):
     came from the disk cache. The old copy stays in a browser for up to
     one hour, and only for visitors who opened the site before the fix.
   - App Check on the live site: closed in step 7.8a (see 7.7).
-- 7.7b The photos, before the link goes into the README (not needed for a
-  deploy). Tier 2 — not started.
-  - The owner accepts the Home photos, the app-bar logo and all car
-    photos as they are (decided in 7.10a); no licence work.
-  - The only photo item left: in 7.11 or before the README screenshots,
-    look whether any car photo fails to show on the live web site (a CORS
-    problem of an outside address; it works in the Android app), and
-    decide then.
-  - Check the settings/company values.
+- 7.7b The photos and the company values on the live site. Tier 2 — DONE
+  (no code change).
+  - The owner checked the live site in an Incognito window: the catalog
+    shows every photo that exists, and the cars with several photos show
+    all of them on the car page. Two cars have no photo and show the grey
+    placeholder icon, the designed fallback. The About page shows the
+    company values correctly.
+  - The owner accepts the photos as they are (see 7.10a); no licence work.
 - 7.8 The launcher icon and the app name. Tier 2 — DONE (in the commit
   "Add the launcher and web icons from the owner's logo"). Not deployed
   yet: step 7.8a.
@@ -3382,9 +3385,9 @@ Phase 7 decisions (the owner's, 2026-10-20):
     Icon-512, the maskable icons and DevTools > Application > Manifest;
     the Android emulator: the icon in the launcher, the app and recent
     apps.
-  - The label "Tbilisi Car" is set in AndroidManifest.xml but NOT yet
-    checked with the owner's eyes in the app drawer: to be seen in 7.11
-    on a real phone.
+  - The label "Tbilisi Car" is set in AndroidManifest.xml; the owner saw
+    it in the app drawer with the release APK on the emulator (7.10) and
+    on a real phone (7.11).
   - Note: a normal Chrome profile may show the old favicon from its cache
     until the site data is cleared.
 - 7.8a The third Hosting deploy with the new web icons. Tier 1 — DONE
@@ -3505,9 +3508,20 @@ Phase 7 decisions (the owner's, 2026-10-20):
     and the FAQ: all fine.
   - App Check: this APK has no App Check provider, so its requests show
     as "Unverified: outdated client". Expected; nothing is enforced.
-- 7.11 Checks on a real Android phone by the owner: the public tabs, the
-  phone and e-mail links, TalkBack on the FAQ, Android Back everywhere,
-  offline, and the admin screens on Android. Tier 3 — not started.
+- 7.11 Checks on a real Android phone by the owner. Tier 3 — DONE.
+  - The owner downloaded the APK from the release page v1.0.0 in the
+    phone's browser and installed it; the "install from this source"
+    prompt and the Google Play Protect warning appeared as the release
+    notes say.
+  - Checked, all fine: the icon and the label "Tbilisi Car"; the four
+    public tabs, with the photos; the phone and e-mail links on the About
+    page (the dialer and the mail app open; nothing was called or sent);
+    Android Back through the catalog, a car page and the form to Home and
+    out of the app; the language switch ka, ru, en; offline with airplane
+    mode (a clear message, no crash, and the catalog loads again when the
+    network is back); the admin screens on the phone.
+  - NOT tested: TalkBack on the FAQ (skipped by the owner; to be named in
+    the README). No booking was sent (no write to the live database).
 - 7.12 The final README: the live link, the APK link, screenshots, GIFs, an
   honest "how I worked" paragraph, "iOS not tested on Windows" and "possible
   future work". Tier 3 — not started.
