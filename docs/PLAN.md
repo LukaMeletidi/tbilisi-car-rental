@@ -65,7 +65,8 @@ are in CLAUDE.md.
 - App ID: com.greek.tbilisicarrental (Android applicationId and namespace, iOS bundle
   ID; the iOS test target keeps the .RunnerTests suffix).
 - Dart package name: tbilisi_car_rental.
-- GitHub: https://github.com/LukaMeletidi/tbilisi-car-rental.git (private), branch main.
+- GitHub: https://github.com/LukaMeletidi/tbilisi-car-rental.git (public since
+  2026-10-21), branch main.
 
 ## 2. Public (Customer-Facing) App
 
@@ -128,7 +129,8 @@ Search (step 1.10):
 - It searches the brand and the model: every word typed must be contained in
   "brand model", ignoring letter case. An empty search shows all cars.
 - The input is not restricted. Georgian or Russian text simply finds nothing.
-- Known limit: searching "mx5" does not find "MX-5" (punctuation is not ignored).
+- Known limit: searching "ab1" does not find a model named "AB-1" (punctuation is not
+  ignored).
 - Search and filters combine (both must match). The "Filters (n)" counter does not
   count the search.
 - It runs in the app on the loaded cars: no new Firestore query.
@@ -1613,8 +1615,8 @@ Not planned since 2026-10-20; see Section 15 ('Not planned').
 7. Release on the free plan: polish, the Privacy Policy, the live link (Flutter
    web on Firebase Hosting) and an Android APK from a GitHub Release, then the
    final README — open (the decisions of 2026-10-20 and the steps 7.1 to 7.12
-   are in Section 23; 7.1 to 7.11 are done, 7.3b is skipped; only 7.12,
-   the final README, and the final clean-up remain). No paid services: the
+   are in Section 23; 7.1 to 7.12 are done, 7.3b is skipped; only the
+   final clean-up remains). No paid services: the
    Blaze plan, Cloud Functions, e-mail, TTL, the photo upload and Analytics
    are not planned (Section 15).
    README: the live link, the APK link, screenshots and GIFs (the admin panel
@@ -3530,10 +3532,32 @@ Phase 7 decisions (the owner's, 2026-10-20):
     network is back); the admin screens on the phone.
   - NOT tested: TalkBack on the FAQ (skipped by the owner; to be named in
     the README). No booking was sent (no write to the live database).
-- 7.12 The final README: the live link, the APK link, screenshots, GIFs, an
+- 7.12 The final README: the live link, the APK link, screenshots, an
   honest "how I worked" paragraph, "iOS not tested on Windows" and "possible
-  future work". Tier 3 — not started.
+  future work". Tier 3 — DONE (in the commits "Add screenshots for the
+  README" and "Write the final README").
   - The README links the release page
     https://github.com/LukaMeletidi/tbilisi-car-rental/releases/tag/v1.0.0
     and the live site. The repository licence is decided there (none for
     now, all rights reserved).
+  - Screenshots (commit d0c9c0d): 9 images in docs/screenshots/, 2.9 MB.
+    The JPEGs' EXIF (a software tag) was removed losslessly; there was no
+    GPS or device data. No GIF, by the owner's choice.
+  - The README: first person, plain text, with the links, what the app
+    does, the screenshots, how it is built and tested, how I worked, what
+    is not done and how to run it with an own Firebase project. Checked:
+    the links answer 200, every relative path exists, the claims match
+    the plan and the code, and the test numbers are today's (2536 Flutter
+    tests, 114 Node tests); the secrets scan has 0 errors.
+  - The owner accepts the photos as they are and wants no photo or
+    licence text about the images in the README.
+
+Final clean-up for the owner (manual, on the owner's own computer and
+accounts; no secret is written here):
+- Delete the old temporary rules files: C:\Users\U\Desktop\live_rules_4_2.txt,
+  C:\temp\deployed_rules*.txt and C:\temp\live_rules_*.
+- Revoke or delete the App Check debug tokens in the Firebase console when
+  the project is finished.
+- Optional: delete the old classic reCAPTCHA key in the other Google
+  project.
+- Keep the keystore backup safe: it is the app's only signing key.
